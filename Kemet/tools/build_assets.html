@@ -109,8 +109,11 @@ async function buildChar(id) {
   scenes.forEach((s, i) => s.traverse(o => {
     if (!o.isMesh) return;
     const m = o.material;
-    m.normalMap = null; m.roughnessMap = null; m.metalnessMap = null; m.aoMap = null;
-    m.map = shrink(m.map, 1024);
+    // 質感のための凹凸（ノーマル）と粗さの画像は残す（高画質化）
+    m.aoMap = null;
+    if (m.normalMap) m.normalMap = shrink(m.normalMap, 1024);
+    if (m.roughnessMap) { const r = shrink(m.roughnessMap, 1024); m.roughnessMap = r; if (m.metalnessMap) m.metalnessMap = r; }
+    m.map = shrink(m.map, 2048);
     if (i === 0 && o.isSkinnedMesh && /Superhero/.test(m.name)) headOnly(o);
     if (/Hood/.test(o.name) && !d.hood) o.visible = false;
     if (/Hair/.test(m.name)) { m.color = new THREE.Color(d.hairCol); m.map = null; m.roughness = 0.5; }

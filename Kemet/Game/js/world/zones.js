@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import * as B from './builders.js';
 import * as T from './textures.js';
+import { Reflector } from '../../lib/jsm/objects/Reflector.js';
 
 function ground(size, material, y = 0) {
   const g = new THREE.PlaneGeometry(size, size, 1, 1);
@@ -237,18 +238,22 @@ export function buildNecropolis() {
   }
 
   // 墓の入口（崖に掘られた門）
-  batch.box(60, 16, 10, B.M.sandstoneDark(), [0, 8, -34], 0, 6);
+  batch.box(60, 16, 10, B.M.pbr('large_sandstone_blocks_01', '#d8c0a0'), [0, 8, -34], 0, 5);
   C.box(-17, -34, 26, 10); C.box(17, -34, 26, 10);
   batch.box(8, 9, 1, B.M.hiero(), [0, 4.5, -28.8]);
   for (const s of [-1, 1]) { batch.box(1.4, 8, 1.4, B.M.hieroPlain(), [s * 4.6, 4, -28.6]); C.box(s * 4.6, -28.6, 1.4, 1.4); }
   batch.box(11, 1.4, 2, B.M.gold(), [0, 8.4, -29]);
 
   // 墓の中：暗い通路（天井つき）。z = -34 から -120
+  // 墓の中は実写の石（Poly Haven, CC0）
+  const stoneWall = B.M.pbr('large_sandstone_blocks_01');
+  const stoneCeil = B.M.pbr('sandstone_blocks_08', '#9a8a72');
+  const stonePillar = B.M.pbr('sandstone_blocks_08');
   const corridor = (x1, x2, z1, z2) => {
     const w = x2 - x1, d = z1 - z2, cx = (x1 + x2) / 2, cz = (z1 + z2) / 2;
-    batch.box(w, 0.3, d, B.M.sandstoneDark(), [cx, 6.15, cz], 0, 4);
+    batch.box(w, 0.3, d, stoneCeil, [cx, 6.15, cz], 0, 3);
   };
-  const tombWall = (x1, z1, x2, z2) => B.wall(batch, C, x1, z1, x2, z2, 6, 1.2, B.M.hiero());
+  const tombWall = (x1, z1, x2, z2) => B.wall(batch, C, x1, z1, x2, z2, 6, 1.2, stoneWall, 3.5);
   // 1本目の通路
   tombWall(-3.5, -39, -3.5, -70); tombWall(3.5, -39, 3.5, -62);
   corridor(-4, 4, -39, -70);
@@ -259,7 +264,7 @@ export function buildNecropolis() {
   tombWall(24, -62, 24, -50); tombWall(10, -70, 10, -96); tombWall(24, -50, 40, -50); tombWall(40, -50, 40, -96);
   corridor(10, 40, -50, -96);
   for (const [x, z, r] of [[16, -58, 0], [34, -58, 0], [16, -88, 0], [34, -88, 0]]) B.sarcophagus(batch, C, x, z, r);
-  for (const x of [18, 32]) for (const z of [-66, -80]) B.column(batch, C, x, z, 6, 0.6);
+  for (const x of [18, 32]) for (const z of [-66, -80]) B.column(batch, C, x, z, 5.2, 0.75, false, stonePillar);
   // 奥の間（盗賊団の頭）へ
   tombWall(10, -96, 22, -96); tombWall(28, -96, 40, -96);
   tombWall(22, -96, 22, -104); tombWall(28, -96, 28, -104);
@@ -272,8 +277,40 @@ export function buildNecropolis() {
   C.box(20, -121.5, 18, 4);
 
   // 墓の床（暗めの石）
-  const floor = ground(60, new THREE.MeshStandardMaterial({ map: T.paving(), color: '#8a7a66', roughness: 1 }), 0.03);
-  floor.position.set(22, 0.03, -82); root.add(floor);
+  const floorMat = B.M.pbr('red_sandstone_pavement', '#b8a58a');
+  // 墓の床（入口から奥の間まで）
+  const fg = new THREE.PlaneGeometry(62, 96).rotateX(-Math.PI / 2);
+  const fuv = fg.attributes.uv;
+  for (let i = 0; i < fuv.count; i++) fuv.setXY(i, fuv.getX(i) * 62 / 3, fuv.getY(i) * 96 / 3);
+  const floor = new THREE.Mesh(fg, floorMat); floor.receiveShadow = true;
+  floor.position.set(21, 0.03, -82); root.add(floor);
+
+  // ミイラの広間は浸水している：水面の反射と濁り
+  const water = new Reflector(new THREE.PlaneGeometry(29, 45), { textureWidth: 512, textureHeight: 512, color: '#8a8270', clipBias: 0.003 });
+  water.rotation.x = -Math.PI / 2; water.position.set(25, 0.12, -73);
+  root.add(water);
+  const murk = new THREE.Mesh(new THREE.PlaneGeometry(29, 45).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, uniforms: { time: { value: 0 } },
+    vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
+    fragmentShader: 'uniform float time; varying vec3 vW; void main(){ float r = sin(vW.x*1.7+time*.8)*sin(vW.z*1.3-time*.6) + sin((vW.x-vW.z)*3.1+time*1.4)*.4; gl_FragColor = vec4(vec3(.09,.11,.08) + r*.02, .42 + r*.06); }',
+  }));
+  murk.position.set(25, 0.14, -73); root.add(murk);
+
+  // 天井の穴から差し込む光の筋とちり
+  for (const [x, z] of [[21, -60], [29, -74], [22, -88]]) {
+    const sp = new THREE.SpotLight('#fff1cf', 45, 20, 0.3, 0.6, 1.4);
+    sp.position.set(x, 12, z); sp.target.position.set(x + 0.4, 0, z + 0.8);
+    root.add(sp, sp.target);
+    const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.4).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#fff6dc' }));
+    hole.position.set(x, 5.99, z); root.add(hole);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.2, 6, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#ffe7b0', transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    beam.position.set(x + 0.2, 3, z + 0.4); beam.rotation.x = 0.07; root.add(beam);
+  }
+  const dustPos = [];
+  for (let i = 0; i < 1500; i++) dustPos.push(10 + Math.random() * 30, Math.random() * 6, -50 - Math.random() * 46);
+  const dust = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(dustPos, 3)),
+    new THREE.PointsMaterial({ color: '#fff0c8', size: 0.03, transparent: true, opacity: 0.5, depthWrite: false }));
+  root.add(dust);
 
   // 外の端
   C.box(0, 48, 80, 4); C.box(-26, 10, 4, 80); C.box(26, 10, 4, 80);
@@ -318,6 +355,8 @@ export function buildNecropolis() {
     ],
     chests: [{ x: 36, z: -54, ankh: 150 }, { x: 12, z: -92, ankh: 200 }, { x: -12, z: 25, ankh: 80 }],
     update(dt, t) {
+      murk.material.uniforms.time.value = t;
+      dust.rotation.y = Math.sin(t * 0.05) * 0.01;
       for (const tr of torches) {
         const f = 0.85 + Math.sin(t * 13 + tr.phase) * 0.1 + Math.sin(t * 7.3 + tr.phase) * 0.08;
         tr.flame.scale.set(f, f * 1.1, f);

@@ -10,6 +10,13 @@ export function mat(key, make) {
   if (!mats.has(key)) mats.set(key, make());
   return mats.get(key);
 }
+const texLoader = new THREE.TextureLoader();
+/** 実写の素材（Poly Haven, CC0）：色・凹凸・粗さの3枚 */
+function pbrMaterial(id, tint) {
+  const t = kind => { const x = texLoader.load(`assets/tex/${id}_${kind}.jpg`); x.wrapS = x.wrapT = THREE.RepeatWrapping; x.anisotropy = 8; return x; };
+  const map = t('diff'); map.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map, normalMap: t('nor'), roughnessMap: t('rough'), normalScale: new THREE.Vector2(1.2, 1.2), color: tint });
+}
 const std = (map, color = '#ffffff', extra = {}) => new THREE.MeshStandardMaterial({ map, color, roughness: 0.92, metalness: 0, ...extra });
 
 export const M = {
@@ -29,6 +36,7 @@ export const M = {
   trunk: () => mat('trunk', () => new THREE.MeshStandardMaterial({ color: '#8a6a44', roughness: 1 })),
   clay: () => mat('clay', () => new THREE.MeshStandardMaterial({ color: '#b86a3c', roughness: 0.85 })),
   leaf: () => mat('leaf', () => new THREE.MeshStandardMaterial({ map: T.palmLeaf(), alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 })),
+  pbr: (id, tint = '#ffffff') => mat('pbr' + id + tint, () => pbrMaterial(id, tint)),
   cloth: (a, b) => mat('cloth' + a + b, () => std(T.cloth(a, b), '#ffffff', { side: THREE.DoubleSide })),
 };
 
@@ -191,14 +199,16 @@ export function pylon(B, C, x, z, width = 26, height = 13, rotY = 0) {
 }
 
 /** パピルス柱 */
-export function column(B, C, x, z, h = 7, r = 0.6, painted = true) {
+export function column(B, C, x, z, h = 7, r = 0.6, painted = true, material = null) {
   const shaft = new THREE.CylinderGeometry(r * 0.9, r, h, 16, 1);
-  B.add(shaft, painted ? M.hieroPlain() : M.sandstone(), trs([x, h / 2, z]));
+  B.add(shaft, material || (painted ? M.hieroPlain() : M.sandstone()), trs([x, h / 2, z]));
   const pts = [];
   for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push(new THREE.Vector2(r * 0.9 + Math.pow(t, 1.8) * r * 0.9, t * 1.4)); }
-  B.add(new THREE.LatheGeometry(pts, 16), M.sandstone(), trs([x, h, z]));
-  B.add(new THREE.CylinderGeometry(r * 0.95, r * 0.95, 0.25, 16), M.blue(), trs([x, h - 0.4, z]));
-  B.add(new THREE.CylinderGeometry(r * 0.95, r * 0.95, 0.15, 16), M.red(), trs([x, h - 0.7, z]));
+  B.add(new THREE.LatheGeometry(pts, 16), material || M.sandstone(), trs([x, h, z]));
+  if (!material) {
+    B.add(new THREE.CylinderGeometry(r * 0.95, r * 0.95, 0.25, 16), M.blue(), trs([x, h - 0.4, z]));
+    B.add(new THREE.CylinderGeometry(r * 0.95, r * 0.95, 0.15, 16), M.red(), trs([x, h - 0.7, z]));
+  }
   B.box(r * 2.2, 0.4, r * 2.2, M.sandstoneDark(), [x, h + 1.6, z]);
   B.add(new THREE.CylinderGeometry(r * 1.3, r * 1.4, 0.4, 16), M.sandstoneDark(), trs([x, 0.2, z]));
   C.circle(x, z, r * 1.1);
@@ -291,10 +301,10 @@ export function well(B, C, x, z) {
 }
 
 /** 長い壁（城壁） */
-export function wall(B, C, x1, z1, x2, z2, h = 5, t = 1.6, material = M.mud()) {
+export function wall(B, C, x1, z1, x2, z2, h = 5, t = 1.6, material = M.mud(), texScale = 3) {
   const len = Math.hypot(x2 - x1, z2 - z1), rot = Math.atan2(x2 - x1, z2 - z1);
   const cx = (x1 + x2) / 2, cz = (z1 + z2) / 2;
-  B.box(t, h, len, material, [cx, h / 2, cz], rot, 3);
+  B.box(t, h, len, material, [cx, h / 2, cz], rot, texScale);
   B.box(t + 0.3, 0.4, len, M.mudWhite(), [cx, h + 0.2, cz], rot, 3);
   // 当たり判定：軸に沿った壁だけ
   if (Math.abs(x2 - x1) < 0.01) C.box(cx, cz, t, len);

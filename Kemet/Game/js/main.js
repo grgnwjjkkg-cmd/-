@@ -8,6 +8,10 @@ import * as B from './world/builders.js';
 import { PEOPLE, TOWN_NPCS, CLUES, objective, script } from './story.js';
 import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, playerStats, expToNext } from './items.js';
 import { audio } from './audio.js';
+import { EffectComposer } from '../lib/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from '../lib/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from '../lib/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from '../lib/jsm/postprocessing/OutputPass.js';
 
 const $ = id => document.getElementById(id);
 const SAVE_KEY = 'kemet-save-v1';
@@ -69,6 +73,12 @@ class Game {
     this.icons = new Map();
     this.save = this.load() || newSave();
 
+    // 光のにじみ（ブルーム）
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.35, 0.6, 0.85);
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
     this.resize();
     window.addEventListener('resize', () => this.resize());
     this.setupInput();
@@ -734,6 +744,7 @@ class Game {
   resize() {
     const w = innerWidth, h = innerHeight;
     this.renderer.setSize(w, h, false);
+    this.composer?.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.fov = w < h ? 62 : 50;
     this.camera.updateProjectionMatrix();
@@ -763,7 +774,7 @@ class Game {
       for (const n of this.npcs) n.update(dt, this.player);
       this.player.actor.update(dt);
       this.updateLight();
-      if (render) this.renderer.render(this.scene, this.camera);
+      if (render) this.composer.render();
       return;
     }
 
@@ -800,7 +811,7 @@ class Game {
 
     this.updateCamera(dt);
     this.updateLight();
-    if (render) { this.updateHUD(); this.renderer.render(this.scene, this.camera); }
+    if (render) { this.updateHUD(); this.composer.render(); }
   }
 
   updateCamera(dt) {
@@ -844,7 +855,7 @@ class Game {
     this.sun.position.set(p.x + 30, 45, p.z + 18);
     this.sun.target.position.set(p.x, 0, p.z);
     this.sun.intensity = 2.8 * (1 - k);
-    this.hemi.intensity = 1.0 * (1 - k) + 0.12 * k;
+    this.hemi.intensity = 1.0 * (1 - k) + 0.35 * k;
     this.lantern.intensity = 18 * k;
     this.lantern.position.set(p.x, 2.4, p.z);
     if (k > 0.5) {
