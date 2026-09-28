@@ -38,8 +38,16 @@ final class StudyStore {
     private(set) var bookmarks: Set<String>
     /// 開発用: 確認待ちも表示する
     var showPending: Bool {
-        didSet { UserDefaults.standard.set(showPending, forKey: Self.showPendingKey) }
+        didSet {
+            UserDefaults.standard.set(showPending, forKey: Self.showPendingKey)
+            refreshVisibility()
+        }
     }
+
+    /// 同梱分と端末の印をあわせた現在の状態（端末の印が優先）。印が変わったときだけ作り直す。
+    private(set) var approvals: [String: Approval] = [:]
+    /// アプリに表示する論文。印や設定が変わったときだけ作り直す（毎回計算すると重いため）。
+    private(set) var visibleStudies: [Study] = []
 
     init(bundle: Bundle = .main) {
         let decoder = StudyJSON.decoder()
@@ -74,23 +82,22 @@ final class StudyStore {
         #else
         showPending = false
         #endif
+        refreshVisibility()
+    }
+
+    private func refreshVisibility() {
+        let merged = bundledApprovals.merging(localApprovals) { _, local in local }
+        approvals = merged
+        visibleStudies = showPending ? allStudies : allStudies.filter { merged[$0.pmid]?.status == Approval.published }
     }
 
     // MARK: - 公開OKの管理
-
-    /// 同梱分と端末の印をあわせた現在の状態（端末の印が優先）。
-    var approvals: [String: Approval] { bundledApprovals.merging(localApprovals) { _, local in local } }
 
     func approval(for study: Study) -> Approval? { approvals[study.pmid] }
 
     func isPublished(_ study: Study) -> Bool { approval(for: study)?.status == Approval.published }
 
-    /// アプリに表示する論文。
-    var visibleStudies: [Study] {
-        showPending ? allStudies : allStudies.filter(isPublished)
-    }
-
-    var publishedCount: Int { allStudies.filter(isPublished).count }
+    var publishedCount: Int { approvals.values.filter { $0.status == Approval.published }.count }
 
     /// 開発用の確認画面から呼ぶ。nil で印を外す。
     func setApproval(_ status: String?, for study: Study) {
@@ -102,6 +109,7 @@ final class StudyStore {
         if let data = try? JSONEncoder().encode(localApprovals) {
             UserDefaults.standard.set(data, forKey: Self.localApprovalsKey)
         }
+        refreshVisibility()
     }
 
     /// approvals.json として書き出す内容（同梱分＋端末の印）。
