@@ -1,0 +1,577 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1B481FB0C43697C522A169C6 /* RestTimerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8481438880E7C9385245BD37 /* RestTimerBar.swift */; };
+		276160F0B01008E5DDA6F874 /* themes.json in Resources */ = {isa = PBXBuildFile; fileRef = A73BE923AFF047CBDD1FCC2B /* themes.json */; };
+		29469512E5A57FAA420B2429 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9963D1F22B180BD70B4B5182 /* Models.swift */; };
+		29694C9218B2CF00D605751D /* summaries.json in Resources */ = {isa = PBXBuildFile; fileRef = F8E7E8A678F6AF6D9454DB9C /* summaries.json */; };
+		2FD46F124E9D5D213ADAC3A4 /* StudyDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2658884AF3039BA94D60A04C /* StudyDataTests.swift */; };
+		30710056EE7E664C98D95C07 /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171C70934EA6875BD4527E54 /* SetRowView.swift */; };
+		3AF5F8593D5908A80CA86A39 /* WorkoutHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5BE91DBC3AF5C05ACC3AB7 /* WorkoutHomeView.swift */; };
+		427BACB13623E2E6154E7FCE /* StudyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C1A0184EA61FB492B4FE6F /* StudyStore.swift */; };
+		511F645E3C4AEDA1B57F5878 /* Study.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02CE6A7A49F56DACC40190B /* Study.swift */; };
+		67E6963E6F842E6553EDC49D /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 009806BA9F8C25A7BF846092 /* ExercisePickerView.swift */; };
+		761AC2082075A6E01C8F760B /* StudyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6F795BE4F0CB613BC50744E /* StudyComponents.swift */; };
+		8E6F0F1ED6B79B5364B69EE2 /* WorkoutEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F2110D37F21B4F54E84146 /* WorkoutEditorView.swift */; };
+		9524BD9C9445A4E7821B3408 /* approvals.json in Resources */ = {isa = PBXBuildFile; fileRef = AF89EF19952F54F61787D3C7 /* approvals.json */; };
+		9A871432E8803D584A80EE3C /* StudiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21070C6F2FB4C3334314BA99 /* StudiesView.swift */; };
+		A3C4F4AB3F0546CFCAE3F5EA /* InsightViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */; };
+		AC8AD329AB94C2C9336E6110 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63B3E846C2C119D9544F226 /* ReviewView.swift */; };
+		ADEEDFAC203CC615313CD5C0 /* EviTrainApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A85C8F2EED4B8A85172D57C /* EviTrainApp.swift */; };
+		BFC80C92CB63FD498F585E15 /* StudyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28ADF6D3AF1D314D5EA0D4A0 /* StudyDetailView.swift */; };
+		C0AAAA98BBF13A3A44B9973C /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9924E054D895E58AC99EB7 /* Stats.swift */; };
+		C0CBC03F607B91410B063D52 /* charts.json in Resources */ = {isa = PBXBuildFile; fileRef = DA4D050A2880CE2E64554013 /* charts.json */; };
+		CA77C1995ECDB3B548B7E927 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A9A4B1EB8CB98BB646AE7FD /* HistoryView.swift */; };
+		CE7C58033A937C5035E01621 /* ExerciseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05E6F048B53FC6DDEA3510B /* ExerciseCatalog.swift */; };
+		CEEEF41D0D4D42ADD549EFB1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CAADEFECC1A5DDED56EF1DC9 /* Assets.xcassets */; };
+		EA3E786C6F73DEA97A905002 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE791ED4DF3BAAFAF03DE02 /* SettingsView.swift */; };
+		F0D2453059771C56437EC8E9 /* RestTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C929DABEDA4315CEBFDA11C4 /* RestTimer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AC5E71D12CFA7858F5188A20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C58EF01BC98D5647C7D0DB1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 854FDCE5C537D356C95AD1F8;
+			remoteInfo = EviTrain;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		009806BA9F8C25A7BF846092 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
+		0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightViews.swift; sourceTree = "<group>"; };
+		171C70934EA6875BD4527E54 /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
+		21070C6F2FB4C3334314BA99 /* StudiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudiesView.swift; sourceTree = "<group>"; };
+		214894C193B7F4756FCCC62B /* EviTrain.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EviTrain.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		22C1A0184EA61FB492B4FE6F /* StudyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyStore.swift; sourceTree = "<group>"; };
+		2658884AF3039BA94D60A04C /* StudyDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyDataTests.swift; sourceTree = "<group>"; };
+		28ADF6D3AF1D314D5EA0D4A0 /* StudyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyDetailView.swift; sourceTree = "<group>"; };
+		2CE791ED4DF3BAAFAF03DE02 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		5A9A4B1EB8CB98BB646AE7FD /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		8481438880E7C9385245BD37 /* RestTimerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerBar.swift; sourceTree = "<group>"; };
+		8D5BE91DBC3AF5C05ACC3AB7 /* WorkoutHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHomeView.swift; sourceTree = "<group>"; };
+		8D9924E054D895E58AC99EB7 /* Stats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
+		9963D1F22B180BD70B4B5182 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		9A85C8F2EED4B8A85172D57C /* EviTrainApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EviTrainApp.swift; sourceTree = "<group>"; };
+		A05E6F048B53FC6DDEA3510B /* ExerciseCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseCatalog.swift; sourceTree = "<group>"; };
+		A0F2110D37F21B4F54E84146 /* WorkoutEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEditorView.swift; sourceTree = "<group>"; };
+		A73BE923AFF047CBDD1FCC2B /* themes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = themes.json; sourceTree = "<group>"; };
+		AF89EF19952F54F61787D3C7 /* approvals.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = approvals.json; sourceTree = "<group>"; };
+		B63B3E846C2C119D9544F226 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
+		C929DABEDA4315CEBFDA11C4 /* RestTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimer.swift; sourceTree = "<group>"; };
+		CAADEFECC1A5DDED56EF1DC9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DA4D050A2880CE2E64554013 /* charts.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = charts.json; sourceTree = "<group>"; };
+		EC5FE4FFF5214D675CFCE6AC /* EviTrainTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = EviTrainTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F02CE6A7A49F56DACC40190B /* Study.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Study.swift; sourceTree = "<group>"; };
+		F6F795BE4F0CB613BC50744E /* StudyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyComponents.swift; sourceTree = "<group>"; };
+		F8E7E8A678F6AF6D9454DB9C /* summaries.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = summaries.json; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		06FF0688C91D1ACEFD0570FA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6DD967800AA7C14A4D6B79EF /* Studies */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		117077FC80E4877C9DA91BA5 /* EviTrainTests */ = {
+			isa = PBXGroup;
+			children = (
+				2658884AF3039BA94D60A04C /* StudyDataTests.swift */,
+			);
+			path = EviTrainTests;
+			sourceTree = "<group>";
+		};
+		1FC42CCDA24076C10CBE0CAA /* Workout */ = {
+			isa = PBXGroup;
+			children = (
+				009806BA9F8C25A7BF846092 /* ExercisePickerView.swift */,
+				0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */,
+				8481438880E7C9385245BD37 /* RestTimerBar.swift */,
+				171C70934EA6875BD4527E54 /* SetRowView.swift */,
+				A0F2110D37F21B4F54E84146 /* WorkoutEditorView.swift */,
+				8D5BE91DBC3AF5C05ACC3AB7 /* WorkoutHomeView.swift */,
+			);
+			path = Workout;
+			sourceTree = "<group>";
+		};
+		285AE945D2C324891570726A /* EviTrain */ = {
+			isa = PBXGroup;
+			children = (
+				CAADEFECC1A5DDED56EF1DC9 /* Assets.xcassets */,
+				9A85C8F2EED4B8A85172D57C /* EviTrainApp.swift */,
+				311F9A35EE2BFD878D8216F6 /* Models */,
+				06FF0688C91D1ACEFD0570FA /* Resources */,
+				E6D772105B43EEA9594957D8 /* Services */,
+				B2DDAE6412BA70E19C35F02E /* Views */,
+			);
+			path = EviTrain;
+			sourceTree = "<group>";
+		};
+		311F9A35EE2BFD878D8216F6 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A05E6F048B53FC6DDEA3510B /* ExerciseCatalog.swift */,
+				9963D1F22B180BD70B4B5182 /* Models.swift */,
+				F02CE6A7A49F56DACC40190B /* Study.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		4452B5CF47425063FA68BD59 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				5A9A4B1EB8CB98BB646AE7FD /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		4964D188094CAFF316B4C645 = {
+			isa = PBXGroup;
+			children = (
+				285AE945D2C324891570726A /* EviTrain */,
+				117077FC80E4877C9DA91BA5 /* EviTrainTests */,
+				E1442131FC921B0B4534ACDC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6DD967800AA7C14A4D6B79EF /* Studies */ = {
+			isa = PBXGroup;
+			children = (
+				AF89EF19952F54F61787D3C7 /* approvals.json */,
+				DA4D050A2880CE2E64554013 /* charts.json */,
+				F8E7E8A678F6AF6D9454DB9C /* summaries.json */,
+				A73BE923AFF047CBDD1FCC2B /* themes.json */,
+			);
+			path = Studies;
+			sourceTree = "<group>";
+		};
+		7D4310451A714224B175D57B /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				2CE791ED4DF3BAAFAF03DE02 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		B2DDAE6412BA70E19C35F02E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4452B5CF47425063FA68BD59 /* History */,
+				F8F577399AE1A99468EA471B /* Papers */,
+				7D4310451A714224B175D57B /* Settings */,
+				1FC42CCDA24076C10CBE0CAA /* Workout */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E1442131FC921B0B4534ACDC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				214894C193B7F4756FCCC62B /* EviTrain.app */,
+				EC5FE4FFF5214D675CFCE6AC /* EviTrainTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E6D772105B43EEA9594957D8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C929DABEDA4315CEBFDA11C4 /* RestTimer.swift */,
+				8D9924E054D895E58AC99EB7 /* Stats.swift */,
+				22C1A0184EA61FB492B4FE6F /* StudyStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F8F577399AE1A99468EA471B /* Papers */ = {
+			isa = PBXGroup;
+			children = (
+				B63B3E846C2C119D9544F226 /* ReviewView.swift */,
+				21070C6F2FB4C3334314BA99 /* StudiesView.swift */,
+				F6F795BE4F0CB613BC50744E /* StudyComponents.swift */,
+				28ADF6D3AF1D314D5EA0D4A0 /* StudyDetailView.swift */,
+			);
+			path = Papers;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6A73272EC14FC18FC2643BFB /* EviTrainTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0C675935FE69811A823E463A /* Build configuration list for PBXNativeTarget "EviTrainTests" */;
+			buildPhases = (
+				7078D35B9038D05E9F3F0F5F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				97A872AC80FAD55D3B9B8901 /* PBXTargetDependency */,
+			);
+			name = EviTrainTests;
+			packageProductDependencies = (
+			);
+			productName = EviTrainTests;
+			productReference = EC5FE4FFF5214D675CFCE6AC /* EviTrainTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		854FDCE5C537D356C95AD1F8 /* EviTrain */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A960DFF2ACB9BC6BC004D9F9 /* Build configuration list for PBXNativeTarget "EviTrain" */;
+			buildPhases = (
+				BEC2423EEF5EF7D0C49348B8 /* Sources */,
+				AD447A2D91E5497768EAB91A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EviTrain;
+			packageProductDependencies = (
+			);
+			productName = EviTrain;
+			productReference = 214894C193B7F4756FCCC62B /* EviTrain.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C58EF01BC98D5647C7D0DB1A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					854FDCE5C537D356C95AD1F8 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F744E6A4357167713793D32B /* Build configuration list for PBXProject "EviTrain" */;
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				ja,
+			);
+			mainGroup = 4964D188094CAFF316B4C645;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E1442131FC921B0B4534ACDC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				854FDCE5C537D356C95AD1F8 /* EviTrain */,
+				6A73272EC14FC18FC2643BFB /* EviTrainTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AD447A2D91E5497768EAB91A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEEEF41D0D4D42ADD549EFB1 /* Assets.xcassets in Resources */,
+				9524BD9C9445A4E7821B3408 /* approvals.json in Resources */,
+				C0CBC03F607B91410B063D52 /* charts.json in Resources */,
+				29694C9218B2CF00D605751D /* summaries.json in Resources */,
+				276160F0B01008E5DDA6F874 /* themes.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7078D35B9038D05E9F3F0F5F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2FD46F124E9D5D213ADAC3A4 /* StudyDataTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEC2423EEF5EF7D0C49348B8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ADEEDFAC203CC615313CD5C0 /* EviTrainApp.swift in Sources */,
+				CE7C58033A937C5035E01621 /* ExerciseCatalog.swift in Sources */,
+				67E6963E6F842E6553EDC49D /* ExercisePickerView.swift in Sources */,
+				CA77C1995ECDB3B548B7E927 /* HistoryView.swift in Sources */,
+				A3C4F4AB3F0546CFCAE3F5EA /* InsightViews.swift in Sources */,
+				29469512E5A57FAA420B2429 /* Models.swift in Sources */,
+				F0D2453059771C56437EC8E9 /* RestTimer.swift in Sources */,
+				1B481FB0C43697C522A169C6 /* RestTimerBar.swift in Sources */,
+				AC8AD329AB94C2C9336E6110 /* ReviewView.swift in Sources */,
+				30710056EE7E664C98D95C07 /* SetRowView.swift in Sources */,
+				EA3E786C6F73DEA97A905002 /* SettingsView.swift in Sources */,
+				C0AAAA98BBF13A3A44B9973C /* Stats.swift in Sources */,
+				9A871432E8803D584A80EE3C /* StudiesView.swift in Sources */,
+				511F645E3C4AEDA1B57F5878 /* Study.swift in Sources */,
+				761AC2082075A6E01C8F760B /* StudyComponents.swift in Sources */,
+				BFC80C92CB63FD498F585E15 /* StudyDetailView.swift in Sources */,
+				427BACB13623E2E6154E7FCE /* StudyStore.swift in Sources */,
+				8E6F0F1ED6B79B5364B69EE2 /* WorkoutEditorView.swift in Sources */,
+				3AF5F8593D5908A80CA86A39 /* WorkoutHomeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		97A872AC80FAD55D3B9B8901 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 854FDCE5C537D356C95AD1F8 /* EviTrain */;
+			targetProxy = AC5E71D12CFA7858F5188A20 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		7B0212C2097F7EE35D858CD8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.evitrain.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EviTrain.app/EviTrain";
+			};
+			name = Release;
+		};
+		7E15F77E91B6836866A4473B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "エビトレ";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.evitrain;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		93C2D2DA409A67E7567C770E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9EA78D3F55EF6467F083F7D8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E9AAA808E043D0D0CBD7293B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "エビトレ";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.evitrain;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		EF569C72820F7C6AF2A24FEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.evitrain.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EviTrain.app/EviTrain";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0C675935FE69811A823E463A /* Build configuration list for PBXNativeTarget "EviTrainTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EF569C72820F7C6AF2A24FEE /* Debug */,
+				7B0212C2097F7EE35D858CD8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A960DFF2ACB9BC6BC004D9F9 /* Build configuration list for PBXNativeTarget "EviTrain" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E15F77E91B6836866A4473B /* Debug */,
+				E9AAA808E043D0D0CBD7293B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F744E6A4357167713793D32B /* Build configuration list for PBXProject "EviTrain" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9EA78D3F55EF6467F083F7D8 /* Debug */,
+				93C2D2DA409A67E7567C770E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C58EF01BC98D5647C7D0DB1A /* Project object */;
+}

@@ -21,14 +21,14 @@
 
 ## Mac でビルドする
 
-Xcode のプロジェクトファイルは [XcodeGen](https://github.com/yonaskolb/XcodeGen) で `project.yml` から生成します。
+`EviTrain.xcodeproj` は同梱済みなので、そのまま開けます。
 
 ```sh
-brew install xcodegen      # 初回だけ
 cd EviTrain
-xcodegen generate          # EviTrain.xcodeproj ができる
 open EviTrain.xcodeproj
 ```
+
+プロジェクトの設定は `project.yml` が元です。ファイルを追加・削除したときは [XcodeGen](https://github.com/yonaskolb/XcodeGen) で作り直します（`xcodegen generate`）。
 
 Xcode を開いたら、次の手順でビルドします。
 
