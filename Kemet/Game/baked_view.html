@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ベイクした広間（試作）</title>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:block;width:100%;height:100%}</style>
+</head>
+<body>
+<script type="module">
+// Blender で光を計算した広間を表示する（ライトマップ＋実写テクスチャ＋水面の反射）
+import * as THREE from 'three';
+import { GLTFLoader } from './lib/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from './lib/jsm/loaders/RGBELoader.js';
+import { Reflector } from './lib/jsm/objects/Reflector.js';
+import { EffectComposer } from './lib/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from './lib/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from './lib/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from './lib/jsm/postprocessing/OutputPass.js';
+
+const params = new URLSearchParams(location.search);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = +(params.get('exposure') || 1.0);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#050403');
+scene.fog = new THREE.FogExp2('#2a2216', 0.012);
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 200);
+
+const texLoader = new THREE.TextureLoader();
+function pbr(id, tint = '#ffffff') {
+  const t = k => { const x = texLoader.load(`assets/tex/${id}_${k}.jpg`); x.wrapS = x.wrapT = THREE.RepeatWrapping; x.anisotropy = 8; return x; };
+  const map = t('diff'); map.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map, normalMap: t('nor'), roughnessMap: t('rough'), color: tint, normalScale: new THREE.Vector2(1.3, 1.3) });
+}
+const MATS = {
+  wall: pbr('large_sandstone_blocks_01'),
+  pillar: pbr('sandstone_blocks_08'),
+  floor: pbr('red_sandstone_pavement', '#b8a58a'),
+  ceil: pbr('sandstone_blocks_08', '#9a8a72'),
+};
+
+const [gltf, light] = await Promise.all([
+  new GLTFLoader().loadAsync('assets/baked/hall.glb'),
+  new RGBELoader().loadAsync('assets/baked/hall_light.hdr'),
+]);
+light.channel = 1;          // 2組目のUV（ライトマップ用）を使う
+light.flipY = false;
+light.colorSpace = THREE.LinearSRGBColorSpace;
+// 書き出しは材質の順（壁・柱・床・天井）に分かれている
+const order = ['wall', 'pillar', 'floor', 'ceil'];
+let idx = 0;
+gltf.scene.traverse(o => {
+  if (!o.isMesh) return;
+  const m = MATS[order[idx++]].clone();
+  m.lightMap = light;
+  m.lightMapIntensity = Math.PI * +(params.get('lm') || 1);
+  o.material = m;
+});
+scene.add(gltf.scene);
+// 反射：部屋の中から撮った映り込み
+scene.add(new THREE.AmbientLight('#ffffff', 0.02));
+const cube = new THREE.CubeCamera(0.1, 100, new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType }));
+cube.position.set(0, 2, 16); scene.add(cube); cube.update(renderer, scene);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromCubemap(cube.renderTarget.texture).texture;
+scene.environmentIntensity = 0.25;
+
+// 水
+const water = new Reflector(new THREE.PlaneGeometry(18, 40), { textureWidth: 1024, textureHeight: 1024, color: '#8a8270', clipBias: 0.003 });
+water.rotation.x = -Math.PI / 2; water.position.set(0, 0.12, 18);
+scene.add(water);
+const murk = new THREE.Mesh(new THREE.PlaneGeometry(18, 40).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, uniforms: { time: { value: 0 } },
+  vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
+  fragmentShader: 'uniform float time; varying vec3 vW; void main(){ float r = sin(vW.x*1.7+time*.8)*sin(vW.z*1.3-time*.6) + sin((vW.x-vW.z)*3.1+time*1.4)*.4; gl_FragColor = vec4(vec3(.09,.11,.08)+r*.02, .38 + r*.05); }',
+}));
+murk.position.copy(water.position).setY(0.14); scene.add(murk);
+// 光の筋とちり（見た目だけ）
+for (const [x, z] of [[-2, 10], [3, 23], [-1.5, 32]]) {
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.3, 7, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#ffe7b0', transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  beam.position.set(x - 0.35, 3.5, z + 0.75); beam.rotation.x = 0.12; scene.add(beam);
+}
+const dp = []; for (let i = 0; i < 2500; i++) dp.push((Math.random() - .5) * 17, Math.random() * 7, Math.random() * 38 - 2);
+scene.add(new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(dp, 3)), new THREE.PointsMaterial({ color: '#fff0c8', size: 0.025, transparent: true, opacity: 0.5, depthWrite: false })));
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.6, 0.9));
+composer.addPass(new OutputPass());
+
+const shots = [
+  { p: [0.6, 1.9, -3.2], t: [-0.4, 1.3, 14] },
+  { p: [-3.0, 1.3, 5.5], t: [3.0, 1.6, 20] },
+  { p: [1.6, 1.5, 8.0], t: [6.5, 0.6, 16.0] },
+  { p: [0.0, 1.5, 24], t: [0.0, 1.8, 38] },
+];
+window.setShot = (i, t = 0) => { const s = shots[i]; camera.position.set(...s.p); camera.lookAt(...s.t); murk.material.uniforms.time.value = t; composer.render(); };
+window.READY = true;
+if (!location.hash.includes('still')) {
+  let i = 0; setInterval(() => { i = (i + 1) % shots.length; }, 4000);
+  (function loop() { requestAnimationFrame(loop); setShot(i, performance.now() / 1000); })();
+}
+</script>
+</body>
+</html>
