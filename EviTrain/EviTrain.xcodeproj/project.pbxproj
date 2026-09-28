@@ -20,6 +20,7 @@
 		427BACB13623E2E6154E7FCE /* StudyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C1A0184EA61FB492B4FE6F /* StudyStore.swift */; };
 		472C7FFD6B55F95EDDF212ED /* TrainingCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEAE2185A52825ED5FF7ADC /* TrainingCalendarView.swift */; };
 		511F645E3C4AEDA1B57F5878 /* Study.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02CE6A7A49F56DACC40190B /* Study.swift */; };
+		65C435B73B2FEFFA31BAFF55 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C645FBF9A7F81AE0611E7C11 /* ShareCardView.swift */; };
 		67E6963E6F842E6553EDC49D /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 009806BA9F8C25A7BF846092 /* ExercisePickerView.swift */; };
 		6B1CFFDF9DAC6E87D8D301F6 /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39026E0FC758A1FC7EF7BD5 /* MenuBuilder.swift */; };
 		73F7305688116ACB01205416 /* MenuViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F726B20270E8AB542D5DDF96 /* MenuViews.swift */; };
@@ -84,6 +85,7 @@
 		B63B3E846C2C119D9544F226 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		B9766D091F94F5793D667338 /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		C39026E0FC758A1FC7EF7BD5 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
+		C645FBF9A7F81AE0611E7C11 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		C929DABEDA4315CEBFDA11C4 /* RestTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimer.swift; sourceTree = "<group>"; };
 		CAADEFECC1A5DDED56EF1DC9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CDEAE2185A52825ED5FF7ADC /* TrainingCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingCalendarView.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 				0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */,
 				8481438880E7C9385245BD37 /* RestTimerBar.swift */,
 				171C70934EA6875BD4527E54 /* SetRowView.swift */,
+				C645FBF9A7F81AE0611E7C11 /* ShareCardView.swift */,
 				A0F2110D37F21B4F54E84146 /* WorkoutEditorView.swift */,
 				8D5BE91DBC3AF5C05ACC3AB7 /* WorkoutHomeView.swift */,
 			);
@@ -366,6 +369,7 @@
 				AC8AD329AB94C2C9336E6110 /* ReviewView.swift in Sources */,
 				30710056EE7E664C98D95C07 /* SetRowView.swift in Sources */,
 				EA3E786C6F73DEA97A905002 /* SettingsView.swift in Sources */,
+				65C435B73B2FEFFA31BAFF55 /* ShareCardView.swift in Sources */,
 				C0AAAA98BBF13A3A44B9973C /* Stats.swift in Sources */,
 				9A871432E8803D584A80EE3C /* StudiesView.swift in Sources */,
 				511F645E3C4AEDA1B57F5878 /* Study.swift in Sources */,

@@ -10,6 +10,7 @@ struct FinishCelebrationView: View {
     @State private var shown = 0
     @State private var headerVisible = false
     @State private var confetti = false
+    @State private var shareImage: Image?
 
     var body: some View {
         ZStack {
@@ -49,17 +50,29 @@ struct FinishCelebrationView: View {
             if confetti { ConfettiView().allowsHitTesting(false).ignoresSafeArea() }
         }
         .safeAreaInset(edge: .bottom) {
-            Button {
-                dismiss()
-            } label: {
-                Text("閉じる")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 14)
-                    .foregroundStyle(theme.onAccent)
-                    .background(theme.accent, in: RoundedRectangle(cornerRadius: 14))
+            HStack(spacing: 10) {
+                if let shareImage {
+                    ShareLink(item: shareImage, preview: SharePreview("エビトレの記録", image: shareImage)) {
+                        Label("画像でシェア", systemImage: "square.and.arrow.up")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 14)
+                            .background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .foregroundStyle(.tint)
+                }
+                Button {
+                    dismiss()
+                } label: {
+                    Text("閉じる")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 14)
+                        .foregroundStyle(theme.onAccent)
+                        .background(theme.accent, in: RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding()
             .background(.ultraThinMaterial)
         }
@@ -108,6 +121,7 @@ struct FinishCelebrationView: View {
         }
         withAnimation { shown = summary.results.count + 1 }
         if summary.recordCount > 0 { confetti = true }
+        if !summary.results.isEmpty { shareImage = ShareImage.render(summary: summary, theme: theme) }
     }
 }
 
