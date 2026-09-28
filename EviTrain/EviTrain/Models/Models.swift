@@ -49,6 +49,8 @@ final class Exercise {
     var createdAt: Date
     /// この種目の休憩時間（最後に選んだものを記憶）。nil なら設定の休憩時間
     var restSeconds: Double?
+    /// 種目のメモ（フォームの注意など）
+    var note: String?
 
     @Relationship(deleteRule: .nullify, inverse: \WorkoutEntry.exercise)
     var entries: [WorkoutEntry] = []
@@ -144,6 +146,8 @@ final class SetRecord {
     var isDone: Bool
     var completedAt: Date?
     var entry: WorkoutEntry?
+    /// きつさ（RPE 6〜10。任意）
+    var rpe: Double?
 
     init(order: Int, weight: Double = 0, reps: Int = 0, seconds: Double = 0, meters: Double = 0) {
         self.order = order

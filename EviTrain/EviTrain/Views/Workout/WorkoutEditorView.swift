@@ -264,6 +264,11 @@ private struct EntrySection: View {
                                 .font(.caption)
                                 .lineLimit(1)
                         }
+                        if let note = entry.exercise?.note, !note.isEmpty {
+                            Label(note, systemImage: "note.text")
+                                .font(.caption)
+                                .lineLimit(2)
+                        }
                     }
                     Spacer()
                     Menu {

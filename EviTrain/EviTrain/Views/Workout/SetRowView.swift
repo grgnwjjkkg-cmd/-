@@ -15,10 +15,18 @@ struct SetRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Text("\(number)")
-                .font(.subheadline.bold())
-                .frame(width: 22)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 2) {
+                Text("\(number)")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.secondary)
+                if let rpe = set.rpe {
+                    Text("RPE\(rpe.short)")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.tint)
+                        .fixedSize()
+                }
+            }
+            .frame(width: 30)
 
             fields
 
@@ -39,6 +47,13 @@ struct SetRowView: View {
         .sheet(isPresented: $showingPlates) { PlateCalculatorView(target: set.weight) }
     }
 
+    /// RPE の説明（あと何回できそうだったか）
+    private func rpeLabel(_ value: Double) -> String {
+        let left = 10 - value
+        let text: String = left == 0 ? "限界" : "あと\(left.short)回できそう"
+        return "RPE \(value.short)（\(text)）"
+    }
+
     /// 長押しで出す、入力を速くするための操作。
     @ViewBuilder
     private var quickActions: some View {
@@ -57,6 +72,14 @@ struct SetRowView: View {
         case .distanceTime:
             Button("タイム −0.05秒", systemImage: "minus") { set.seconds = max(0, set.seconds - 0.05) }
             Button("タイム +0.05秒", systemImage: "plus") { set.seconds += 0.05 }
+        }
+        Menu("きつさ（RPE）", systemImage: "gauge.with.dots.needle.67percent") {
+            ForEach([10.0, 9.5, 9.0, 8.5, 8.0, 7.0, 6.0], id: \.self) { value in
+                Button(rpeLabel(value)) { set.rpe = value }
+            }
+            if set.rpe != nil {
+                Button("消す", role: .destructive) { set.rpe = nil }
+            }
         }
         Divider()
         if tracking == .weightReps && set.weight > 20 {

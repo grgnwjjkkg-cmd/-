@@ -10,6 +10,7 @@ struct BackupFile: Codable {
         var tags: [String]
         var isCustom: Bool
         var restSeconds: Double?
+        var note: String? = nil
     }
 
     struct SetData: Codable {
@@ -19,6 +20,7 @@ struct BackupFile: Codable {
         var seconds: Double
         var meters: Double
         var isDone: Bool
+        var rpe: Double? = nil
     }
 
     struct EntryData: Codable {
@@ -105,10 +107,11 @@ enum BackupService {
 
         // 標準種目は休憩時間を覚えているものだけ、自作種目はすべて保存する
         var exerciseData: [BackupFile.ExerciseData] = []
-        for exercise in exercises where exercise.isCustom || exercise.restSeconds != nil {
+        for exercise in exercises where exercise.isCustom || exercise.restSeconds != nil || exercise.note != nil {
             exerciseData.append(BackupFile.ExerciseData(name: exercise.name, group: exercise.groupRaw,
                                                         tracking: exercise.trackingRaw, tags: exercise.tags,
-                                                        isCustom: exercise.isCustom, restSeconds: exercise.restSeconds))
+                                                        isCustom: exercise.isCustom, restSeconds: exercise.restSeconds,
+                                                        note: exercise.note))
         }
 
         var workoutData: [BackupFile.WorkoutData] = []
@@ -119,7 +122,8 @@ enum BackupService {
                 var sets: [BackupFile.SetData] = []
                 for set in entry.sortedSets {
                     sets.append(BackupFile.SetData(order: set.order, weight: set.weight, reps: set.reps,
-                                                   seconds: set.seconds, meters: set.meters, isDone: set.isDone))
+                                                   seconds: set.seconds, meters: set.meters, isDone: set.isDone,
+                                                   rpe: set.rpe))
                 }
                 entries.append(BackupFile.EntryData(order: entry.order, exercise: name,
                                                     restSeconds: entry.restSeconds, sets: sets))
@@ -171,6 +175,7 @@ enum BackupService {
         for info in backup.exercises {
             let target = exercise(named: info.name)
             if target.restSeconds == nil { target.restSeconds = info.restSeconds }
+            if target.note == nil { target.note = info.note }
         }
 
         let existingStarts = ((try? context.fetch(FetchDescriptor<Workout>())) ?? []).map(\.startedAt)
@@ -193,6 +198,7 @@ enum BackupService {
                     let set = SetRecord(order: setData.order, weight: setData.weight, reps: setData.reps,
                                         seconds: setData.seconds, meters: setData.meters)
                     set.isDone = setData.isDone
+                    set.rpe = setData.rpe
                     context.insert(set)
                     set.entry = entry
                 }

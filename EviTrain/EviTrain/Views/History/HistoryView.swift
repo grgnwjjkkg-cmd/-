@@ -58,6 +58,9 @@ private struct WorkoutHistoryList: View {
                     TrainingCalendarView(workouts: workouts, selectedDay: $selectedDay)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
+                    WeeklyVolumeChart(workouts: workouts)
+                        .listRowInsets(EdgeInsets(top: 12, leading: 0, bottom: 0, trailing: 0))
+                        .listRowBackground(Color.clear)
                 }
                 Section {
                     ForEach(shownWorkouts) { workout in
@@ -204,6 +207,14 @@ struct ExerciseProgressView: View {
                 }
             }
 
+            Section {
+                TextField("フォームの注意、使う器具の設定など", text: noteBinding, axis: .vertical)
+            } header: {
+                Text("メモ")
+            } footer: {
+                Text("トレーニング中、この種目の名前の下に表示されます。")
+            }
+
             let studies = studyStore.related(to: exercise)
             if !studies.isEmpty {
                 Section("この種目に関係する研究") {
@@ -219,6 +230,10 @@ struct ExerciseProgressView: View {
         }
         .themedBackground()
         .navigationTitle(exercise.name)
+    }
+
+    private var noteBinding: Binding<String> {
+        Binding(get: { exercise.note ?? "" }, set: { exercise.note = $0.isEmpty ? nil : $0 })
     }
 
     private var fastestSpeed: Double? {
