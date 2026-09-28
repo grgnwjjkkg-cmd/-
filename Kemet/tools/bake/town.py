@@ -53,25 +53,25 @@ for s in (-1, 1):
 L.box('city', 'stone', (-50, 6.6, 0), (2.2, 1.2, 7.2), collide=False)     # 門の上の梁
 
 # ---------- 神殿 ----------
-tw, td, th = 11.2, 5, 14
+tw, td, th = 12.5, 6, 22   # 塔門（人の12倍の高さ）
 for s in (-1, 1):
     L.tbox('temple', 'blocks', (s * (14 - tw / 2), th / 2, -38), (tw, th, td), taper=0.82)
     L.box('temple', 'stone', (s * (14 - tw / 2), th + 0.3, -38), (tw * 0.86, 0.6, td * 0.95), collide=False)
-    L.box('temple', 'stone', (s * 3.2, 2.5, -38), (0.8, 5, 4))
-L.box('temple', 'blocks', (0, 7.5, -38), (6.8, 5, 4), collide=False)
-L.box('temple', 'stone', (0, 10.3, -38), (7.4, 0.8, 4.5), collide=False)
+    L.box('temple', 'stone', (s * 3.2, 4, -38), (0.8, 8, 4))
+L.box('temple', 'blocks', (0, 11, -38), (6.8, 6, 4), collide=False)
+L.box('temple', 'stone', (0, 14.3, -38), (7.4, 0.8, 4.5), collide=False)
 for x in (-9, 9):   # オベリスク
-    L.tbox('temple', 'stone', (x, 7.1, -31), (1.2, 13, 1.2), taper=0.6)
+    L.tbox('temple', 'stone', (x, 10.6, -31), (1.6, 20, 1.6), taper=0.6)
     L.box('temple', 'stone', (x, 0.3, -31), (2.2, 0.6, 2.2))
 for z in (-46, -52, -58, -64):
     for x in (-7, 7):
-        L.cyl('temple', 'stone', x, z, 0, 8, 0.72, 0.64)
-        L.cyl('temple', 'stone', x, z, 8, 1.4, 0.64, 1.2, collide=False)
-        L.box('temple', 'stone', (x, 9.6, z), (2.5, 0.4, 2.5), collide=False)
+        L.cyl('temple', 'stone', x, z, 0, 12, 1.05, 0.95)
+        L.cyl('temple', 'stone', x, z, 12, 1.8, 0.95, 1.7, collide=False)
+        L.box('temple', 'stone', (x, 14.1, z), (3.6, 0.6, 3.6), collide=False)
 for x1, z1, x2, z2 in ((-13, -41, -13, -70), (13, -41, 13, -70), (-13, -70, 13, -70)):
     cx, cz, ln = (x1 + x2) / 2, (z1 + z2) / 2, math.hypot(x2 - x1, z2 - z1)
-    if abs(x2 - x1) < 0.01: L.box('temple', 'blocks', (cx, 3.5, cz), (1.2, 7, ln))
-    else: L.box('temple', 'blocks', (cx, 3.5, cz), (ln, 7, 1.2))
+    if abs(x2 - x1) < 0.01: L.box('temple', 'blocks', (cx, 5, cz), (1.2, 10, ln))
+    else: L.box('temple', 'blocks', (cx, 5, cz), (ln, 10, 1.2))
 L.box('temple', 'stone', (0, 0.6, -66), (3, 1.2, 2))                     # 祭壇
 L.box('temple', 'stone', (6, 0.2, -27), (3, 0.4, 3), collide=False)      # 神託の壺の台
 

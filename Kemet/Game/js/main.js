@@ -803,6 +803,8 @@ class Game {
           <button class="btn sub" id="warpTown">町へ戻る</button>
           <button class="btn sub" id="warpGiza">ギザへワープ</button>
           <button class="btn sub" id="warpPyramid">ピラミッドの中へ</button>
+          <button class="btn sub" id="warpSunken">海中遺跡へ</button>
+          <button class="btn sub" id="warpSky">天空都市へ</button>
           <button class="btn sub" id="addAnkh">+1000 アンク</button></div>`;
     }
     this.openPanel(`<div class="pHead"><h2>メニュー</h2><button class="close">✕</button></div>${tabs}${body}`, root => {
@@ -820,7 +822,7 @@ class Game {
           if (!save.weapon) { this.addItem('travel_sword'); save.weapon = 'travel_sword'; }
         }
         this.paused = true;
-        await this.enterZone(to, false, { necropolis: 'town', town: 'necropolis', giza: 'necropolis', pyramid: 'giza' }[to]);
+        await this.enterZone(to, false, { necropolis: 'town', town: 'necropolis', giza: 'necropolis', pyramid: 'giza', sunken: 'town', sky: 'giza' }[to]);
         this.paused = false;
         this.refreshHUD();
       };
@@ -828,6 +830,8 @@ class Game {
       root.querySelector('#warpTown')?.addEventListener('click', () => warp('town'));
       root.querySelector('#warpGiza')?.addEventListener('click', () => warp('giza'));
       root.querySelector('#warpPyramid')?.addEventListener('click', () => warp('pyramid'));
+      root.querySelector('#warpSunken')?.addEventListener('click', () => warp('sunken'));
+      root.querySelector('#warpSky')?.addEventListener('click', () => warp('sky'));
       root.querySelector('#addAnkh')?.addEventListener('click', () => { this.gainAnkh(1000); this.openMenu('settings'); });
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };
