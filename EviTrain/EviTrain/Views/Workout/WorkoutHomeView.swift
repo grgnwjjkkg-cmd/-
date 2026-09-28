@@ -3,20 +3,34 @@ import SwiftUI
 
 /// 「記録」タブ。進行中のトレーニングがあればそれを表示し、なければ開始画面を出す。
 struct WorkoutHomeView: View {
+    @Environment(\.modelContext) private var context
     @Query(filter: #Predicate<Workout> { $0.finishedAt == nil }, sort: \Workout.startedAt)
     private var activeWorkouts: [Workout]
     @State private var finishSummary: FinishSummary?
+    /// 破棄の途中で、もう画面に出さないトレーニング
+    @State private var discarding: PersistentIdentifier?
 
     var body: some View {
         NavigationStack {
-            if let workout = activeWorkouts.first {
-                WorkoutEditorView(workout: workout, isActive: true) { finishSummary = $0 }
+            if let workout = activeWorkouts.first(where: { $0.persistentModelID != discarding }) {
+                WorkoutEditorView(workout: workout, isActive: true) { finishSummary = $0 } onDiscard: { discard($0) }
             } else {
                 StartScreen()
             }
         }
         .fullScreenCover(item: $finishSummary) { summary in
             FinishCelebrationView(summary: summary)
+        }
+    }
+
+    /// 先に画面を開始画面へ切り替え、少し待ってから削除する。
+    private func discard(_ workout: Workout) {
+        discarding = workout.persistentModelID
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            context.delete(workout)
+            try? context.save()
+            discarding = nil
         }
     }
 }

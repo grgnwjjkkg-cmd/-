@@ -55,6 +55,8 @@ struct BackupFile: Codable {
         var sourcePMID: String?
         var weeks: Int?
         var perWeek: Int?
+        /// 古いバックアップには無いので省略可
+        var firstUsedAt: Date? = nil
         var items: [MenuItemData]
     }
 
@@ -137,7 +139,7 @@ enum BackupService {
             }
             menuData.append(BackupFile.MenuData(name: menu.name, note: menu.note, isFavorite: menu.isFavorite,
                                                 sourcePMID: menu.sourcePMID, weeks: menu.weeks, perWeek: menu.perWeek,
-                                                items: items))
+                                                firstUsedAt: menu.firstUsedAt, items: items))
         }
         let weights: [BodyWeight] = (try? context.fetch(FetchDescriptor<BodyWeight>(sortBy: [SortDescriptor(\.date)]))) ?? []
         let weightData = weights.map { BackupFile.BodyWeightData(date: $0.date, kilograms: $0.kilograms) }
@@ -207,6 +209,7 @@ enum BackupService {
             let menu = MenuTemplate(name: data.name, note: data.note, sourcePMID: data.sourcePMID,
                                     weeks: data.weeks, perWeek: data.perWeek)
             menu.isFavorite = data.isFavorite
+            menu.firstUsedAt = data.firstUsedAt
             context.insert(menu)
             for itemData in data.items {
                 let item = MenuItem(order: itemData.order, exercise: exercise(named: itemData.exercise),

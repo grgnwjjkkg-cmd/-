@@ -112,6 +112,7 @@ struct FinishCelebrationView: View {
     }
 
     /// 見出し → 種目を0.45秒ごとに1つずつ表示。自己ベストがあれば紙吹雪。
+    @MainActor
     private func play() async {
         withAnimation(.spring(duration: 0.5, bounce: 0.35)) { headerVisible = true }
         try? await Task.sleep(for: .milliseconds(500))

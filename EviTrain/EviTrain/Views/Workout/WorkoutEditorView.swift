@@ -12,6 +12,8 @@ struct WorkoutEditorView: View {
     let isActive: Bool
     /// 終了したときに呼ばれる（振り返りの内容を渡す）。終了後はこの画面が閉じるため、結果の表示は呼び出し元で行う。
     var onFinish: (FinishSummary) -> Void = { _ in }
+    /// 破棄するとき、呼び出し元が画面を切り替えてから削除する（消したデータを画面が読まないように）
+    var onDiscard: ((Workout) -> Void)?
 
     @State private var showingPicker = false
     @State private var papersFor: Exercise?
@@ -134,8 +136,12 @@ struct WorkoutEditorView: View {
         .confirmationDialog("記録を破棄しますか？", isPresented: $confirmingDiscard, titleVisibility: .visible) {
             Button("破棄する", role: .destructive) {
                 restTimer.stop()
-                context.delete(workout)
-                try? context.save()
+                if let onDiscard {
+                    onDiscard(workout)
+                } else {
+                    context.delete(workout)
+                    try? context.save()
+                }
             }
         }
         .confirmationDialog("チェックしていないセットがあります", isPresented: $confirmingUnfinished, titleVisibility: .visible) {

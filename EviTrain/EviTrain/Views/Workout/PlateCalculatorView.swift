@@ -90,6 +90,14 @@ private struct PlateStackView: View {
         }
     }
 
+    private func plateView(_ plate: Double, maxHeight: CGFloat) -> some View {
+        let ratio: CGFloat = 0.35 + 0.65 * CGFloat(min(plate, 25)) / 25
+        let width: CGFloat = plate >= 10 ? 14 : 9
+        return RoundedRectangle(cornerRadius: 3)
+            .fill(color(for: plate))
+            .frame(width: width, height: maxHeight * ratio)
+    }
+
     var body: some View {
         GeometryReader { proxy in
             let height = proxy.size.height
@@ -97,9 +105,7 @@ private struct PlateStackView: View {
                 RoundedRectangle(cornerRadius: 2).fill(.gray.opacity(0.6)).frame(width: 36, height: 10)
                 RoundedRectangle(cornerRadius: 2).fill(.gray).frame(width: 8, height: 26)
                 ForEach(Array(plates.enumerated()), id: \.offset) { _, plate in
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(color(for: plate))
-                        .frame(width: plate >= 10 ? 14 : 9, height: height * CGFloat(0.35 + 0.65 * min(plate, 25) / 25))
+                    plateView(plate, maxHeight: height)
                 }
                 RoundedRectangle(cornerRadius: 2).fill(.gray.opacity(0.6)).frame(width: 30, height: 10)
                 Spacer(minLength: 0)

@@ -208,9 +208,15 @@ struct MenuEditorView: View {
         }
         .confirmationDialog("「\(menu.name)」を削除しますか？", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("削除する", role: .destructive) {
-                context.delete(menu)
-                try? context.save()
+                // 先に画面を閉じてから削除する（消したメニューを画面が読まないように）
+                let target = menu
+                let modelContext = self.context
                 dismiss()
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(500))
+                    modelContext.delete(target)
+                    try? modelContext.save()
+                }
             }
         }
     }
