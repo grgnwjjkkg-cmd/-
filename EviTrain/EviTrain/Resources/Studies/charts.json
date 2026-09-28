@@ -1,0 +1,212 @@
+[
+ {
+  "pmid": "28229575",
+  "chart_title": "30m走の記録の伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "ジャンプ練習をした選手",
+    "value": 4.22,
+    "kind": "practice"
+   },
+   {
+    "label": "いつもの練習だけの選手",
+    "value": 1.08,
+    "kind": "compare"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は10週間での30m走の成績の伸び（各グループの平均）。",
+  "quote": "the increase in F30 performance (4.22% for PLYO vs. 1.08% for CON)"
+ },
+ {
+  "pmid": "32032229",
+  "chart_title": "坂道ダッシュ6週間の最高スピード",
+  "unit": "m/秒",
+  "bars": [
+   {
+    "label": "練習前",
+    "value": 8.75,
+    "kind": "before"
+   },
+   {
+    "label": "練習後",
+    "value": 9.07,
+    "kind": "after"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "上り下りの坂でダッシュ練習をしたグループの、最高スピードの平均。",
+  "quote": "The U+D group increased their MRS by 3.7% (from 8.75 ± 0.72 to 9.07 ± 0.64 m·s-1, p < 0.05)"
+ },
+ {
+  "pmid": "41662339",
+  "chart_title": "ジャンプの高さの伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "動かす自重トレをした人",
+    "value": 5.4,
+    "kind": "practice"
+   },
+   {
+    "label": "止めて耐える自重トレをした人",
+    "value": 4.1,
+    "kind": "practice"
+   },
+   {
+    "label": "トレーニングなしの人",
+    "value": 0.7,
+    "kind": "compare"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は4週間での垂直跳びの高さの伸び（各グループの平均）。",
+  "quote": "Vertical jump height improved by 5.4% in the dynamic group and 4.1% in the isometric group compared with 0.7% in the control"
+ },
+ {
+  "pmid": "36193438",
+  "chart_title": "ボールを投げる速さの伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "やや重めでゆっくり筋トレ",
+    "value": 18.7,
+    "kind": "practice"
+   },
+   {
+    "label": "軽めで速く筋トレ",
+    "value": 18.3,
+    "kind": "practice"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は5週間での投げる速さの伸び。どちらのやり方でも同じくらい伸びた。",
+  "quote": "throwing velocity (18.7% and 18.3%, p < 0.01) in Group 1 and 2 respectively"
+ },
+ {
+  "pmid": "25457418",
+  "chart_title": "5mダッシュのタイム（12週間後）",
+  "unit": "秒",
+  "bars": [
+   {
+    "label": "切り返しも入れた練習（SAQ）",
+    "value": 1.4,
+    "kind": "practice"
+   },
+   {
+    "label": "まっすぐ走るだけの練習",
+    "value": 1.46,
+    "kind": "compare"
+   }
+  ],
+  "lower_is_better": true,
+  "note": "数字は12週間後の5mダッシュのタイム（各グループの平均）。短いほど速い。",
+  "quote": "the 5m sprint had significantly improved (P<.05) in the SAQ training group compared to the control group (1.40±0.13 vs. 1.46±0.12s, respectively)"
+ },
+ {
+  "pmid": "41017018",
+  "chart_title": "シャトルランの回数の伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "体育で短いインターバル走をした子",
+    "value": 13.7,
+    "kind": "practice"
+   },
+   {
+    "label": "ふつうの体育だけの子",
+    "value": 4.8,
+    "kind": "compare"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は6週間での20mシャトルランの回数の伸び（各グループの平均）。",
+  "quote": "The increase in the EXP group (13.7% in laps completed) was significantly higher than in the CON group (4.8%) (p < 0.05)."
+ },
+ {
+  "pmid": "24533491",
+  "chart_title": "準備運動の工夫とジャンプの伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "止めて伸ばす動的ストレッチ",
+    "value": 5.3,
+    "kind": "practice"
+   },
+   {
+    "label": "動きながらの動的ストレッチ",
+    "value": 3.4,
+    "kind": "practice"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は8週間での反動をつけたジャンプの高さの伸び。何もしない群は変化なし。",
+  "quote": "CMJ height (SDS: 5.3%; ADS: 3.4%; p<0.05)"
+ },
+ {
+  "pmid": "28240710",
+  "chart_title": "ストレッチ後のジャンプの高さ",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "30秒×3回、休みを入れて（4分後）",
+    "value": 8.1,
+    "kind": "practice"
+   },
+   {
+    "label": "90秒続けて（直後）",
+    "value": -17.5,
+    "kind": "practice"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字はストレッチしなかった脚と比べた、片脚ジャンプの高さの変化。",
+  "quote": "intermittent stretching increased CMJ height by 8.1 ± 2.0%, 4 minutes into recovery (2.2 ± 2.0 cm, 95% confidence interval [CI]: 1.0-3.4 cm, p = 0.001), whereas continuous stretching decreased CMJ height by 17.5 ± 3.3% immediately after"
+ },
+ {
+  "pmid": "40717201",
+  "chart_title": "前の手のパンチの速さの伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "片手ずつの筋トレ",
+    "value": 22.3,
+    "kind": "practice"
+   },
+   {
+    "label": "片手＋両手の組み合わせ",
+    "value": 20.1,
+    "kind": "practice"
+   },
+   {
+    "label": "両手での筋トレ",
+    "value": 9.6,
+    "kind": "compare"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は8週間でのパンチの最高スピードの伸び（各グループの平均）。",
+  "quote": "the unilateral group (Δ22.3%) and hybrid group (Δ20.1%) exhibited significantly greater peak speed gains than the bilateral group (Δ9.6%, p < 0.05)"
+ },
+ {
+  "pmid": "42479598",
+  "chart_title": "片脚で押す力の伸び",
+  "unit": "%",
+  "bars": [
+   {
+    "label": "片脚ずつ筋トレした人",
+    "value": 22.7,
+    "kind": "practice"
+   },
+   {
+    "label": "両脚で筋トレした人",
+    "value": 13.7,
+    "kind": "compare"
+   }
+  ],
+  "lower_is_better": false,
+  "note": "数字は8週間での片脚レッグプレスの最大重量の伸び（各グループの平均）。",
+  "quote": "the increase in unilateral 1RM strength was greater ( p < 0.01) for UG (22.7 ± 7.0%) than for BG (13.7 ± 8.3%)"
+ }
+]

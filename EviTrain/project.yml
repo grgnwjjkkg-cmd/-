@@ -29,3 +29,28 @@ targets:
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+  EviTrainTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - EviTrainTests
+    dependencies:
+      - target: EviTrain
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.evitrain.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  EviTrain:
+    build:
+      targets:
+        EviTrain: all
+        EviTrainTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - EviTrainTests
+    archive:
+      config: Release

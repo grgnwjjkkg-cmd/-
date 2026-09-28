@@ -9,7 +9,7 @@ struct WorkoutHomeView: View {
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt, order: .reverse)
     private var finishedWorkouts: [Workout]
     @State private var finishedRecords: [Stats.Record]?
-    @Environment(PaperStore.self) private var paperStore
+    @Environment(StudyStore.self) private var studyStore
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
 
     var body: some View {
@@ -47,9 +47,9 @@ struct WorkoutHomeView: View {
                 .listRowBackground(Color.clear)
             }
 
-            if let paper = paperStore.paperOfTheDay() {
+            if let study = studyStore.studyOfTheDay() {
                 Section {
-                    DailyPaperCard(paper: paper)
+                    DailyStudyCard(study: study)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }

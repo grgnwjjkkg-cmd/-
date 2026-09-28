@@ -76,7 +76,7 @@ struct WorkoutEditorView: View {
             ExercisePickerView { add($0) }
         }
         .sheet(item: $papersFor) { exercise in
-            NavigationStack { RelatedPapersView(exercise: exercise) }
+            NavigationStack { RelatedStudiesView(exercise: exercise) }
         }
         .confirmationDialog("記録を破棄しますか？", isPresented: $confirmingDiscard, titleVisibility: .visible) {
             Button("破棄する", role: .destructive) {
@@ -172,7 +172,7 @@ private struct EntrySection: View {
                 }
                 Spacer()
                 Menu {
-                    Button("関連する論文", systemImage: "doc.text.magnifyingglass", action: onShowPapers)
+                    Button("関係する研究", systemImage: "doc.text.magnifyingglass", action: onShowPapers)
                     Button("種目を削除", systemImage: "trash", role: .destructive, action: onDelete)
                 } label: {
                     Image(systemName: "ellipsis.circle")

@@ -7,9 +7,9 @@ enum AppSettings {
 }
 
 enum Appearance: String, CaseIterable, Identifiable {
-    case dark = "ダーク"
-    case light = "ライト"
     case system = "端末に合わせる"
+    case light = "ライト"
+    case dark = "ダーク"
 
     var id: String { rawValue }
 
@@ -22,79 +22,40 @@ enum Appearance: String, CaseIterable, Identifiable {
     }
 }
 
-/// ホームに出す「今日の研究」カード。読むだけでなく、その場で設定に反映できる。
-struct DailyPaperCard: View {
-    let paper: Paper
+/// ホームに出す「今日の研究」カード。答え・★・ひとことだけで分かるようにする。
+struct DailyStudyCard: View {
+    let study: Study
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("今日の研究", systemImage: "lightbulb.max.fill")
-                .font(.caption.bold())
-                .foregroundStyle(.tint)
-            NavigationLink {
-                PaperDetailView(paper: paper)
-            } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(paper.title)
-                        .font(.headline)
-                        .multilineTextAlignment(.leading)
-                    if let practical = paper.practical {
-                        Text(practical)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(3)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Text(paper.citation)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
+        NavigationLink {
+            StudyDetailView(study: study)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("今日の研究", systemImage: "lightbulb.max.fill")
+                    .font(.caption.bold())
+                    .foregroundStyle(Palette.main)
+                Text(study.headline)
+                    .font(.headline)
+                    .multilineTextAlignment(.leading)
+                HStack(spacing: 8) {
+                    VerdictChip(verdict: study.verdictKind)
+                    StarsView(stars: study.stars, font: .caption2)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(study.oneLine)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                Text("\(study.citation.firstAuthor)（\(study.citation.year)）・ \(study.design)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
-            .buttonStyle(.plain)
-            if let action = paper.action {
-                PaperActionButton(action: action)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.main.opacity(0.35)))
         }
-        .padding()
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.tint.opacity(0.35)))
-    }
-}
-
-/// 論文の内容を設定に反映するボタン。反映済みならチェックを表示する。
-struct PaperActionButton: View {
-    @AppStorage(RestTimer.defaultSecondsKey) private var restSeconds = 90.0
-    @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
-    let action: PaperAction
-
-    private var isApplied: Bool {
-        switch action.knownKind {
-        case .restTimer: restSeconds == action.value
-        case .weeklySets: weeklySetTarget == Int(action.value)
-        case nil: false
-        }
-    }
-
-    var body: some View {
-        if action.knownKind != nil {
-            Button {
-                switch action.knownKind {
-                case .restTimer: restSeconds = action.value
-                case .weeklySets: weeklySetTarget = Int(action.value)
-                case nil: break
-                }
-            } label: {
-                Label(isApplied ? "設定済み" : action.label,
-                      systemImage: isApplied ? "checkmark.circle.fill" : "bolt.fill")
-                    .font(.subheadline.bold())
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(isApplied)
-            .sensoryFeedback(.success, trigger: isApplied)
-        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -108,7 +69,7 @@ struct WeeklySetsCard: View {
             HStack {
                 Label("今週のセット数", systemImage: "chart.bar.fill")
                     .font(.caption.bold())
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(Palette.main)
                 Spacer()
                 Text("目標 各\(target)セット")
                     .font(.caption)
@@ -122,7 +83,7 @@ struct WeeklySetsCard: View {
                     ProgressView(value: Double(min(item.sets, target)), total: Double(max(target, 1)))
                     Text("\(item.sets)/\(target)")
                         .font(.caption.monospacedDigit())
-                        .foregroundStyle(item.sets >= target ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+                        .foregroundStyle(item.sets >= target ? AnyShapeStyle(Palette.main) : AnyShapeStyle(.secondary))
                         .frame(width: 44, alignment: .trailing)
                 }
             }

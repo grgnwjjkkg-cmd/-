@@ -3,11 +3,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
-    @Environment(PaperStore.self) private var paperStore
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
-    @AppStorage(PaperStore.feedURLKey) private var feedURL = ""
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
-    @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.dark
+    @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt)
     private var workouts: [Workout]
 
@@ -24,7 +22,7 @@ struct SettingsView: View {
                 } header: {
                     Text("トレーニング")
                 } footer: {
-                    Text("論文の「設定にする」ボタンからも変更できます。")
+                    Text("目標を決めると、記録タブに部位ごとの今週のセット数が表示されます。")
                 }
 
                 Section("表示") {
@@ -33,29 +31,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section {
-                    TextField("https://example.com/papers.json", text: $feedURL)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Button {
-                        Task { await paperStore.refresh() }
-                    } label: {
-                        if paperStore.isLoading {
-                            ProgressView()
-                        } else {
-                            Text("論文を読み込む")
-                        }
-                    }
-                    .disabled(feedURL.isEmpty || paperStore.isLoading)
-                    if let error = paperStore.lastError {
-                        Text(error).font(.caption).foregroundStyle(.red)
-                    }
-                } header: {
-                    Text("論文データ")
-                } footer: {
-                    Text("論文要約サイトが配信するJSONのURLです。空欄のときはアプリに入っているサンプルを表示します。")
-                }
 
                 Section("データ") {
                     ShareLink(item: CSVExport.make(workouts), preview: SharePreview("トレーニング記録.csv")) {
@@ -66,7 +41,7 @@ struct SettingsView: View {
 
                 Section("このアプリについて") {
                     LabeledContent("バージョン", value: Bundle.main.appVersion)
-                    Text("記録は端末の中だけに保存され、広告はありません。論文の要約は研究の紹介であり、医学的な助言ではありません。")
+                    Text("記録は端末の中だけに保存され、広告はありません。論文の要約は研究の紹介であり、医療・治療についての助言ではありません。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

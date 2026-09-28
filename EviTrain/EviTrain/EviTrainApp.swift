@@ -4,7 +4,7 @@ import SwiftUI
 @main
 struct EviTrainApp: App {
     private let container: ModelContainer
-    @State private var paperStore = PaperStore()
+    @State private var studyStore = StudyStore()
     @State private var restTimer = RestTimer()
 
     init() {
@@ -19,16 +19,15 @@ struct EviTrainApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environment(paperStore)
+                .environment(studyStore)
                 .environment(restTimer)
-                .task { await paperStore.refresh() }
         }
         .modelContainer(container)
     }
 }
 
 struct RootView: View {
-    @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.dark
+    @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
 
     var body: some View {
         TabView {
@@ -36,7 +35,7 @@ struct RootView: View {
                 .tabItem { Label("記録", systemImage: "figure.strengthtraining.traditional") }
             HistoryView()
                 .tabItem { Label("履歴", systemImage: "chart.xyaxis.line") }
-            PapersView()
+            StudiesView()
                 .tabItem { Label("論文", systemImage: "doc.text.magnifyingglass") }
             SettingsView()
                 .tabItem { Label("設定", systemImage: "gearshape") }

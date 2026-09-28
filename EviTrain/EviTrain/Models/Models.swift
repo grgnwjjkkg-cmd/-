@@ -69,9 +69,6 @@ final class Exercise {
         get { TrackingType(rawValue: trackingRaw) ?? .weightReps }
         set { trackingRaw = newValue.rawValue }
     }
-
-    /// 論文検索に使うキーワード（タグ＋部位名）。
-    var paperKeywords: Set<String> { Set(tags).union([group.rawValue]) }
 }
 
 @Model

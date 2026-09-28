@@ -121,7 +121,7 @@ private struct ExerciseHistoryList: View {
 
 /// 種目ごとの伸び（グラフ）と、関連する論文。
 struct ExerciseProgressView: View {
-    @Environment(PaperStore.self) private var paperStore
+    @Environment(StudyStore.self) private var studyStore
     let exercise: Exercise
 
     var body: some View {
@@ -150,14 +150,14 @@ struct ExerciseProgressView: View {
                 }
             }
 
-            let papers = paperStore.related(to: exercise)
-            if !papers.isEmpty {
+            let studies = studyStore.related(to: exercise)
+            if !studies.isEmpty {
                 Section("この種目に関係する研究") {
-                    ForEach(papers) { paper in
+                    ForEach(studies) { study in
                         NavigationLink {
-                            PaperDetailView(paper: paper)
+                            StudyDetailView(study: study)
                         } label: {
-                            PaperRow(paper: paper)
+                            StudyRow(study: study)
                         }
                     }
                 }
