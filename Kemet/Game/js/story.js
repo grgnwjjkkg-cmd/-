@@ -17,13 +17,13 @@ export const PEOPLE = {
 
 // 町にいる人（model は assets/chars/<model>.glb、anim は待機の動き）
 export const TOWN_NPCS = [
-  { id: 'nefer', model: 'nefer', pos: [0, -54], face: 0, anim: 'Idle_Talking_Loop' },
-  { id: 'amen', model: 'amen', pos: [-5, 9], face: 2.5, anim: 'Idle_Loop', scale: 0.78 },
-  { id: 'tawi', model: 'tawi', pos: [11, 5], face: -1.6, anim: 'Idle_Loop' },
-  { id: 'hatra', model: 'hatra', pos: [-12, -7], face: 1.6, anim: 'Idle_Talking_Loop' },
-  { id: 'seti', model: 'seti', pos: [41, 1], face: -1.4, anim: 'Sitting_Idle_Loop', sit: true },
-  { id: 'kash', model: 'kash', pos: [-45, 3.5], face: 1.57, anim: 'Sword_Idle' },
-  { id: 'kem', model: 'kem', pos: [-22, -22], face: 0.6, anim: 'Idle_Loop' },
+  { id: 'nefer', model: 'human_nefer', pos: [0, -54], face: 0, anim: 'Idle_Talking_Loop' },
+  { id: 'amen', model: 'human_amen', pos: [-5, 9], face: 2.5, anim: 'Idle_Loop' },
+  { id: 'tawi', model: 'human_tawi', pos: [11, 5], face: -1.6, anim: 'Idle_Loop' },
+  { id: 'hatra', model: 'human_hatra', pos: [-12, -7], face: 1.6, anim: 'Idle_Talking_Loop' },
+  { id: 'seti', model: 'human_seti', pos: [41, 1], face: -1.4, anim: 'Sitting_Idle_Loop', sit: true },
+  { id: 'kash', model: 'human_kash', pos: [-45, 3.5], face: 1.57, anim: 'Sword_Idle' },
+  { id: 'kem', model: 'human_kem', pos: [-22, -22], face: 0.6, anim: 'Idle_Loop' },
 ];
 
 /** 探索で見つかる物（場所ごと） */

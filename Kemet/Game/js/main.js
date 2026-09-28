@@ -112,7 +112,7 @@ class Game {
     const set = p => { bar.style.width = Math.round(p * 100) + '%'; };
     await this.assets.init(set);
     const models = [...new Set(Object.values(WEAPONS).map(w => w.model))];
-    await this.assets.preload([HERO_MODEL, ...TOWN_NPCS.map(n => n.model), 'bandit', 'mummy', 'jackal'], models, set);
+    await this.assets.preload([HERO_MODEL, ...TOWN_NPCS.map(n => n.model), 'human_bandit', 'human_mummy', 'jackal'], models, set);
     await this.makeIcons(models);
     await this.enterZone(this.save.zone, true);
     $('loadText').textContent = 'ナイルのほとり、古代の都メンネフェル。';
@@ -222,6 +222,10 @@ class Game {
     }
     this.makeFinds(name);
     this.setupPyramid(!initial);
+    if (!initial && ['necropolis', 'giza'].includes(name) && !this.save.flags.tipLookUp) {
+      this.save.flags.tipLookUp = true;
+      setTimeout(() => this.toast('画面の右側を上下になぞると、見上げたり見下ろしたりできる'), 1200);
+    }
     for (const el of [...$('labels').children]) if (!this.npcs.some(n => n.label === el)) el.remove();
     this.inside = 0;
     if (!initial) { audio.play(this.zone.music); await wait(100); $('fade').classList.remove('on'); }
@@ -434,6 +438,11 @@ class Game {
       if (k === 'j' && !this.paused) this.player.attack(this.stats);
       if (k === 'k' && !this.paused) this.player.roll();
       if (k === 'e') this.interact();
+      // 矢印キーでカメラ（上下＝見上げる・見下ろす、左右＝回す）
+      if (k === 'arrowup') this.camPitch = Math.max(-0.75, this.camPitch - 0.12);
+      if (k === 'arrowdown') this.camPitch = Math.min(1.2, this.camPitch + 0.12);
+      if (k === 'arrowleft') { this.camYaw += 0.15; this.lastDrag = this.time; }
+      if (k === 'arrowright') { this.camYaw -= 0.15; this.lastDrag = this.time; }
     });
     window.addEventListener('keyup', e => { keys.delete(e.key.toLowerCase()); upd(); });
   }
@@ -950,7 +959,8 @@ class Game {
     }
 
     if (!this.paused) {
-      this.player.update(dt, this.input, this.camYaw + Math.PI, this.stats, this);
+      const inp = this.underwater ? { ...this.input, x: this.input.x * 0.62, y: this.input.y * 0.62 } : this.input;
+      this.player.update(dt, inp, this.camYaw + Math.PI, this.stats, this);
       this.enemies = this.enemies.filter(e => { const keep = e.update(dt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
       // 敵どうしが重ならないように
       for (let i = 0; i < this.enemies.length; i++) for (let j = i + 1; j < this.enemies.length; j++) {
@@ -1079,16 +1089,18 @@ class Game {
       this.scene.environmentRotation.y = z.skyRot;
       this.scene.backgroundRotation.y = z.skyRot;
     }
-    const wantBg = look.sky && z.sky ? z.sky : this.darkBg || (this.darkBg = new THREE.Color('#050302'));
+    if (look.bg && !this.bgCache?.[look.bg]) (this.bgCache ||= {})[look.bg] = new THREE.Color(look.bg);
+    const wantBg = look.sky && z.sky ? z.sky : look.bg ? this.bgCache[look.bg] : this.darkBg || (this.darkBg = new THREE.Color('#050302'));
     if (this.scene.background !== wantBg) this.scene.background = wantBg;
     // 場所ごとの曲
     const region = z.region(p);
     if (!this.titleMode && !this.boss && region.name !== this.lastRegion) { this.lastRegion = region.name; audio.play(region.music); }
     // 環境音と足音の種類
-    const amb = region.name === 'town' || this.zone.name === 'town' ? 'town' : region.kind === 'outdoor' ? 'desert' : region.kind === 'cave' ? 'cave' : 'tomb';
+    const amb = region.name === 'town' || this.zone.name === 'town' ? 'town' : region.kind === 'outdoor' ? 'desert' : region.kind === 'cave' ? 'cave' : region.kind === 'underwater' ? 'underwater' : 'tomb';
     audio.ambience(this.titleMode ? (this.zone.name === 'town' ? 'town' : 'desert') : amb);
     const inWater = (z.waters || []).some(w => p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1);
-    audio.surface = inWater ? 'water' : region.kind === 'outdoor' && amb !== 'town' ? 'sand' : 'stone';
+    audio.surface = inWater ? 'water' : (region.kind === 'outdoor' && amb !== 'town') || amb === 'underwater' ? 'sand' : 'stone';
+    this.underwater = amb === 'underwater';
   }
 
   updateHUD() {

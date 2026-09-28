@@ -202,14 +202,14 @@ class Level:
             f = bm.faces.new((a, b, c, d)); f.smooth = True; f[lay] = 1
             for lp in f.loops: lp[uvl].uv = (lp.vert.co.x / 7.0, lp.vert.co.y / 7.0)
 
-    def mesh_file(self, group, mat, path, loc, rot=0.0, scale=1.0, collide=None):
-        """別に作った形（OBJ）を置く。loc=ゲーム座標（足もと）、rot=y軸まわり"""
+    def mesh_file(self, group, mat, path, loc, rot=0.0, scale=1.0, collide=None, tilt=0.0, roll=0.0):
+        """別に作った形（OBJ）を置く。loc=ゲーム座標（足もと）、rot=y軸まわり、tilt=前後に倒す、roll=横に倒す"""
         before = set(bpy.data.objects)
         bpy.ops.wm.obj_import(filepath=path, forward_axis='NEGATIVE_Z', up_axis='Y')
         objs = [o for o in bpy.data.objects if o not in before]
         bm = self.bm(group, mat)
         from mathutils import Matrix
-        M = Matrix.Translation(B(*loc)) @ Matrix.Rotation(rot, 4, 'Z') @ Matrix.Scale(scale, 4)
+        M = Matrix.Translation(B(*loc)) @ Matrix.Rotation(rot, 4, 'Z') @ Matrix.Rotation(tilt, 4, 'X') @ Matrix.Rotation(roll, 4, 'Y') @ Matrix.Scale(scale, 4)
         for o in objs:
             tmp = o.data.copy(); tmp.transform(M @ o.matrix_world)
             for poly in tmp.polygons: poly.material_index = 0

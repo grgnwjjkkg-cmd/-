@@ -3,7 +3,7 @@
 # BLENDER に blender の場所を入れておく（例: BLENDER=/Applications/Blender.app/Contents/MacOS/Blender）
 BLENDER=${BLENDER:-blender}
 SAMPLES=${1:-160}; shift
-LEVELS=${*:-"necropolis giza pyramid"}
+LEVELS=${*:-"necropolis giza pyramid sunken town"}
 for lv in $LEVELS; do
   echo "== $lv"
   "$BLENDER" -b --python "tools/bake/$lv.py" -- "$SAMPLES" || exit 1

@@ -187,9 +187,10 @@ export class NPC {
 // 敵
 // ------------------------------------------------------------
 export const ENEMY_TYPES = {
-  bandit: { name: '盗賊', model: 'bandit', hp: 48, atk: 9, speed: 3.4, reach: 1.8, aggro: 13, windup: 0.45, cooldown: 1.1, weapon: 'Dagger', attack: 'Sword_Attack', run: 'Jog_Fwd_Loop', exp: 18, ankh: 25 },
-  mummy: { name: 'ミイラ', model: 'mummy', hp: 64, atk: 12, speed: 1.5, reach: 1.6, aggro: 10, windup: 0.6, cooldown: 1.4, attack: 'Punch_Cross', run: 'Walk_Loop', runSpeed: 0.75, exp: 24, ankh: 30 },
+  bandit: { name: '盗賊', model: 'human_bandit', hp: 48, atk: 9, speed: 3.4, reach: 1.8, aggro: 13, windup: 0.45, cooldown: 1.1, weapon: 'Dagger', attack: 'Sword_Attack', run: 'Jog_Fwd_Loop', exp: 18, ankh: 25 },
+  mummy: { name: 'ミイラ', model: 'human_mummy', hp: 64, atk: 12, speed: 1.5, reach: 1.6, aggro: 10, windup: 0.6, cooldown: 1.4, attack: 'Punch_Cross', run: 'Walk_Loop', runSpeed: 0.75, exp: 24, ankh: 30 },
   jackal: { name: '盗賊団の頭「黒ジャッカル」', model: 'jackal', hp: 320, atk: 17, speed: 3.9, reach: 2.2, aggro: 16, windup: 0.5, cooldown: 0.8, weapon: 'Sword_2', weaponTint: '#e0a95a', attack: 'Sword_Attack', run: 'Jog_Fwd_Loop', exp: 160, ankh: 400, scale: 1.2, boss: true },
+  guardian: { name: '王墓の番人', model: 'jackal', hp: 260, atk: 16, speed: 3.6, reach: 2.2, aggro: 12, windup: 0.5, cooldown: 0.9, weapon: 'Scythe', weaponTint: '#9aa0c8', attack: 'Sword_Attack', run: 'Jog_Fwd_Loop', exp: 140, ankh: 300, scale: 1.15 },
 };
 
 export class Enemy {

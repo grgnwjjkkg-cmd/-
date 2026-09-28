@@ -14,15 +14,44 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 GAME = os.path.join(HERE, '..', '..', 'Game', 'assets')
 D = LocationService.get_user_data()
 
+RACE = lambda af, ca, as_: {"african": af, "caucasian": ca, "asian": as_}
+M_ = lambda g, age, mus, w, h=0.5, prop=0.8, race=None: {"gender": g, "age": age, "muscle": mus, "weight": w, "proportions": prop, "height": h,
+                                                     "cupsize": 0.5, "firmness": 0.5, "race": race or RACE(0.45, 0.35, 0.2)}
+WHITE, CREAM, OCHRE, INDIGO = (0.93, 0.9, 0.82), (0.9, 0.84, 0.7), (0.72, 0.52, 0.28), (0.18, 0.2, 0.36)
+GOLD_BLUE = [(0.1, 0.32, 0.62), (0.85, 0.66, 0.25), (0.06, 0.45, 0.42), (0.85, 0.66, 0.25)]
+BLACK_HAIR = (0.045, 0.036, 0.03)
+# 服：kilt=腰布／長い服（top_f・bottom_f は身長に対する高さ。dress=True は胸から下をおおう服）
 CHARS = {
     # 主人公：若い探検家。日焼けした肌、短い黒髪、白い腰布と青と金の首飾り
-    'hero': dict(
-        macro={"gender": 1.0, "age": 0.42, "muscle": 0.72, "weight": 0.42, "proportions": 0.85, "height": 0.62,
-               "cupsize": 0.5, "firmness": 0.5, "race": {"african": 0.45, "caucasian": 0.35, "asian": 0.2}},
-        skin='young_african_male', eyes='brown', brows='eyebrow001', hair='short02', hair_color=(0.16, 0.12, 0.1),
-        kilt=dict(top=1.02, bottom=0.60, color=(0.93, 0.9, 0.82)), collar=dict(colors=[(0.1, 0.32, 0.62), (0.85, 0.66, 0.25), (0.06, 0.45, 0.42), (0.85, 0.66, 0.25)]),
-        armbands=True, skin_tex=1024,
-    ),
+    'hero': dict(macro=M_(1.0, 0.42, 0.72, 0.42, 0.62, 0.85), skin='young_african_male', hair='short02', hair_color=(0.16, 0.12, 0.1),
+                 kilt=dict(top_f=0.564, bottom_f=0.331, color=WHITE), collar=GOLD_BLUE, armbands=True),
+    # 神官長ネフェル：白い長い服、黒いかつら、金と青の首飾り
+    'nefer': dict(macro=M_(0.0, 0.5, 0.45, 0.4, 0.62, 0.9, RACE(0.4, 0.4, 0.2)), skin='young_african_female', hair='bob02', hair_color=BLACK_HAIR,
+                  kilt=dict(top_f=0.765, bottom_f=0.07, color=WHITE, dress=True, belt_f=0.6, belt=(0.85, 0.66, 0.25)), collar=GOLD_BLUE, armbands=True),
+    # 市場の少年アメン
+    'amen': dict(macro=M_(1.0, 0.16, 0.5, 0.45, 0.5, 0.6), skin='young_african_male', hair='short01', hair_color=BLACK_HAIR,
+                 kilt=dict(top_f=0.56, bottom_f=0.36, color=CREAM)),
+    # 菓子売りのタウィ：黄土色の長い服
+    'tawi': dict(macro=M_(0.0, 0.62, 0.4, 0.62, 0.45, 0.7, RACE(0.5, 0.3, 0.2)), skin='middleage_african_female', hair='long01', hair_color=BLACK_HAIR,
+                 kilt=dict(top_f=0.76, bottom_f=0.07, color=OCHRE, dress=True, belt_f=0.6, belt=(0.5, 0.2, 0.12)), collar=[(0.7, 0.25, 0.15), (0.9, 0.8, 0.5)]),
+    # 武器商人ハトラ：がっしりした体、茶色の腰布、革の帯
+    'hatra': dict(macro=M_(1.0, 0.58, 0.65, 0.72, 0.55, 0.7), skin='middleage_african_male', hair='short04', hair_color=BLACK_HAIR,
+                  kilt=dict(top_f=0.57, bottom_f=0.3, color=(0.55, 0.4, 0.26)), armbands=True),
+    # 漁師セティ：年配、やせた体、短い腰布
+    'seti': dict(macro=M_(1.0, 0.85, 0.45, 0.35, 0.5, 0.7, RACE(0.55, 0.3, 0.15)), skin='old_african_male', hair='short01', hair_color=(0.45, 0.43, 0.4),
+                 kilt=dict(top_f=0.56, bottom_f=0.37, color=CREAM)),
+    # 西門の衛兵カシュ：たくましい体、藍色のふちの腰布、首飾りと腕輪
+    'kash': dict(macro=M_(1.0, 0.4, 0.9, 0.5, 0.75, 0.9), skin='young_african_male', hair='short02', hair_color=BLACK_HAIR,
+                 kilt=dict(top_f=0.565, bottom_f=0.32, color=WHITE, belt=INDIGO), collar=[(0.85, 0.66, 0.25), (0.6, 0.15, 0.1), (0.85, 0.66, 0.25)], armbands=True),
+    # 老学者ケム：年寄り、白い長い衣、髪なし
+    'kem': dict(macro=M_(1.0, 0.95, 0.35, 0.45, 0.45, 0.6, RACE(0.4, 0.35, 0.25)), skin='old_african_male', hair=None,
+                kilt=dict(top_f=0.57, bottom_f=0.06, color=CREAM, belt=(0.4, 0.3, 0.2)), collar=[(0.9, 0.86, 0.74), (0.8, 0.74, 0.6), (0.9, 0.86, 0.74), (0.55, 0.4, 0.25)]),
+    # 盗賊：黒っぽい腰布、腕輪
+    'bandit': dict(macro=M_(1.0, 0.45, 0.7, 0.5, 0.55, 0.7, RACE(0.5, 0.35, 0.15)), skin='young_african_male', hair='short04', hair_color=BLACK_HAIR,
+                   kilt=dict(top_f=0.565, bottom_f=0.3, color=(0.28, 0.22, 0.18), belt=(0.6, 0.15, 0.1)), armbands=True),
+    # ミイラ：全身に包帯
+    'mummy': dict(macro=M_(1.0, 0.6, 0.35, 0.25, 0.6, 0.7), skin='old_african_male', hair=None, bandage=True,
+                  kilt=dict(top_f=0.56, bottom_f=0.36, color=(0.62, 0.55, 0.42))),
 }
 
 ID = sys.argv[sys.argv.index('--') + 1] if '--' in sys.argv else 'hero'
@@ -50,8 +79,9 @@ body = HumanService.create_human(macro_detail_dict=C['macro'])
 HumanService.add_builtin_rig(body, 'game_engine')
 HumanService.set_character_skin(os.path.join(D, f"skins/{C['skin']}/{C['skin']}.mhmat"), body, skin_type='MAKESKIN')
 parts = {}
+C.setdefault('brows', 'eyebrow001'); C.setdefault('skin_tex', 1024)
 for f, t in ((f"eyes/low-poly/low-poly.mhclo", 'Eyes'), (f"eyebrows/{C['brows']}/{C['brows']}.mhclo", 'Eyebrows'),
-             ("eyelashes/eyelashes01/eyelashes01.mhclo", 'Eyelashes'), (f"hair/{C['hair']}/{C['hair']}.mhclo", 'Hair')):
+             ("eyelashes/eyelashes01/eyelashes01.mhclo", 'Eyelashes')) + (((f"hair/{C['hair']}/{C['hair']}.mhclo", 'Hair'),) if C.get('hair') else ()):
     parts[t] = HumanService.add_mhclo_asset(os.path.join(D, f), body, asset_type=t, subdiv_levels=0, material_type='MAKESKIN')
 rig = body.parent
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
@@ -175,7 +205,7 @@ if C.get('collar'):
             ring.append((hit if hit else aim) + nrm * 0.008)
         rings.append(ring)
     collar = ring_mesh('Collar', rings)
-    cols = C['collar']['colors']
+    cols = C['collar']
     img = bpy.data.images.new('beads', 8, 64); px = []
     for y in range(64):
         c = cols[(y * len(cols)) // 64]; k = 0.75 + 0.25 * math.sin((y % (64 // len(cols))) / (64 / len(cols)) * math.pi)
@@ -235,40 +265,52 @@ joints = {pb.name: (RW @ pb.head, RW @ pb.tail) for pb in rig.pose.bones}
 bpy.context.view_layer.update()
 dg = bpy.context.evaluated_depsgraph_get()
 bvh = BVHTree.FromObject(body, dg)
-
-
+H = max(v.co.z for v in body.data.vertices)
+ARM_GROUPS = {body.vertex_groups[n].index for n in [g.name for g in body.vertex_groups] if any(k in n for k in ('upperarm', 'lowerarm', 'hand', 'thumb', 'index', 'middle', 'ring', 'pinky'))}
+def is_arm(v): return sum(g.weight for g in v.groups if g.group in ARM_GROUPS) > 0.3
+# 腕をのぞいた体（服の形を測るため。T の字の腕に服が当たらないように）
+torso = bmesh.new(); torso.from_mesh(body.data)
+torso.verts.ensure_lookup_table()
+bmesh.ops.delete(torso, geom=[torso.verts[v.index] for v in body.data.vertices if is_arm(v)], context='VERTS')
+bvh_t = BVHTree.FromBMesh(torso); torso.free()
 
 
 if C.get('kilt'):
-    K = C['kilt']; n = 40; rings = []
-    for yi in range(9):
-        z = K['top'] + (K['bottom'] - K['top']) * yi / 8
+    K = C['kilt']; n = 48; rings = []
+    K['top'] = K.get('top_f', 0.56) * H; K['bottom'] = K.get('bottom_f', 0.33) * H
+    NR = 14 if K.get('dress') else 9
+    for yi in range(NR):
+        z = K['top'] + (K['bottom'] - K['top']) * yi / (NR - 1)
         ring = []
         for j in range(n):
             a = j / n * math.tau
             d = Vector((math.sin(a), -math.cos(a), 0))
-            hit = surface(Vector((0, 0, z)) + d * 0.6, -d)
+            hit = bvh_t.ray_cast(Vector((0, 0, z)) + d * 0.6, -d)[0]
             r = (hit - Vector((0, 0, z))).length if hit else 0.2
             ring.append(r)
         # 脚のすきまのへこみを埋める（となりの角度となめらかに）
         for _ in range(6):
             ring = [max(ring[j], (ring[j - 1] + ring[(j + 1) % n]) / 2) for j in range(n)]
-        rings.append([Vector((0, 0, z)) + Vector((math.sin(j / n * math.tau), -math.cos(j / n * math.tau), 0)) * (ring[j] + 0.014 + 0.04 * (yi / 8) ** 1.3) for j in range(n)])
+        rings.append([Vector((0, 0, z)) + Vector((math.sin(j / n * math.tau), -math.cos(j / n * math.tau), 0)) * (ring[j] + 0.014 + (0.08 if K.get('dress') else 0.04) * (yi / (NR - 1)) ** 1.3) for j in range(n)])
     # 上から下へ半径がちぢまないようにする（脚のすきまに入りこまない）
-    for yi in range(1, 9):
+    waist_i = 0 if not K.get('dress') else min(range(NR), key=lambda i: abs(rings[i][0].z - K.get('belt_f', 0.6) * H))
+    for yi in range(max(1, waist_i + 1), NR):
         for j in range(n):
             c = Vector((0, 0, rings[yi][j].z)); pr = (rings[yi - 1][j] - Vector((0, 0, rings[yi - 1][j].z))).length
             v = rings[yi][j] - c
             if v.length < pr: rings[yi][j] = c + v.normalized() * pr
     kilt = ring_mesh('Kilt', rings)
-    kilt.data.materials.append(mat('linen', (1, 1, 1), 0.9, img=pleats(256, 8, K['color'], 0.22)))
+    kilt.data.materials.append(mat('linen', (1, 1, 1), 0.9, img=pleats(256, 8, K['color'], 0.22 if not K.get('dress') else 0.12)))
     kilt.data.materials[0].use_backface_culling = False
     bmb = bmesh.new(); bmb.from_mesh(body.data)
-    hide = [v for v in bmb.verts if K['bottom'] + 0.08 < v.co.z < K['top'] - 0.03 and abs(v.co.x) < 0.3]
+    arm_v = {v.index for v in body.data.vertices if is_arm(v)}
+    hide = [v for v in bmb.verts if K['bottom'] + 0.08 < v.co.z < K['top'] - 0.03 and v.index not in arm_v]
     bmesh.ops.delete(bmb, geom=hide, context='VERTS'); bmb.to_mesh(body.data); bmb.free()
     # 腰ひも
-    belt = ring_mesh('Belt', [[p + (p - Vector((0, 0, p.z))).normalized() * 0.006 + Vector((0, 0, dz)) for p in rings[0]] for dz in (0.02, -0.035)])
-    belt.data.materials.append(mat('belt', (0.55, 0.36, 0.18), 0.6))
+    br = rings[waist_i]
+    belt = ring_mesh('Belt', [[p + (p - Vector((0, 0, p.z))).normalized() * 0.008 + Vector((0, 0, dz)) for p in br] for dz in (0.02, -0.035)])
+    belt.data.materials.append(mat('belt', K.get('belt', (0.55, 0.36, 0.18)), 0.6))
+    K['waist'] = br[0].z
     clothes += [kilt, belt]
 
 
@@ -293,6 +335,7 @@ if C.get('armbands'):
 def skirt_weights(o, top, bottom):
     for g in ('pelvis', 'thigh_l', 'thigh_r'): o.vertex_groups.get(g) or o.vertex_groups.new(name=g)
     for v in o.data.vertices:
+        if v.co.z > top + 0.001: continue   # 腰より上（長い服の胸の部分）は体の重みのまま
         t = max(0.0, min(1.0, (top - v.co.z) / (top - bottom)))
         side = max(-1.0, min(1.0, v.co.x / 0.12))
         leg = 0.92 * t ** 1.1
@@ -306,7 +349,13 @@ skirts = [o for o in clothes if o.name in ('Kilt', 'Belt')]
 for o in clothes:
     if o in skirts or o.name == 'Collar': continue
     transfer_weights(o)
-for o in skirts: skirt_weights(o, C['kilt']['top'] + 0.05, C['kilt']['bottom'])
+for o in skirts:
+    K = C['kilt']
+    if K.get('dress'):
+        transfer_weights(o)
+        skirt_weights(o, K['waist'], K['bottom'])
+    else:
+        skirt_weights(o, K['top'] + 0.05, K['bottom'])
 meshes += [o for o in clothes if o not in meshes]
 
 # ---------------------------------------------------------------- 6. 骨に乗せる・材質を軽くする
@@ -349,10 +398,26 @@ def simple(o, size, rough=0.6, alpha=False, tint=None, name=None):
 
 
 simple(body, C['skin_tex'], 0.55, name='skin')
+if C.get('bandage'):   # ミイラ：肌の画像を、ななめに巻いた古い包帯の画像に取りかえる
+    W = 512; img = bpy.data.images.new('bandage', W, W); px = [0.0] * (W * W * 4)
+    rnd = random.Random(7)
+    strip = [0.75 + 0.25 * rnd.random() for _ in range(64)]
+    dirt = [[rnd.random() for _ in range(33)] for _ in range(33)]
+    for y in range(W):
+        for x in range(W):
+            u = (y + x * 0.35) / 16.0; k = int(u) % 64; f = u - int(u)
+            edge = 0.72 if f < 0.08 or f > 0.94 else 1.0
+            dd = dirt[y * 32 // W][x * 32 // W] * 0.35 + (rnd.random() - 0.5) * 0.1
+            v = strip[k] * edge * (1 - dd * 0.6)
+            i = (y * W + x) * 4
+            px[i:i + 4] = [0.66 * v, 0.58 * v, 0.44 * v, 1]
+    img.pixels = px
+    body.data.materials[0].node_tree.nodes['Image Texture'].image = img
+
 simple(parts['Eyes'], 256, 0.1, name='eyes')
 simple(parts['Eyebrows'], 256, 0.9, alpha=True, name='brows')
 simple(parts['Eyelashes'], 256, 0.9, alpha=True, name='lashes')
-simple(parts['Hair'], 512, 0.7, alpha=True, tint=C['hair_color'], name='hair')
+if 'Hair' in parts: simple(parts['Hair'], 512, 0.7, alpha=True, tint=C['hair_color'], name='hair')
 
 arm['realHuman'] = 1
 
@@ -360,7 +425,7 @@ arm['realHuman'] = 1
 for o in bpy.data.objects: o.select_set(o is arm or o in meshes)
 bpy.context.view_layer.objects.active = arm
 bpy.ops.export_scene.gltf(filepath=OUT, export_format='GLB', use_selection=True, export_animations=False,
-                          export_extras=True, export_image_format='AUTO', export_jpeg_quality=85, export_apply=False,
+                          export_extras=True, export_image_format='WEBP', export_image_quality=82, export_apply=False,
                           export_skins=True, export_morph=False)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(TMP, f'{ID}.blend'))
 print('WROTE', OUT, os.path.getsize(OUT) // 1024, 'KB')

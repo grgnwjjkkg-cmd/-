@@ -26,7 +26,30 @@ const LOOKS = {
   outdoor: { sun: 2.2, hemi: 0.8, lantern: 0, torch: 0, exposure: 0.6, fog: ['#d8c6a4', 260, 2600], env: 0.8, sky: true },
   indoor: { sun: 0, hemi: 0.18, lantern: 6, torch: 14, exposure: 1.25, fog: ['#120c07', 8, 80], env: 0.15, sky: false },
   cave: { sun: 0, hemi: 0.14, lantern: 7, torch: 14, exposure: 1.3, fog: ['#0e0b08', 5, 50], env: 0.12, sky: false },
+  underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0b3848' },
 };
+
+// 水の中：水面でゆれた光の模様（コースティクス）を、床や壁に重ねる
+function addCaustics(m, uni) {
+  m.onBeforeCompile = sh => {
+    sh.uniforms.cTime = uni.cTime;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vWPos; uniform float cTime;
+float cst(vec2 p) {
+  float c = 0.0;
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec2 q = p * (0.55 + fi * 0.37) + vec2(cTime * (0.3 + fi * 0.13), -cTime * (0.21 + fi * 0.07));
+    c += abs(sin(q.x + sin(q.y * 1.3 + cTime * 0.5)) * sin(q.y + sin(q.x * 1.1 - cTime * 0.4)));
+  }
+  return pow(1.0 - c / 3.0, 5.0);
+}`).replace('#include <dithering_fragment>', `#include <dithering_fragment>
+float up = clamp(1.0 - vWPos.y * 0.06, 0.2, 1.0);
+gl_FragColor.rgb += gl_FragColor.rgb * cst(vWPos.xz * 0.9) * 2.2 * up;`);
+  };
+}
 
 export async function loadBakedZone(name, game) {
   const base = `assets/levels/${name}/`;
@@ -68,6 +91,19 @@ export async function loadBakedZone(name, game) {
     o.material = matCache.get(key);
     o.matrixAutoUpdate = false; o.updateMatrix();
   });
+  const underwater = meta.regions.some(r => r.kind === 'underwater');
+  const cUni = { cTime: { value: 0 } };
+  if (underwater) for (const m of matCache.values()) if (m.map) addCaustics(m, cUni);
+  // 泡：足もとから立ちのぼる
+  let bubbles = null;
+  if (underwater) {
+    const N = 260, pos = new Float32Array(N * 3), spd = new Float32Array(N);
+    for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 30; pos[i * 3 + 1] = Math.random() * 14; pos[i * 3 + 2] = (Math.random() - 0.5) * 30; spd[i] = 0.6 + Math.random() * 1.2; }
+    const geo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    bubbles = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#cfefff', size: 0.07, transparent: true, opacity: 0.6, depthWrite: false }));
+    bubbles.userData.spd = spd; bubbles.frustumCulled = false;
+    root.add(bubbles);
+  }
 
   // 当たり判定
   const C = new Colliders();
@@ -204,6 +240,16 @@ export async function loadBakedZone(name, game) {
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
       exitFx.forEach((m, i) => { m.material.opacity = 0.12 + Math.sin(t * 2 + i) * 0.05; });
+      cUni.cTime.value = t;
+      if (bubbles && player) {
+        const a = bubbles.geometry.attributes.position, sp = bubbles.userData.spd, P = player.pos;
+        for (let i = 0; i < sp.length; i++) {
+          let y = a.getY(i) + sp[i] * dt, x = a.getX(i) + Math.sin(t * 2 + i) * dt * 0.15;
+          if (y > 14 || Math.abs(x - P.x) > 16 || Math.abs(a.getZ(i) - P.z) > 16) { y = 0; x = P.x + (Math.random() - 0.5) * 30; a.setZ(i, P.z + (Math.random() - 0.5) * 30); }
+          a.setX(i, x); a.setY(i, y);
+        }
+        a.needsUpdate = true;
+      }
       if (seal?.open && seal.mesh.visible) { seal.t += dt; seal.mesh.position.y = seal.h / 2 - seal.t * 1.4; if (seal.t * 1.4 > seal.h) seal.mesh.visible = false; }
       if (props) {
         props.water.userData.water.uniforms.time.value = t;

@@ -129,8 +129,8 @@ M['gateBlock'] = [-48.5, -47.5, -3.5, 3.5]
 M['regions'] = [
     {'name': 'town', 'box': [-120, 140, -130, 130], 'kind': 'outdoor', 'music': 'town'},
 ]
-M['spawns'] = {'default': {'x': 0, 'z': 30, 'face': math.pi}, 'necropolis': {'x': -44, 'z': 0, 'face': math.pi / 2}}
-M['exits'] = [{'x': -53, 'z': 0, 'r': 3, 'to': 'necropolis', 'requires': 'gateOpen'}]
+M['spawns'] = {'default': {'x': 0, 'z': 30, 'face': math.pi}, 'necropolis': {'x': -44, 'z': 0, 'face': math.pi / 2}, 'sunken': {'x': 40, 'z': -1.5, 'face': -math.pi / 2}}
+M['exits'] = [{'x': -53, 'z': 0, 'r': 3, 'to': 'necropolis', 'requires': 'gateOpen'}, {'x': 45.6, 'z': 1, 'r': 1.3, 'to': 'sunken'}]   # 船着き場の先から海中遺跡へ
 M['enemies'] = []
 M['chests'] = []
 M['waters'] = []

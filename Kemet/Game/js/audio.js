@@ -295,6 +295,7 @@ export class Audio {
     town: { wet: 0.03, music: 0.5, events: ['bird', 'bird', 'clatter'], rate: 0.25 },
     tomb: { wet: 0.55, music: 0.28, events: ['drip', 'drip', 'steps', 'stone', 'sigh'], rate: 0.2 },
     cave: { wet: 0.75, music: 0.25, events: ['drip', 'drip', 'drip', 'rumble', 'stone', 'steps'], rate: 0.28 },
+    underwater: { wet: 0.8, music: 0.22, events: ['bubble', 'bubble', 'bubble', 'moan'], rate: 0.35 },
   };
 
   ambience(kind) {
@@ -336,7 +337,11 @@ export class Audio {
       const l = c.createOscillator(), d = c.createGain(); l.frequency.value = wobble; d.gain.value = vol * 0.7; l.connect(d).connect(g.gain); l.start(t);
       o.connect(g).connect(gain); o.start(t);
     };
-    if (kind === 'desert' || kind === 'town') {
+    if (kind === 'underwater') {   // 水の中：こもった低い音と、ゆっくりうねる水の音
+      noiseLayer('lowpass', 260, 0.9, 0.16, 0.05, 90, 0.04);
+      noiseLayer('lowpass', 70, 0.7, 0.2);
+      hum(55, 0.03, 0.04);
+    } else if (kind === 'desert' || kind === 'town') {
       const k = kind === 'town' ? 0.55 : 1;
       noiseLayer('bandpass', 520, 0.8, 0.10 * k, 0.07, 260, 0.05);   // 風の音（ゆっくり強くなったり弱くなったり）
       noiseLayer('bandpass', 1700, 2.5, 0.025 * k, 0.11, 700, 0.09); // 砂が流れるさらさら音
@@ -381,6 +386,8 @@ export class Audio {
       case 'sigh': noise(t, 'bandpass', 500, 300, 4, 2.6, 0.02); break;
       case 'rumble': noise(t, 'lowpass', 90, 40, 0.7, 3.2, 0.12); tone(t, 38, 30, 3, 0.05); break;
       case 'sand': noise(t, 'bandpass', 2500, 1200, 1.2, 1.8 + Math.random(), 0.035); break;
+      case 'bubble': { const n = 2 + Math.floor(Math.random() * 5); for (let i = 0; i < n; i++) { const f = 300 + Math.random() * 500; tone(t + i * 0.07, f, f * 2.6, 0.06, 0.04); } break; }
+      case 'moan': tone(t, 90 + Math.random() * 40, 60, 3.5, 0.03, 'triangle'); break;   // 遠くで何かが鳴くような低い音
       case 'bird': { const f = 2600 + Math.random() * 1200, n = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) tone(t + i * 0.13, f, f * 1.25, 0.08, 0.02, 'triangle'); break; }
       case 'clatter': tone(t, 700, 500, 0.08, 0.02, 'triangle'); tone(t + 0.12, 620, 480, 0.08, 0.015, 'triangle'); break;
     }

@@ -227,10 +227,10 @@ export function buildTown() {
   return {
     name: 'town', music: 'town', root, colliders: C,
     spawn: { x: 0, z: 30, face: Math.PI },
-    arrivals: { necropolis: { x: -44, z: 0, face: Math.PI / 2 } },
+    arrivals: { necropolis: { x: -44, z: 0, face: Math.PI / 2 }, sunken: { x: 40, z: -1.5, face: -Math.PI / 2 } },
     pot: { x: 6, z: -27, object: pot, glow },
     gate: { object: gate, block: gateBlock, x: -50, z: 0 },
-    exits: [{ x: -53, z: 0, r: 3, to: 'necropolis', requires: 'gateOpen' }],
+    exits: [{ x: -53, z: 0, r: 3, to: 'necropolis', requires: 'gateOpen' }, { x: 45.6, z: 1, r: 1.3, to: 'sunken' }],   // 船着き場の先から海中遺跡へ
     update(dt, t) {
       water.userData.water.uniforms.time.value = t;
       gate.userData.update(dt);

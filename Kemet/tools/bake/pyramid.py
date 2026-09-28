@@ -154,7 +154,7 @@ M['regions'] = [
 M['spawns'] = {'default': {'x': 0, 'z': 38, 'face': math.pi}, 'giza': {'x': 0, 'z': 38, 'face': math.pi}}
 M['exits'] = [{'x': 0, 'z': 41.2, 'r': 1.8, 'to': 'giza'}]
 M['enemies'] = [{'type': 'mummy', 'x': 0, 'z': -40}, {'type': 'mummy', 'x': 1, 'z': -60}, {'type': 'mummy', 'x': 36, 'z': -26},
-                {'type': 'mummy', 'x': -40, 'z': 0}, {'type': 'mummy', 'x': -46, 'z': 12}, {'type': 'jackal', 'x': 0, 'z': -86}]
+                {'type': 'mummy', 'x': -40, 'z': 0}, {'type': 'mummy', 'x': -46, 'z': 12}, {'type': 'guardian', 'x': 0, 'z': -86}]
 M['chests'] = [{'x': 67, 'z': -30, 'ankh': 400}, {'x': -50, 'z': -9, 'ankh': 200}]
 M['waters'] = []
 M['beams'] = []
