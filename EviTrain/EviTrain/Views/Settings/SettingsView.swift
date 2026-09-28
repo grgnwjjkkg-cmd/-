@@ -3,6 +3,10 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
+    @Environment(\.modelContext) private var context
+    @State private var backupURL: URL?
+    @State private var importing = false
+    @State private var restoreMessage: String?
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
     @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
@@ -51,11 +55,30 @@ struct SettingsView: View {
                 }
 
 
-                Section("データ") {
+                Section {
+                    Button {
+                        backupURL = writeBackup()
+                    } label: {
+                        Label("バックアップを作る", systemImage: "externaldrive.badge.plus")
+                    }
+                    if let backupURL {
+                        ShareLink(item: backupURL) {
+                            Label("できたバックアップを保存・送る", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                    Button {
+                        importing = true
+                    } label: {
+                        Label("バックアップから戻す", systemImage: "arrow.counterclockwise.circle")
+                    }
                     ShareLink(item: CSVExport.make(workouts), preview: SharePreview("トレーニング記録.csv")) {
-                        Label("記録をCSVで書き出す", systemImage: "square.and.arrow.up")
+                        Label("記録をCSVで書き出す（表計算用）", systemImage: "tablecells")
                     }
                     .disabled(workouts.isEmpty)
+                } header: {
+                    Text("データ")
+                } footer: {
+                    Text("バックアップには、記録・自作種目と休憩時間・マイメニューが入ります。「ファイル」アプリや iCloud Drive に保存しておくと、機種変更のときに戻せます。戻すときは、今のデータに足されます（同じ日時の記録は重ねて入りません）。")
                 }
 
                 Section("このアプリについて") {
@@ -67,6 +90,43 @@ struct SettingsView: View {
             }
             .themedBackground()
             .navigationTitle("設定")
+            .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
+                restore(result)
+            }
+            .alert("バックアップ", isPresented: Binding(get: { restoreMessage != nil }, set: { if !$0 { restoreMessage = nil } })) {
+                Button("OK") { restoreMessage = nil }
+            } message: {
+                Text(restoreMessage ?? "")
+            }
+        }
+    }
+
+    /// バックアップを一時ファイルに書き出して、その場所を返す。
+    private func writeBackup() -> URL? {
+        let backup = BackupService.make(from: context)
+        guard let data = try? BackupFile.encoder().encode(backup) else { return nil }
+        let name = "エビトレ_バックアップ_" + Date.now.formatted(.iso8601.year().month().day()) + ".json"
+        let url = FileManager.default.temporaryDirectory.appending(path: name)
+        do {
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            restoreMessage = "バックアップを作れませんでした（\(error.localizedDescription)）"
+            return nil
+        }
+    }
+
+    private func restore(_ result: Result<URL, Error>) {
+        do {
+            let url = try result.get()
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+            let backup = try BackupFile.decoder().decode(BackupFile.self, from: Data(contentsOf: url))
+            let restored = BackupService.restore(backup, into: context)
+            restoreMessage = "記録 \(restored.workouts)件・メニュー \(restored.menus)件を戻しました。"
+                + (restored.skipped > 0 ? "（すでにある \(restored.skipped)件は重ねて入れていません）" : "")
+        } catch {
+            restoreMessage = "このファイルは読み込めませんでした。エビトレで作ったバックアップを選んでください。"
         }
     }
 }

@@ -168,6 +168,52 @@ final class StatsTests: XCTestCase {
     }
 
     @MainActor
+    func testBackupRoundTrip() throws {
+        func makeContainer() throws -> ModelContainer {
+            try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
+                               MenuTemplate.self, MenuItem.self,
+                               configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        }
+        let source = try makeContainer().mainContext
+        let custom = Exercise(name: "ケーブルクロス", group: .chest, tracking: .weightReps, isCustom: true)
+        custom.restSeconds = 75
+        source.insert(custom)
+        let workout = Workout(startedAt: Date(timeIntervalSince1970: 1_800_000_000))
+        workout.finishedAt = workout.startedAt.addingTimeInterval(3000)
+        source.insert(workout)
+        let entry = WorkoutEntry(order: 0, exercise: custom)
+        source.insert(entry)
+        entry.workout = workout
+        let set = SetRecord(order: 0, weight: 20, reps: 12)
+        set.isDone = true
+        source.insert(set)
+        set.entry = entry
+        let menu = MenuTemplate(name: "胸の日")
+        source.insert(menu)
+        let item = MenuItem(order: 0, exercise: custom, sets: 3, weight: 20, reps: 12)
+        source.insert(item)
+        item.template = menu
+        try source.save()
+
+        let data = try BackupFile.encoder().encode(BackupService.make(from: source))
+        let backup = try BackupFile.decoder().decode(BackupFile.self, from: data)
+
+        let target = try makeContainer().mainContext
+        let result = BackupService.restore(backup, into: target)
+        XCTAssertEqual(result.workouts, 1)
+        XCTAssertEqual(result.menus, 1)
+        let restored = try XCTUnwrap(try target.fetch(FetchDescriptor<Workout>()).first)
+        XCTAssertEqual(restored.sortedEntries.first?.exercise?.name, "ケーブルクロス")
+        XCTAssertEqual(restored.sortedEntries.first?.exercise?.restSeconds, 75)
+        XCTAssertEqual(restored.sortedEntries.first?.sortedSets.first?.weight, 20)
+
+        // もう一度戻しても、同じ記録・メニューは増えない
+        let again = BackupService.restore(backup, into: target)
+        XCTAssertEqual(again.workouts, 0)
+        XCTAssertEqual(again.menus, 0)
+    }
+
+    @MainActor
     func testStreakDays() throws {
         let container = try ModelContainer(for: Workout.self, WorkoutEntry.self, SetRecord.self, Exercise.self,
                                            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
