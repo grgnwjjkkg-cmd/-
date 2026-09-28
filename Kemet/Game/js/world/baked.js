@@ -45,7 +45,7 @@ const LOOKS = {
   outdoor: { sun: 2.2, hemi: 0.8, lantern: 0, torch: 0, exposure: 0.42, fog: ['#d8c6a4', 260, 2600], env: 0.8, sky: true },
   indoor: { sun: 0, hemi: 0.18, lantern: 6, torch: 14, exposure: 1.25, fog: ['#120c07', 8, 80], env: 0.15, sky: false },
   cave: { sun: 0, hemi: 0.14, lantern: 7, torch: 14, exposure: 1.3, fog: ['#0e0b08', 5, 50], env: 0.12, sky: false },
-  heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.62, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, bg: '#8fbde6' },
+  heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.48, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, bg: '#8fbde6' },
   underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0d4556' },
 };
 
