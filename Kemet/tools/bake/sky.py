@@ -13,6 +13,7 @@ SAMPLES = int(argv[0]) if argv else 160
 random.seed(41)
 L = Level('sky', SAMPLES)
 COL = os.path.join(os.path.dirname(__file__), 'models', 'colossus.obj')
+STAND = os.path.join(os.path.dirname(__file__), 'models', 'statue_standing.obj')
 
 L.material('pave', 'red_sandstone_pavement', (0.95, 0.88, 0.78), scale=3)
 L.material('white', 'sandstone_blocks_08', (1.0, 0.97, 0.9), scale=2.5)
@@ -113,6 +114,14 @@ for i in range(12):
     a = i / 12 * math.tau
     L.box('isles', 'white', (-66 + math.cos(a) * 10, 3.5, -4 + math.sin(a) * 10), (1.4, 7, 1.0), rot=a)
 L.box('isles', 'blocks', (-66, 0.4, -4), (6, 0.8, 6))
+
+# ---------- 神々の立ち像：着く島の両わきと、玉座の両わき
+for sx in (-1, 1):
+    for z in (48, 60):
+        L.box('isles', 'blocks', (sx * 8.5, 0.6, z), (3.2, 1.2, 3.2))
+        L.mesh_file('isles', 'white', STAND, (sx * 8.5, 1.2, z), rot=sx * math.pi / 2, scale=5.2)
+    L.box('temple', 'blocks', (sx * 12.5, 0.8, -66), (4, 1.6, 4))
+    L.mesh_file('temple', 'gold', STAND, (sx * 12.5, 1.6, -66), scale=7)
 
 # ---------- 北：ラーの玉座（金色の巨大な座像）
 L.box('temple', 'blocks', (0, 1.5, -76), (14, 3, 12))

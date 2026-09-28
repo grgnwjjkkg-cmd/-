@@ -4,12 +4,13 @@ MakeHuman（MPFB2, CC0）の人を玉座に座らせ、頭巾（ネメス）・�
   blender -b --python tools/bake/make_colossus.py
 できるもの: tools/bake/models/colossus.obj（身長 1 の人の大きさ。置くときに大きくする）
 """
-import bpy, bmesh, os, math
+import bpy, bmesh, os, sys, math
 from mathutils import Vector, Matrix
 from bl_ext.user_default.mpfb.services.humanservice import HumanService
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, 'models', 'colossus.obj')
+STANDING = '--' in sys.argv and 'standing' in sys.argv[sys.argv.index('--') + 1:]   # 立った像（胸の前で腕を組む、オシリス神の形）
+OUT = os.path.join(HERE, 'models', 'statue_standing.obj' if STANDING else 'colossus.obj')
 
 for o in list(bpy.data.objects): bpy.data.objects.remove(o)
 macro = {"gender": 1.0, "age": 0.5, "muscle": 0.62, "weight": 0.55, "proportions": 0.9, "height": 0.5,
@@ -38,6 +39,15 @@ POSE = {
     'lowerarm': lambda s: (FWD + Vector((s * 0.03, 0, -0.42))).normalized(),   # ひじから先はももの上に
     'hand': lambda s: (FWD + Vector((0, 0, -0.35))).normalized(),              # 手はひざの上に平らに
 }
+if STANDING:
+    POSE = {
+        'thigh': lambda s: (DOWN + Vector((-s * 0.03, 0, 0))).normalized(),          # 足はそろえてまっすぐ
+        'calf': lambda s: DOWN,
+        'foot': lambda s: (FWD + Vector((0, 0, -0.3))).normalized(),
+        'upperarm': lambda s: (DOWN + Vector((s * 0.05, -0.28, 0))).normalized(),     # 腕はわきにつけて
+        'lowerarm': lambda s: Vector((-s * 0.75, -0.25, 0.62)).normalized(),         # ひじから先は胸の前で交差
+        'hand': lambda s: Vector((-s * 0.6, -0.1, 0.8)).normalized(),                # 手は反対の肩へ
+    }
 # 指はそろえて伸ばす（手のひらを ももに置く）
 for f in ('index', 'middle', 'ring', 'pinky'):
     for i in (1, 2):
@@ -149,14 +159,19 @@ chin = Vector((hc.x, face_y + 0.015, head0.z - 0.02))
 box((chin.x, chin.y, chin.z - 0.04), (0.032, 0.032, 0.085), taper=0.85)
 # 腰布（すわった ももの上）
 kz = max(J['thigh_l'][0].z, J['thigh_r'][0].z)
-box((pelvis.x, (pelvis.y + (knee_l.y + knee_r.y) / 2) / 2 + 0.02, kz + 0.02), (0.4, abs(knee_l.y - pelvis.y) + 0.05, 0.14), bevel=0.02)
-box((pelvis.x, pelvis.y + 0.02, pelvis.z + 0.02), (0.36, 0.26, 0.14), bevel=0.02)
-box((pelvis.x, (knee_l.y + knee_r.y) / 2 + 0.02, kz - 0.2), (0.12, 0.03, 0.4), taper=0.8)   # 前のたれ布
-# 玉座：座る台と、背中の石板
-box((pelvis.x, pelvis.y + 0.03, seat / 2), (0.62, 0.62, seat))
-box((pelvis.x, pelvis.y + 0.3, sh_l.z / 2), (0.62, 0.14, sh_l.z + 0.02))
-# 足をのせる台
-box((pelvis.x, knee_l.y - 0.1, 0.02), (0.6, 0.5, 0.04))
+if STANDING:   # 立った像：足首までの長い衣と、足もとの台
+    lathe(pelvis.x, pelvis.y + 0.01, 0.06, [(0.2, 0.0), (0.19, 0.3), (0.18, 0.6), (0.17, pelvis.z - 0.12), (0.16, pelvis.z + 0.02)], seg=40)
+    box((pelvis.x, pelvis.y, 0.03), (0.5, 0.45, 0.06))
+
+else:
+    box((pelvis.x, (pelvis.y + (knee_l.y + knee_r.y) / 2) / 2 + 0.02, kz + 0.02), (0.4, abs(knee_l.y - pelvis.y) + 0.05, 0.14), bevel=0.02)
+    box((pelvis.x, pelvis.y + 0.02, pelvis.z + 0.02), (0.36, 0.26, 0.14), bevel=0.02)
+    box((pelvis.x, (knee_l.y + knee_r.y) / 2 + 0.02, kz - 0.2), (0.12, 0.03, 0.4), taper=0.8)   # 前のたれ布
+    # 玉座：座る台と、背中の石板
+    box((pelvis.x, pelvis.y + 0.03, seat / 2), (0.62, 0.62, seat))
+    box((pelvis.x, pelvis.y + 0.3, sh_l.z / 2), (0.62, 0.14, sh_l.z + 0.02))
+    # 足をのせる台
+    box((pelvis.x, knee_l.y - 0.1, 0.02), (0.6, 0.5, 0.04))
 
 me = bpy.data.meshes.new('extra'); bm.normal_update(); bm.to_mesh(me); bm.free()
 extra = bpy.data.objects.new('extra', me); bpy.context.collection.objects.link(extra)

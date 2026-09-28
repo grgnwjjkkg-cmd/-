@@ -12,6 +12,7 @@ SAMPLES = int(argv[0]) if argv else 160
 random.seed(31)
 L = Level('sunken', SAMPLES)
 COL = os.path.join(os.path.dirname(__file__), 'models', 'colossus.obj')
+STAND = os.path.join(os.path.dirname(__file__), 'models', 'statue_standing.obj')
 
 L.material('sand', 'coast_sand_01', (0.78, 0.8, 0.72), scale=4)
 L.material('rock', 'cliff_side', (0.62, 0.64, 0.58), scale=5)
@@ -56,11 +57,14 @@ for i, (x, z, ang) in enumerate(((-17, -30, 0.3), (15, -52, 1.2), (8, -20, 2.4),
 L.box('ruins', 'blocks', (0, 3.5, -54), (30, 7, 2))
 L.box('ruins', 'granite', (0, 4.2, -52.4), (5, 8.4, 1.0))                         # 石碑
 L.box('ruins', 'glow', (0, 5.0, -51.85), (3.2, 4.0, 0.05), collide=False)        # 光る文字（ここで石板を読む）
+for sx in (-1, 1):   # 石碑を守る2体の立ち像
+    L.box('ruins', 'blocks', (sx * 5.5, 1.1, -50.5), (2.2, 0.6, 2.2))
+    L.mesh_file('ruins', 'stone', STAND, (sx * 5.5, 1.4, -50.5), scale=3.6)
 
 # ---------- 倒れた巨像（あお向けに倒れて、半分砂にうもれている）と、首の取れた頭
 L.mesh_file('ruins', 'granite', COL, (26, -1.8, 8), rot=math.radians(-35), scale=9, tilt=math.radians(-78))
 L.meta['colliders']['circles'] += [[26 + math.sin(math.radians(-35)) * d, 8 + math.cos(math.radians(-35)) * d, 3.2] for d in (-8, -3, 2, 7)]
-L.mesh_file('ruins', 'granite', COL, (-30, -1.2, 18), rot=math.radians(120), scale=6.5, roll=math.radians(84))
+L.mesh_file('ruins', 'granite', STAND, (-30, 0.9, 18), rot=math.radians(120), scale=8, tilt=math.radians(-86))   # あお向けに倒れた立ち像
 L.meta['colliders']['circles'] += [[-30, 18, 3.5], [-26, 21, 3]]
 
 # ---------- 大通り（スフィンクス通りの土台）と、両わきの台座
