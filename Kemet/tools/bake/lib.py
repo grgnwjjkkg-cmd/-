@@ -100,6 +100,17 @@ class Level:
             hw, hd = (s[2] if swap else s[0]) / 2, (s[0] if swap else s[2]) / 2
             self.meta['colliders']['boxes'].append([round(c[0] - hw, 3), round(c[0] + hw, 3), round(c[2] - hd, 3), round(c[2] + hd, 3)])
 
+    def tbox(self, group, mat, c, s, taper=0.8, collide=True):
+        """上がすぼまる箱（神殿の塔門など）"""
+        bm = self.bm(group, mat)
+        ret = bmesh.ops.create_cube(bm, size=1)
+        for v in ret['verts']:
+            k = taper if v.co.z > 0 else 1.0
+            lx, ly, lz = v.co.x * s[0] * k, v.co.z * s[1], -v.co.y * s[2] * (0.5 + k / 2)
+            v.co = B(c[0] + lx, c[1] + ly, c[2] + lz)
+        if collide:
+            self.meta['colliders']['boxes'].append([c[0] - s[0] / 2, c[0] + s[0] / 2, c[2] - s[2] / 2, c[2] + s[2] / 2])
+
     def cyl(self, group, mat, x, z, y0, h, r1, r2, seg=28, collide=True, lying=None):
         bm = self.bm(group, mat)
         # 層は形を作る前に用意する（あとから作ると面の参照が切れる）

@@ -86,6 +86,37 @@ function gateDoors(x, z) {
   return group;
 }
 
+/** 光を焼き付けた町に、あとから置く物（ヤシ・屋台・壺・門の扉・川） */
+export function addTownProps(root, C) {
+  const batch = new B.Batcher();
+  B.stall(batch, C, -12, -9, Math.PI / 2, ['#b8432f', '#f1e3c4']);
+  B.stall(batch, C, 13, 5, -Math.PI / 2, ['#2f6fb8', '#f1e3c4']);
+  B.stall(batch, C, 13, -6, -Math.PI / 2, ['#2f8a6a', '#f4d27a']);
+  B.stall(batch, C, -12, 7, Math.PI / 2, ['#d9a13a', '#7a3a8a']);
+  for (const [x, z] of [[-14, -12], [-14.5, -11], [15, 8], [15.4, 9], [-15, 10], [16, -9]]) B.jar(batch, C, x, z, 0.9);
+  const palms = [[-6, 20, 7], [6, 22, 6.5], [-18, -2, 7.5], [18, 12, 6.8], [33, 10, 8], [34, -12, 7.2], [36, 26, 7], [-40, 6, 6.5], [-44, -20, 7], [20, -40, 8], [-20, -42, 7.4], [33, -44, 6.6], [3, 46, 7], [-32, 50, 6]];
+  palms.forEach(([x, z, h], i) => B.palm(batch, C, x, z, h, 0.15 + (i % 3) * 0.08, i * 1.3));
+  B.boat(batch, 49, 6, 0);
+  B.boat(batch, 50, -6, 0.3);
+  batch.build(root);
+  const water = river(44, 140, -120, 120);
+  root.add(water);
+  const pot = new THREE.Group();
+  const potGeo = new THREE.LatheGeometry([[0, 0], [0.6, 0.05], [1.05, 0.6], [1.1, 1.2], [0.8, 1.9], [0.45, 2.1], [0.55, 2.3]].map(([a, b]) => new THREE.Vector2(a, b)), 32);
+  const potMesh = new THREE.Mesh(potGeo, new THREE.MeshStandardMaterial({ color: '#2a5fa8', roughness: 0.3, metalness: 0.25 }));
+  potMesh.castShadow = true;
+  const band = new THREE.Mesh(new THREE.TorusGeometry(1.08, 0.08, 8, 32), B.M.gold()); band.rotation.x = Math.PI / 2; band.position.y = 1.2;
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.2, 5, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#ffd76a', transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.position.y = 4.4;
+  pot.add(potMesh, band, glow);
+  pot.position.set(6, 0.4, -27);
+  C.circle(6, -27, 1.4);
+  root.add(pot);
+  const gate = gateDoors(-50, 0);
+  root.add(gate);
+  return { pot: { x: 6, z: -27, object: pot, glow }, gate, water };
+}
+
 // ------------------------------------------------------------
 // 町：メンネフェル
 // 北：神殿、中央：市場と井戸、東：ナイルと船着き場、西：城壁と西門

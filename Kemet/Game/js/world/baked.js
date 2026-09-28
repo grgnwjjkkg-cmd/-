@@ -5,6 +5,7 @@ import { GLTFLoader } from '../../lib/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from '../../lib/jsm/loaders/RGBELoader.js';
 import { Reflector } from '../../lib/jsm/objects/Reflector.js';
 import { Colliders } from './builders.js';
+import { addTownProps } from './zones.js';
 
 const texLoader = new THREE.TextureLoader();
 const texCache = new Map();
@@ -72,6 +73,15 @@ export async function loadBakedZone(name, game) {
   const C = new Colliders();
   for (const [x0, x1, z0, z1] of meta.colliders.boxes) C.boxes.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 });
   for (const [x, z, r] of meta.colliders.circles) C.circles.push({ x, z, r });
+
+  // 町：あとから置く物と、開け閉めする門
+  let props = null, gateBlock = null;
+  if (meta.gateBlock) {
+    const [x0, x1, z0, z1] = meta.gateBlock;
+    gateBlock = { minX: x0, maxX: x1, minZ: z0, maxZ: z1 };
+    C.boxes.push(gateBlock);
+  }
+  if (name === 'town') props = addTownProps(root, C);
 
   // 水面
   const murks = [];
@@ -141,9 +151,22 @@ export async function loadBakedZone(name, game) {
     region: regionAt,
     isInside: p => regionAt(p).kind !== 'outdoor',
     look: p => LOOKS[regionAt(p).kind],
+    pot: props?.pot,
+    gate: props ? { object: props.gate } : null,
+    openGate(instant) {
+      props?.gate.userData.open(instant);
+      const i = C.boxes.indexOf(gateBlock);
+      if (i >= 0) C.boxes.splice(i, 1);
+    },
     sky, skyRot,
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
+      if (props) {
+        props.water.userData.water.uniforms.time.value = t;
+        props.gate.userData.update(dt);
+        props.pot.glow.material.opacity = 0.25 + Math.sin(t * 2) * 0.1;
+        props.pot.object.rotation.y = Math.sin(t * 0.5) * 0.05;
+      }
       for (const fl of flames) { const k = 0.85 + Math.sin(t * 13 + fl.phase) * 0.1 + Math.sin(t * 7.3 + fl.phase) * 0.08; fl.f.scale.set(k, k * 1.15, k); }
       if (!player) return;
       const look = LOOKS[regionAt(player.pos).kind];

@@ -12,7 +12,7 @@ UA = {'User-Agent': 'kemet-asset-fetch/1.0'}
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'Game', 'assets')
 MODELS = ['sand_rocks_small_01', 'stone_01', 'namaqualand_boulder_02', 'namaqualand_rocks_01', 'rock_face_01',
           'treasure_chest', 'ceramic_vase_02', 'ceramic_vase_03', 'wooden_crate_01', 'moon_rock_03']
-TEXTURES = ['large_sandstone_blocks_01', 'sandstone_blocks_08', 'red_sandstone_pavement', 'aerial_sand', 'rock_wall_07', 'rock_face_02', 'coast_sand_01']
+TEXTURES = ['large_sandstone_blocks_01', 'sandstone_blocks_08', 'red_sandstone_pavement', 'aerial_sand', 'rock_wall_07', 'rock_face_02', 'coast_sand_01', 'clay_plaster', 'beige_wall_001', 'brown_planks_09']
 HDRIS = ['goegap']
 
 def get(url, path):

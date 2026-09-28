@@ -183,7 +183,8 @@ class Game {
     this.npcs = []; this.enemies = []; this.chests = []; this.pickups = [];
     this.boss = null; $('bossbar').classList.add('hidden');
 
-    this.zone = name === 'town' ? buildTown() : await loadBakedZone('necropolis', this);
+    // 光を焼き付けた地図があればそれを使い、なければコードで作る町
+    this.zone = await loadBakedZone(name, this).catch(e => { if (name !== 'town') throw e; return buildTown(); });
     this.scene.add(this.zone.root);
     this.save.zone = name;
 
