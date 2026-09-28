@@ -46,7 +46,7 @@ const LOOKS = {
   indoor: { sun: 0, hemi: 0.18, lantern: 6, torch: 14, exposure: 1.25, fog: ['#120c07', 8, 80], env: 0.15, sky: false },
   cave: { sun: 0, hemi: 0.14, lantern: 7, torch: 14, exposure: 1.3, fog: ['#0e0b08', 5, 50], env: 0.12, sky: false },
   heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.62, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, bg: '#8fbde6' },
-  underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0b3848' },
+  underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0d4556' },
 };
 
 // 水の中：水面でゆれた光の模様（コースティクス）を、床や壁に重ねる
@@ -65,9 +65,9 @@ float cst(vec2 p) {
     c += abs(sin(q.x + sin(q.y * 1.3 + cTime * 0.5)) * sin(q.y + sin(q.x * 1.1 - cTime * 0.4)));
   }
   return pow(1.0 - c / 3.0, 5.0);
-}`).replace('#include <dithering_fragment>', `#include <dithering_fragment>
-float up = clamp(1.0 - vWPos.y * 0.06, 0.2, 1.0);
-gl_FragColor.rgb += gl_FragColor.rgb * cst(vWPos.xz * 0.9) * 2.2 * up;`);
+}`).replace('#include <fog_fragment>', `float up = clamp(1.0 - vWPos.y * 0.06, 0.2, 1.0);
+gl_FragColor.rgb += gl_FragColor.rgb * cst(vWPos.xz * 0.9) * 2.2 * up;
+#include <fog_fragment>`);
   };
 }
 
@@ -120,7 +120,10 @@ export async function loadBakedZone(name, game) {
     const N = 260, pos = new Float32Array(N * 3), spd = new Float32Array(N);
     for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 30; pos[i * 3 + 1] = Math.random() * 14; pos[i * 3 + 2] = (Math.random() - 0.5) * 30; spd[i] = 0.6 + Math.random() * 1.2; }
     const geo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    bubbles = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#cfefff', size: 0.07, transparent: true, opacity: 0.6, depthWrite: false }));
+    const bc = document.createElement('canvas'); bc.width = bc.height = 32;
+    const bx = bc.getContext('2d'); bx.strokeStyle = 'rgba(220,245,255,0.9)'; bx.lineWidth = 3; bx.beginPath(); bx.arc(16, 16, 11, 0, Math.PI * 2); bx.stroke();
+    bx.fillStyle = 'rgba(255,255,255,0.8)'; bx.beginPath(); bx.arc(12, 11, 3, 0, Math.PI * 2); bx.fill();
+    bubbles = new THREE.Points(geo, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(bc), size: 0.09, transparent: true, opacity: 0.75, depthWrite: false }));
     bubbles.userData.spd = spd; bubbles.frustumCulled = false;
     root.add(bubbles);
   }
