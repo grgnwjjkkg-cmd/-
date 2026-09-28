@@ -27,6 +27,7 @@ export const AMULETS = {
   eye_charm:    { name: 'ウアジェトの目', rarity: 4, crit: 0.12, desc: '会心率+12%' },
   ankh_charm:   { name: 'アンクの首飾り', rarity: 4, hp: 40, desc: '最大HP+40' },
   sun_disk:     { name: '太陽円盤', rarity: 5, atkMul: 0.18, desc: '攻撃力+18%' },
+  horus_eye:    { name: 'ホルスの眼', rarity: 5, hp: 30, crit: 0.1, desc: '大ピラミッドの秘宝。最大HP+30・会心率+10%' },
 };
 
 export function itemDef(id) {

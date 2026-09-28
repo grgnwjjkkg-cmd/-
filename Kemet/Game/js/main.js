@@ -218,9 +218,10 @@ class Game {
       }
       this.zone.chests.forEach((c, i) => this.makeChest(c, i));
       const sc = this.zone.scarab || { x: 25, z: -118 };
-      if (this.save.flags.bossDown && !this.save.flags.gotScarab) this.dropScarab(new THREE.Vector3(sc.x, 0, sc.z));
+      if (name === 'necropolis' && this.save.flags.bossDown && !this.save.flags.gotScarab) this.dropScarab(new THREE.Vector3(sc.x, 0, sc.z));
     }
     this.makeFinds(name);
+    this.setupPyramid(!initial);
     for (const el of [...$('labels').children]) if (!this.npcs.some(n => n.label === el)) el.remove();
     this.inside = 0;
     if (!initial) { audio.play(this.zone.music); await wait(100); $('fade').classList.remove('on'); }
@@ -252,6 +253,7 @@ class Game {
   }
 
   makeChest(c, index) {
+    if (this.zone.name !== 'necropolis') index = `${this.zone.name}:${index}`;
     const opened = this.save.chests.includes(index);
     const group = new THREE.Group();
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.6, 0.7), B.M.wood()); body.position.y = 0.3;
@@ -264,6 +266,91 @@ class Game {
     this.scene.add(group);
     this.zone.colliders.circle(c.x, c.z, 0.6);
     this.chests.push({ group, lid, index, ankh: c.ankh, opened, x: c.x, z: c.z });
+  }
+
+  /** ピラミッド：石板の数で封印の印が光り、3つそろうと扉が開く。開いていれば王の間に秘宝 */
+  setupPyramid() {
+    const seal = this.zone.seal;
+    if (!seal) return;
+    const n = this.pyramidTablets();
+    seal.setCount(n);
+    if (n >= 3 || this.save.flags.pyrSeal) seal.openNow(true);
+    if (seal.open && !this.save.flags.pyrRelic && this.zone.relic) this.dropRelic();
+  }
+
+  pyramidTablets() { return (FINDS.pyramid || []).filter(d => (this.save.finds || []).includes(d.id)).length; }
+
+  dropRelic() {
+    const r = this.zone.relic;
+    const mesh = new THREE.Group();
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.26, 24, 16), new THREE.MeshStandardMaterial({ color: '#3fa0ff', emissive: '#2a7bff', emissiveIntensity: 1.4, metalness: 0.4, roughness: 0.15 }));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 12, 40), new THREE.MeshStandardMaterial({ color: '#ffd35a', emissive: '#ff9a20', emissiveIntensity: 0.8, metalness: 0.9, roughness: 0.2 }));
+    mesh.add(eye, ring); mesh.add(new THREE.PointLight('#7ab8ff', 25, 9));
+    mesh.position.set(r.x, 1.6, r.z);
+    this.scene.add(mesh);
+    this.pickups.push({ mesh, kind: 'relic', baseY: 1.6 });
+  }
+
+  /** 秘宝を取ったあと：ピラミッドが崩れはじめる。時間内に外へ出る */
+  startEscape() {
+    this.escape = { t: 100, rock: 0 };
+    audio.sfx('rumble');
+  }
+
+  updateEscape(dt) {
+    const E = this.escape;
+    if (!E || this.paused) return;
+    E.t -= dt;
+    this.shake = Math.max(this.shake, 0.18 + (E.t < 30 ? 0.12 : 0));
+    E.rock -= dt;
+    if (E.rock <= 0) {   // 天井から石が落ちてくる
+      E.rock = 0.35 + Math.random() * 0.5;
+      const p = this.player.pos, a = Math.random() * Math.PI * 2, d = Math.random() * 5;
+      const s = 0.25 + Math.random() * 0.4;
+      const m = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), new THREE.MeshStandardMaterial({ color: '#b9a078', roughness: 1 }));
+      m.position.set(p.x + Math.sin(a) * d, 9, p.z + Math.cos(a) * d);
+      this.scene.add(m);
+      (this.falling ||= []).push({ m, v: 0, s });
+      if (Math.random() < 0.3) audio.sfx('rumble');
+    }
+    const sec = Math.max(0, Math.ceil(E.t));
+    $('objText').textContent = `崩れる前に外へ脱出しろ！ 残り ${sec} 秒`;
+    if (E.t <= 0) this.escapeFailed();
+  }
+
+  updateFalling(dt) {
+    if (!this.falling) return;
+    this.falling = this.falling.filter(f => {
+      f.v += 20 * dt; f.m.position.y -= f.v * dt; f.m.rotation.x += dt * 3;
+      if (f.m.position.y <= f.s * 0.6) {
+        f.m.position.y = f.s * 0.6;
+        if (!f.landed) {
+          f.landed = true; f.life = 3;
+          const d = Math.hypot(f.m.position.x - this.player.pos.x, f.m.position.z - this.player.pos.z);
+          if (d < 0.9 && this.player.hp > 0) { this.player.hp -= 6; this.player.actor.flash(); audio.sfx('hurt'); this.refreshHUD(); }
+        }
+        f.life -= dt;
+        if (f.life <= 0) { this.scene.remove(f.m); return false; }
+      }
+      return true;
+    });
+  }
+
+  async escapeSucceeded() {
+    this.save.flags.pyrEscaped = true;
+    this.shake = 0.8; audio.sfx('rumble');
+    await this.runSteps([{ who: 'narr', text: '外へ飛び出した直後、背後で通路が崩れ落ちた。' },
+      { who: 'narr', text: '脱出成功！ 秘宝「ホルスの眼」を持ち帰った。' },
+      { run: a => { a.giveItem('horus_eye'); a.giveAnkh(600); } }]);
+    this.refreshHUD(); this.persist();
+  }
+
+  async escapeFailed() {
+    this.escape = null; this.paused = true;
+    await this.runSteps([{ who: 'narr', text: '出口が岩でふさがれた……！' }, { who: 'narr', text: '気がつくと、秘宝は石棺の上に戻っていた。もう一度挑戦しよう。' }]);
+    this.save.flags.pyrRelic = false;
+    await this.enterZone('pyramid', false, 'giza');
+    this.paused = false; this.refreshHUD();
   }
 
   dropScarab(pos) {
@@ -323,7 +410,7 @@ class Game {
     this.canvas.addEventListener('pointermove', e => {
       if (e.pointerId !== camId) return;
       this.camYaw -= (e.clientX - lx) * 0.008;
-      this.camPitch = THREE.MathUtils.clamp(this.camPitch + (e.clientY - ly) * 0.004, 0.12, 0.95);
+      this.camPitch = THREE.MathUtils.clamp(this.camPitch + (e.clientY - ly) * 0.005, -0.75, 1.2);  // 上下になぞって見上げる・見下ろす
       lx = e.clientX; ly = e.clientY; this.lastDrag = this.time;
     });
     const endCam = e => { if (e.pointerId === camId) camId = null; };
@@ -393,10 +480,24 @@ class Game {
       audio.sfx('clue');
       const all = (FINDS[this.zone.name] || []).every(d => this.save.finds.includes(d.id));
       const steps = [{ who: 'narr', text: `${f.def.title}を見つけた。` }, { who: 'narr', text: f.def.text }];
-      if (all) steps.push({ who: 'narr', text: '3つのかけらがそろった。石板の言葉が読める……' },
+      if (this.zone.seal) {
+        this.zone.seal.setCount(this.pyramidTablets());
+        if (all) steps.push({ who: 'narr', text: '3枚の石板がそろった。遠くで重い石が動く音がする……' },
+          { run: a => { const g = a.game; g.save.flags.pyrSeal = true; g.zone.seal.openNow(false); g.shake = 0.6; audio.sfx('rumble'); g.dropRelic(); } },
+          { who: 'narr', text: '王の間の封印が解けた！' });
+        else steps.push({ who: 'narr', text: `封印の扉の印が ${this.pyramidTablets()} つ光った。（あと ${3 - this.pyramidTablets()} 枚）` });
+      } else if (all) steps.push({ who: 'narr', text: '3つのかけらがそろった。石板の言葉が読める……' },
         { run: g => { g.addClue('tablet'); g.giveItem('eye_charm'); } },
         { who: 'narr', text: 'かけらの裏に「ウアジェトの目」のお守りが埋め込まれていた！' });
       await this.runSteps(steps);
+    } else if (t.kind === 'pickup' && t.pickup.kind === 'relic') {
+      this.scene.remove(t.pickup.mesh);
+      this.pickups.splice(this.pickups.indexOf(t.pickup), 1);
+      this.save.flags.pyrRelic = true;
+      audio.sfx('rare');
+      await this.runSteps([{ who: 'narr', text: '秘宝「ホルスの眼」を手に入れた！' },
+        { who: 'narr', text: '……ピラミッド全体が揺れはじめた！ 崩れる前に外へ脱出しろ！' }]);
+      this.startEscape();
     } else if (t.kind === 'pickup') {
       this.scene.remove(t.pickup.mesh);
       this.pickups.splice(this.pickups.indexOf(t.pickup), 1);
@@ -481,6 +582,7 @@ class Game {
   api() {
     const g = this;
     return {
+      game: g,
       setFlag(name, value = true) { g.save.flags[name] = value; },
       addClue(id) { if (!g.save.clues.includes(id)) { g.save.clues.push(id); g.toast(`ヒント帳に「${CLUES[id].title}」を書いた`); audio.sfx('clue'); } },
       giveAnkh(n) { g.gainAnkh(n); },
@@ -609,7 +711,18 @@ class Game {
     $('hpBar').style.width = (hp / s.maxHP * 100) + '%';
     $('expBar').style.width = (this.save.exp / expToNext(this.save.level) * 100) + '%';
     $('ankhText').textContent = this.save.ankh.toLocaleString();
-    $('objText').textContent = objective(this.save);
+    $('objText').textContent = this.zoneObjective() || objective(this.save);
+  }
+
+  zoneObjective() {
+    const f = this.save.flags, z = this.zone?.name;
+    if (this.escape) return `崩れる前に外へ脱出しろ！ 残り ${Math.ceil(this.escape.t)} 秒`;
+    if (z === 'pyramid' && !f.pyrRelic) {
+      const n = this.pyramidTablets();
+      return n < 3 ? `ピラミッドの中で石板を探せ（${n}/3）。封印の扉が開く` : '王の間へ。石棺の上の秘宝を手に入れよう';
+    }
+    if (z === 'giza' && !f.pyrEscaped) return '大ピラミッドのふもとの「盗掘者の穴」から中へ入ろう';
+    return null;
   }
 
   /** 次に話すべき人に「！」 */
@@ -679,6 +792,8 @@ class Game {
         <div class="clue" style="margin-top:16px;border-color:#ff8a5a"><b>テスト用（完成版では消します）</b>
           <button class="btn sub" id="warpNecro">墓地へワープ</button>
           <button class="btn sub" id="warpTown">町へ戻る</button>
+          <button class="btn sub" id="warpGiza">ギザへワープ</button>
+          <button class="btn sub" id="warpPyramid">ピラミッドの中へ</button>
           <button class="btn sub" id="addAnkh">+1000 アンク</button></div>`;
     }
     this.openPanel(`<div class="pHead"><h2>メニュー</h2><button class="close">✕</button></div>${tabs}${body}`, root => {
@@ -691,17 +806,19 @@ class Game {
       });
       const warp = async to => {
         this.closePanel();
-        if (to === 'necropolis') {
+        if (to !== 'town') {
           Object.assign(save.flags, { metNefer: true, clueDocks: true, clueCloth: true, gateOpen: true });
           if (!save.weapon) { this.addItem('travel_sword'); save.weapon = 'travel_sword'; }
         }
         this.paused = true;
-        await this.enterZone(to, false, to === 'necropolis' ? 'town' : 'necropolis');
+        await this.enterZone(to, false, { necropolis: 'town', town: 'necropolis', giza: 'necropolis', pyramid: 'giza' }[to]);
         this.paused = false;
         this.refreshHUD();
       };
       root.querySelector('#warpNecro')?.addEventListener('click', () => warp('necropolis'));
       root.querySelector('#warpTown')?.addEventListener('click', () => warp('town'));
+      root.querySelector('#warpGiza')?.addEventListener('click', () => warp('giza'));
+      root.querySelector('#warpPyramid')?.addEventListener('click', () => warp('pyramid'));
       root.querySelector('#addAnkh')?.addEventListener('click', () => { this.gainAnkh(1000); this.openMenu('settings'); });
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };
@@ -844,7 +961,12 @@ class Game {
       for (const ex of this.zone.exits) {
         if (Math.hypot(this.player.pos.x - ex.x, this.player.pos.z - ex.z) < ex.r && (!ex.requires || this.save.flags[ex.requires])) {
           this.paused = true;
-          this.enterZone(ex.to, false, this.zone.name).then(() => { this.paused = false; });
+          const escaped = this.escape && ex.to === 'giza';
+          if (escaped) this.escape = null;
+          this.enterZone(ex.to, false, this.zone.name).then(async () => {
+            if (escaped) await this.escapeSucceeded();
+            this.paused = false;
+          });
           break;
         }
       }
@@ -853,7 +975,8 @@ class Game {
     }
     for (const n of this.npcs) n.update(dt, this.player);
     for (const f of this.finds || []) { f.fx.rotation.y += dt * 0.8; f.fx.material.opacity = 0.55 + Math.sin(this.time * 3 + f.def.x) * 0.35; }
-    for (const k of this.pickups) { k.mesh.rotation.y += dt * 1.5; k.mesh.position.y = 1 + Math.sin(this.time * 2) * 0.15; }
+    for (const k of this.pickups) { k.mesh.rotation.y += dt * 1.5; k.mesh.position.y = (k.baseY ?? 1) + Math.sin(this.time * 2) * 0.15; }
+    this.updateEscape(dt); this.updateFalling(dt);
     this.telegraphs = this.telegraphs.filter(t => {
       t.left -= dt;
       const k = 1 - Math.max(0, t.left) / t.time;
@@ -888,8 +1011,10 @@ class Game {
     for (let t = 0.6; t < dist; t += 0.3) {
       const x = target.x + dirX * t, z = target.z + dirZ * t, y = target.y + dirY * t;
       if (y < 6 && this.zone.colliders.boxes.some(b => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ)) { dist = Math.max(1.6, t - 0.4); break; }
-      if (inside && y > 5.6) { dist = Math.max(1.6, t); break; }
+      if (inside && y > 7.4) { dist = Math.max(1.6, t); break; }
     }
+    // 見上げるとき：カメラは地面より下に行かず、低い位置から上を向く
+    if (this.camPitch < 0) dist = Math.min(dist, Math.max(1.2, (target.y - 0.35) / Math.sin(-this.camPitch)));
     const want3 = new THREE.Vector3(target.x + dirX * dist, target.y + dirY * dist, target.z + dirZ * dist);
     if (!this.camPos) this.camPos = want3.clone();
     this.camPos.lerp(want3, Math.min(1, dt * 10));
@@ -899,7 +1024,9 @@ class Game {
       const s = this.shake * 0.4;
       this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s;
     }
-    this.camera.lookAt(target);
+    // 見上げるほど視線を上へ（巨像やピラミッドを下から見上げられる）
+    const up = Math.max(0, -this.camPitch);
+    this.camera.lookAt(target.x - dirX * up * 4, target.y + up * 9, target.z - dirZ * up * 4);
   }
 
   updateLight() {

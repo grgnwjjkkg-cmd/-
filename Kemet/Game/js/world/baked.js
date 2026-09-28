@@ -129,6 +129,47 @@ export async function loadBakedZone(name, game) {
     new THREE.PointsMaterial({ color: '#fff0c8', size: 0.03, transparent: true, opacity: 0.45, depthWrite: false }));
   root.add(dust);
 
+  // 出入口のしるし：足もとから立ちのぼる淡い光
+  const exitMat = new THREE.MeshBasicMaterial({ color: '#ffe2a8', transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const exitFx = (meta.exits || []).map(ex => {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(ex.r * 0.7, ex.r * 0.8, 3.2, 28, 1, true), exitMat);
+    m.position.set(ex.x, 1.6, ex.z); root.add(m); return m;
+  });
+
+  // 封印の扉（石板を3つ集めると床へ沈む）。表に3つの丸い印があり、見つけた数だけ金色に光る
+  let seal = null;
+  if (meta.seal) {
+    const S = meta.seal, w = S.x1 - S.x0, d = S.z1 - S.z0;
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 352;
+    const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+    const draw = n => {
+      const g = cv.getContext('2d');
+      g.fillStyle = '#6a3b32'; g.fillRect(0, 0, 256, 352);
+      for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? '20,10,8' : '190,150,140'},${Math.random() * 0.25})`; g.fillRect(Math.random() * 256, Math.random() * 352, 2, 2); }
+      g.strokeStyle = 'rgba(20,10,8,0.6)'; g.lineWidth = 4; g.strokeRect(10, 10, 236, 332);
+      for (let i = 0; i < 3; i++) {
+        const lit = i < n;
+        g.beginPath(); g.arc(128, 80 + i * 96, 30, 0, Math.PI * 2);
+        g.fillStyle = lit ? '#ffcf5a' : '#2a1510'; g.fill();
+        g.lineWidth = 5; g.strokeStyle = lit ? '#fff0b0' : '#8a5a48'; g.stroke();
+        if (lit) { g.shadowColor = '#ffb640'; g.shadowBlur = 24; g.fill(); g.shadowBlur = 0; }
+      }
+      tx.needsUpdate = true;
+    };
+    draw(0);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, S.h, d), new THREE.MeshStandardMaterial({ map: tx, roughness: 0.75, emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0.35 }));
+    mesh.position.set((S.x0 + S.x1) / 2, S.h / 2, (S.z0 + S.z1) / 2); root.add(mesh);
+    const block = { minX: S.x0, maxX: S.x1, minZ: S.z0 - 0.2, maxZ: S.z1 + 0.2 };
+    C.boxes.push(block);
+    seal = { mesh, draw, open: false, t: 0, h: S.h,
+      setCount(n) { draw(Math.min(3, n)); },
+      openNow(instant) {
+        if (this.open) return; this.open = true;
+        const i = C.boxes.indexOf(block); if (i >= 0) C.boxes.splice(i, 1);
+        if (instant) this.mesh.visible = false;
+      } };
+  }
+
   // キャラを照らすたいまつの光（近い4つだけ動かして使う）
   const pool = Array.from({ length: 4 }, () => { const l = new THREE.PointLight('#ff9a4a', 0, 10, 1.6); root.add(l); return l; });
 
@@ -147,7 +188,6 @@ export async function loadBakedZone(name, game) {
     enemySpawns: meta.enemies,
     chests: meta.chests,
     scarab: meta.scarab,
-    waters: meta.waters,
     sunDir,
     region: regionAt,
     isInside: p => regionAt(p).kind !== 'outdoor',
@@ -160,8 +200,11 @@ export async function loadBakedZone(name, game) {
       if (i >= 0) C.boxes.splice(i, 1);
     },
     sky, skyRot,
+    seal, relic: meta.relic, waters: meta.waters,
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
+      exitFx.forEach((m, i) => { m.material.opacity = 0.12 + Math.sin(t * 2 + i) * 0.05; });
+      if (seal?.open && seal.mesh.visible) { seal.t += dt; seal.mesh.position.y = seal.h / 2 - seal.t * 1.4; if (seal.t * 1.4 > seal.h) seal.mesh.visible = false; }
       if (props) {
         props.water.userData.water.uniforms.time.value = t;
         props.gate.userData.update(dt);

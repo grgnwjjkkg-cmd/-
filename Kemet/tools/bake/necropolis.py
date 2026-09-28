@@ -231,8 +231,8 @@ M['regions'] = [
     {'name': 'cave', 'box': [10, 52, -106, -54], 'kind': 'cave', 'music': 'tomb'},
     {'name': 'lair', 'box': [52, 80, -108, -82], 'kind': 'indoor', 'music': 'tomb'},
 ]
-M['spawns'] = {'town': {'x': 0, 'z': 104, 'face': math.pi}, 'default': {'x': 0, 'z': 104, 'face': math.pi}}
-M['exits'] = [{'x': 0, 'z': 112, 'r': 3.5, 'to': 'town'}]
+M['spawns'] = {'town': {'x': 0, 'z': 104, 'face': math.pi}, 'default': {'x': 0, 'z': 104, 'face': math.pi}, 'giza': {'x': -23, 'z': 96, 'face': math.pi / 2}}
+M['exits'] = [{'x': 0, 'z': 112, 'r': 3.5, 'to': 'town'}, {'x': -28, 'z': 96, 'r': 3, 'to': 'giza'}]   # 西の道はギザの台地へ
 M['enemies'] = [
     {'type': 'bandit', 'x': -18, 'z': 50}, {'type': 'bandit', 'x': 8, 'z': 26},
     {'type': 'mummy', 'x': 3, 'z': -24}, {'type': 'mummy', 'x': 0, 'z': -50},
