@@ -77,7 +77,7 @@ struct AdventureView: View {
                                         }
                                         .opacity(party.contains(def.id) ? 1 : 0.6)
                                 }
-                                .accessibilityLabel("\(def.name)\(party.contains(def.id) ? "、選択中" : "")")
+                                .accessibilityLabel(party.contains(def.id) ? def.name + "、選択中" : def.name)
                             }
                         }
                         .sensoryFeedback(.selection, trigger: party)

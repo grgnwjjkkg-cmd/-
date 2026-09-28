@@ -175,7 +175,7 @@
 			path = Oshitabi;
 			sourceTree = "<group>";
 		};
-		"TEMP_71F0DBF5-4C68-4B8E-A421-A89150E10CB2" /* Resources */ = {
+		"TEMP_BB1875AA-3EC3-4C22-AAA8-12D73B5F2645" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
