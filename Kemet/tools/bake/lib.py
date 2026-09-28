@@ -112,7 +112,8 @@ class Level:
         if collide:
             self.meta['colliders']['boxes'].append([c[0] - s[0] / 2, c[0] + s[0] / 2, c[2] - s[2] / 2, c[2] + s[2] / 2])
 
-    def cyl(self, group, mat, x, z, y0, h, r1, r2, seg=28, collide=True, lying=None):
+    def cyl(self, group, mat, x, z, y0, h, r1, r2, seg=None, collide=True, lying=None):
+        if seg is None: seg = max(24, min(64, int(2 * math.pi * max(r1, r2) / 0.12)))  # 太い柱ほど面を細かく
         bm = self.bm(group, mat)
         # 層は形を作る前に用意する（あとから作ると面の参照が切れる）
         lay = bm.faces.layers.int.get('cyl') or bm.faces.layers.int.new('cyl')
@@ -127,14 +128,25 @@ class Level:
                 v.co = B(x, 0, z) + Vector((0, 0, y0)) + p
             else:
                 v.co = B(x, y0 + h / 2, z) + p
-        # 円筒に沿った模様のUV（箱投影だと伸びるため）
-        circ = 2 * math.pi * max(r1, r2)
-        for f in {f for v in ret['verts'] for f in v.link_faces}:
+        # 円筒に沿った模様のUV（箱投影だと伸びるため）。一周で模様がちょうど整数回くり返すようにして、つなぎ目を消す
+        faces = {f for v in ret['verts'] for f in v.link_faces}
+        axis = B(x, y0 + h / 2, z)
+        reps = max(1, round(2 * math.pi * max(r1, r2) / 2.5))
+        for f in faces:
+            side = len(f.verts) == 4
+            f.smooth = side   # 側面はなめらかに、上下のふたは平らに
+            if lying is not None:
+                f[lay] = 0; continue
             f[lay] = 1
-            for lp in f.loops:
-                p = lp.vert.co - B(x, y0 + h / 2, z) if lying is None else Vector((0, 0, 0))
-                ang = math.atan2(p.y, p.x) if lying is None else 0
-                lp[uvl].uv = ((ang / (2 * math.pi)) * circ / 2.5, (lp.vert.co.z) / 2.5)
+            if side:
+                us = [(math.atan2((lp.vert.co - axis).y, (lp.vert.co - axis).x) / (2 * math.pi)) % 1.0 for lp in f.loops]
+                if max(us) - min(us) > 0.5: us = [u + 1 if u < 0.5 else u for u in us]
+                for lp, u in zip(f.loops, us): lp[uvl].uv = (u * reps, lp.vert.co.z / 2.5)
+            else:
+                for lp in f.loops: lp[uvl].uv = ((lp.vert.co.x - axis.x) / 2.5, (lp.vert.co.y - axis.y) / 2.5)
+        # ふたと側面の境目は角として残す（なめらかにすると丸く見えるため）
+        edges = [e for e in {e for f in faces for e in f.edges} if len(e.link_faces) == 2 and e.link_faces[0].smooth != e.link_faces[1].smooth]
+        for e in edges: e.smooth = False
         if collide: self.meta['colliders']['circles'].append([x, z, max(r1, r2) + 0.05])
 
     def rock(self, group, mat, c, r, seed=0, rough=0.35, subdiv=3, collide=False):
@@ -146,7 +158,65 @@ class Level:
             d = v.co.normalized()
             k = 1 + rough * noise.noise(d * 1.6 + o) + rough * 0.4 * noise.noise(d * 4.1 + o)
             v.co = B(c[0] + d.x * r[0] * k, c[1] + d.z * r[1] * k, c[2] - d.y * r[2] * k)
+        for f in {f for v in ret['verts'] for f in v.link_faces}: f.smooth = True
         if collide: self.meta['colliders']['circles'].append([c[0], c[2], min(r[0], r[2]) * 0.9])
+
+    def cliff(self, group, mat, x0, x1, z_face, height, step=1.0, seed=0, holes=(), depth=10.0):
+        """南向きの岩壁。地層の段（横の線）と、縦の割れ目・でこぼこがある。
+        height(x)=その場所の崖の高さ、holes=[(x0, x1, y1)] 穴（墓の入口）"""
+        bm = self.bm(group, mat)
+        lay = bm.faces.layers.int.get('cyl') or bm.faces.layers.int.new('cyl')
+        uvl = bm.loops.layers.uv.verify()
+        o = Vector((seed * 3.7, seed * 1.3, 0))
+        nx = int((x1 - x0) / step)
+        H = max(height(x0 + i * step) for i in range(nx + 1))
+        ny = int(H / step) + 1
+        def pos(i, j):
+            x = x0 + i * step
+            top = height(x)
+            y = min(j * step, top)
+            # 地層：高さ 2.8m ごとに段、層ごとに少しずつ出っぱり方が違う
+            layer = math.floor(y / 2.8); f = y / 2.8 - layer
+            ledge = 0.9 * (f ** 3) + 0.5 * noise.noise(Vector((layer * 1.7, 0.3, 0)) + o)
+            # 縦の割れ目と大きなでこぼこ
+            v = Vector((x * 0.09, y * 0.05, 0)) + o
+            bulge = 2.2 * noise.noise(v) + 0.9 * noise.noise(v * 3.1) + 0.35 * noise.noise(Vector((x * 0.9, y * 0.35, 1)) + o)
+            crack = 1.2 * max(0.0, 0.08 - abs(noise.noise(Vector((x * 0.21, 0.5, 2)) + o))) / 0.08
+            d = 1.2 + bulge + ledge + crack + 0.08 * y      # 上ほど少し奥へ（崖らしい傾き）
+            zz = z_face - max(0.0, d)
+            if j * step > top: zz -= (j * step - top) * 0.8  # 上の縁は奥へ丸める
+            return B(x, y, zz)
+        grid = [[bm.verts.new(pos(i, j)) for j in range(ny + 1)] for i in range(nx + 1)]
+        for i in range(nx):
+            for j in range(ny):
+                cx, cy = x0 + (i + 0.5) * step, (j + 0.5) * step
+                if cy > height(cx) + step: continue
+                if any(a < cx < b and cy < y1 for a, b, y1 in holes): continue
+                f = bm.faces.new((grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]))
+                f.smooth = True; f[lay] = 1
+                for lp in f.loops: lp[uvl].uv = (lp.vert.co.x / 7.0, lp.vert.co.z / 7.0)
+        # 崖の上の台地（奥へ平らに）
+        for i in range(nx):
+            a, b = grid[i][ny], grid[i + 1][ny]
+            c = bm.verts.new(b.co + Vector((0, depth, 0))); d = bm.verts.new(a.co + Vector((0, depth, 0)))
+            f = bm.faces.new((a, b, c, d)); f.smooth = True; f[lay] = 1
+            for lp in f.loops: lp[uvl].uv = (lp.vert.co.x / 7.0, lp.vert.co.y / 7.0)
+
+    def mesh_file(self, group, mat, path, loc, rot=0.0, scale=1.0, collide=None):
+        """別に作った形（OBJ）を置く。loc=ゲーム座標（足もと）、rot=y軸まわり"""
+        before = set(bpy.data.objects)
+        bpy.ops.wm.obj_import(filepath=path, forward_axis='NEGATIVE_Z', up_axis='Y')
+        objs = [o for o in bpy.data.objects if o not in before]
+        bm = self.bm(group, mat)
+        from mathutils import Matrix
+        M = Matrix.Translation(B(*loc)) @ Matrix.Rotation(rot, 4, 'Z') @ Matrix.Scale(scale, 4)
+        for o in objs:
+            tmp = o.data.copy(); tmp.transform(M @ o.matrix_world)
+            for poly in tmp.polygons: poly.material_index = 0
+            if tmp.uv_layers: [tmp.uv_layers.remove(u) for u in list(tmp.uv_layers)]
+            bm.from_mesh(tmp); bpy.data.meshes.remove(tmp)
+            bpy.data.objects.remove(o)
+        if collide: self.meta['colliders']['boxes'].append(collide)
 
     def terrain(self, group, mat, x0, x1, z0, z1, nx, nz, height):
         bm = self.bm(group, mat)
@@ -159,7 +229,7 @@ class Level:
             verts.append(row)
         for j in range(nz):
             for i in range(nx):
-                bm.faces.new((verts[j][i], verts[j + 1][i], verts[j + 1][i + 1], verts[j][i + 1]))
+                bm.faces.new((verts[j][i], verts[j + 1][i], verts[j + 1][i + 1], verts[j][i + 1])).smooth = True
 
     def pyramid(self, group, mat, x, z, size, h):
         bm = self.bm(group, mat)

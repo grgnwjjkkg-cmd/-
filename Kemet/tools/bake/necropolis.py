@@ -13,12 +13,13 @@ L = Level('necropolis', SAMPLES)
 
 # ---------- 材質 ----------
 L.material('sand', 'coast_sand_01', (1.0, 0.93, 0.8), scale=4)
-L.material('cliff', 'rock_face_02', (0.95, 0.82, 0.66), scale=6)
+L.material('cliff', 'rock_face_02', (0.98, 0.84, 0.66), scale=6)
+L.material('carved', 'sandstone_blocks_08', (1.0, 0.9, 0.76), scale=9)   # 岩から彫り出した像
 L.material('rock', 'rock_face_02', (0.78, 0.66, 0.54), scale=4)
 L.material('blocks', 'large_sandstone_blocks_01', scale=3)
 L.material('stone', 'sandstone_blocks_08', scale=2.5)
 L.material('pave', 'red_sandstone_pavement', (0.78, 0.7, 0.58), scale=3)
-L.material('pyr', 'sandstone_blocks_08', (1.0, 0.9, 0.75), scale=12)
+L.material('pyr', 'large_sandstone_blocks_01', (0.86, 0.72, 0.55), scale=5)
 L.emission('glow', (1.0, 0.85, 0.6), 6)
 
 L.group('ext', 4096)    # 屋外（砂漠・遺跡・崖）
@@ -40,30 +41,23 @@ def dune(x, z):
 
 L.terrain('ext', 'sand', -80, 80, -14, 140, 64, 62, dune)
 
-# 崖（北の壁）：大きな岩を並べる。入口（x=0）のところは空ける
-for i, x in enumerate(range(-76, 80, 7)):
-    if abs(x) < 7: continue
-    h = 24 + (i * 37 % 11)
-    L.rock('ext', 'cliff', (x, h * 0.5, -11 - (i % 3)), (7.5, h, 7), seed=i, rough=0.3, subdiv=3)
-L.rock('ext', 'cliff', (-5, 22, -13), (7, 14, 6), seed=91)
-L.rock('ext', 'cliff', (5, 22, -13), (7, 14, 6), seed=92)
-L.rock('ext', 'cliff', (0, 30, -13), (11, 8, 7), seed=93)
-L.meta['colliders']['boxes'] += [[-80, -2.2, -16, -5.0], [2.2, 80, -16, -5.0]]
+# 崖（北の壁）：地層の段がある一枚の岩壁。入口（x=0）のところに穴
+def cliff_h(x):
+    return 27 + 5 * math.sin(x * 0.07 + 1) + 2.5 * math.sin(x * 0.19 + 2) + 1.2 * math.sin(x * 0.53)
+L.cliff('ext', 'cliff', -84, 84, -5.4, cliff_h, step=1.0, seed=3, holes=[(-2.3, 2.3, 8.3)])
+# ふもとの落石
+for i, x in enumerate(range(-76, 80, 9)):
+    if abs(x) < 16: continue
+    s_ = 1.2 + (i * 37 % 5) * 0.5
+    L.rock('ext', 'cliff', (x + (i % 3), s_ * 0.4, -5.2 - (i % 2)), (s_ * 1.6, s_, s_ * 1.2), seed=40 + i, rough=0.35)
+L.meta['colliders']['boxes'] += [[-84, -2.2, -16, -5.0], [2.2, 84, -16, -5.0]]
 
 # 墓の入口（崖に彫られた門）：人の9倍の高さの座像が両わきに座る
 for sx in (-1, 1):
     L.box('ext', 'blocks', (sx * 4.2, 8, -4.6), (4.4, 16, 1.6))                     # 門の両わき
     X = sx * 10.5
-    L.box('ext', 'blocks', (X, 1.5, -4.2), (6.4, 3, 7))                             # 座像の台
-    L.box('ext', 'stone', (X, 5.2, -5.4), (4.6, 4.4, 4.6), collide=False)          # 座（腰）
-    L.box('ext', 'stone', (X, 4.6, -1.8), (4.4, 3.2, 3.0), collide=False)          # ひざ
-    L.box('ext', 'stone', (X - 1.2, 1.5 + 1.6, -0.9), (1.4, 3.2, 1.6), collide=False)   # すね
-    L.box('ext', 'stone', (X + 1.2, 1.5 + 1.6, -0.9), (1.4, 3.2, 1.6), collide=False)
-    L.tbox('ext', 'stone', (X, 10.6, -5.6), (4.6, 7, 3.2), taper=0.8)              # 胴
-    L.box('ext', 'stone', (X, 15.0, -5.4), (1.8, 1.8, 1.8), collide=False)          # 首
-    L.box('ext', 'stone', (X, 16.8, -5.2), (2.6, 3.0, 2.8), collide=False)          # 頭
-    L.tbox('ext', 'stone', (X, 17.6, -5.6), (4.2, 3.6, 3.2), taper=0.7)            # 頭巾（ネメス）
-    L.tbox('ext', 'stone', (X, 20.6, -5.6), (2.0, 2.6, 2.0), taper=0.45)           # 冠
+    L.box('ext', 'blocks', (X, 1.5, -4.6), (8.4, 3, 9))                             # 座像の台
+    L.mesh_file('ext', 'carved', os.path.join(os.path.dirname(__file__), 'models', 'colossus.obj'), (X, 3.0, -3.6), scale=11.5)
 L.box('ext', 'blocks', (0, 12.5, -4.6), (4.4, 7, 1.8), collide=False)               # まぐさ石
 L.box('ext', 'stone', (0, 16.4, -4.4), (30, 0.9, 2.6), collide=False)               # 軒
 L.box('ext', 'blocks', (0, 20, -4.9), (30, 6.4, 1.4), collide=False)                # 上の壁
@@ -99,10 +93,12 @@ for z in range(10, 100, 12):
         L.box('ext', 'stone', (sx * 6, 1.6, z), (1.2, 3.2, 1.2), rot=0.0)
 
 # 遠景のピラミッド
-L.pyramid('far', 'pyr', 40, -420, 330, 210)      # 崖の向こうの大ピラミッド
-L.pyramid('far', 'pyr', -420, -60, 260, 165)
-L.pyramid('far', 'pyr', 400, 120, 230, 146)
-L.pyramid('far', 'pyr', -330, 330, 120, 76)
+L.pyramid('far', 'pyr', 70, -330, 360, 230)      # 崖の向こうの大ピラミッド（崖の上に頭が見える）
+L.pyramid('far', 'pyr', -420, 20, 300, 190)
+L.pyramid('far', 'pyr', 440, 110, 260, 165)
+L.pyramid('far', 'pyr', -260, 420, 160, 100)
+# 地平線までつづく砂漠（ピラミッドが宙に浮かないように）
+L.terrain('far', 'sand', -1600, 1600, -1600, 1600, 64, 64, lambda x, z: dune(x, z) - 0.4 + 6 * min(1, max(0, (math.hypot(x, z - 60) - 180) / 250)) * math.sin(x * 0.004 + 1) * math.sin(z * 0.005 + 2))
 
 # ============================================================
 # 墓の中（暗い）：入口通路 → 前室 → 通路 → 浸水した柱の広間
