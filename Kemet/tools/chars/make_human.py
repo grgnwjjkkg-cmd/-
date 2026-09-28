@@ -24,7 +24,8 @@ BLACK_HAIR = (0.045, 0.036, 0.03)
 CHARS = {
     # 主人公：若い探検家。日焼けした肌、短い黒髪、白い腰布と青と金の首飾り
     'hero': dict(macro=M_(1.0, 0.42, 0.72, 0.42, 0.62, 0.85), skin='young_african_male', hair='short02', hair_color=(0.16, 0.12, 0.1),
-                 kilt=dict(top_f=0.564, bottom_f=0.331, color=WHITE), collar=GOLD_BLUE, armbands=True),
+                 kilt=dict(top_f=0.564, bottom_f=0.331, color=WHITE, belt=(0.36, 0.22, 0.12)), collar=GOLD_BLUE, armbands=True,
+                 headband=(0.42, 0.06, 0.04), bracers=True, satchel=True),
     # 神官長ネフェル：白い長い服、黒いかつら、金と青の首飾り
     'nefer': dict(macro=M_(0.0, 0.5, 0.45, 0.4, 0.62, 0.9, RACE(0.4, 0.4, 0.2)), skin='young_african_female', hair='bob02', hair_color=BLACK_HAIR,
                   kilt=dict(top_f=0.765, bottom_f=0.07, color=WHITE, dress=True, belt_f=0.6, belt=(0.85, 0.66, 0.25)), collar=GOLD_BLUE, armbands=True),
@@ -313,6 +314,54 @@ if C.get('kilt'):
     K['waist'] = br[0].z
     clothes += [kilt, belt]
 
+
+def band_around(center, axis, radius_guess, half_w, name, material, bvh_=None, n=28, pad=0.006):
+    """軸のまわりに体の表面にそって巻く帯（はちまき・腕当て・たすき）"""
+    ax = axis.normalized(); u = ax.orthogonal().normalized(); w = ax.cross(u)
+    rings = []
+    for k in (-half_w, half_w):
+        ring = []
+        for j in range(n):
+            a = j / n * math.tau; d = u * math.cos(a) + w * math.sin(a)
+            c = center + ax * k
+            hit = (bvh_ or bvh).ray_cast(c + d * 0.4, -d)[0]
+            r = (hit - c).length if hit else radius_guess
+            ring.append(c + d * (r + pad))
+        rings.append(ring)
+    o = ring_mesh(name, rings); o.data.materials.append(material); clothes.append(o)
+    return o
+
+
+LEATHER = mat('leather', (0.36, 0.22, 0.12), 0.65)
+if C.get('headband'):   # はちまき：おでこの高さで頭に巻く
+    h0, h1 = joints['Head']
+    band_around(h0.lerp(h1, 0.5) + Vector((0, -0.005, 0)), Vector((0, 0.28, 1)), 0.1, 0.013, 'Headband', mat('headband', C['headband'], 0.8), n=36, pad=0.021)
+if C.get('bracers'):    # 革の腕当て（ひじから手首）
+    for s_ in ('l', 'r'):
+        h, t = joints[f'lowerarm_{s_}']
+        band_around(h.lerp(t, 0.62), t - h, 0.04, 0.06, f'Bracer_{s_}', LEATHER, pad=0.008)
+if C.get('sash'):       # たすき：左の肩から右の腰へ、ななめに胸をまわる帯
+    sh = joints['clavicle_l'][1]; hip = joints['thigh_r'][0]
+    mid = sh.lerp(hip, 0.5)
+    axis = Vector((0, 1, 0)).cross((sh - hip).normalized())   # 帯の面に垂直な向き
+    band_around(mid, axis, 0.2, 0.03, 'Sash', mat('sash', C['sash'], 0.85), bvh_=bvh_t, n=48, pad=0.01)
+if C.get('satchel'):    # 右の腰のかばん
+    hip = joints['thigh_r'][0]
+    r = bmesh.new(); bmesh.ops.create_cube(r, size=1)
+    for v in r.verts: v.co = Vector((hip.x - 0.13 + v.co.x * 0.07, hip.y + 0.02 + v.co.y * 0.2, hip.z - 0.1 + v.co.z * 0.18))
+    me = bpy.data.meshes.new('Satchel'); r.to_mesh(me); r.free()
+    o = bpy.data.objects.new('Satchel', me); bpy.context.collection.objects.link(o); o.data.materials.append(LEATHER); clothes.append(o)
+if C.get('sandals'):    # サンダルの底
+    for s_ in ('l', 'r'):
+        f0, f1 = joints[f'foot_{s_}']; b1 = joints[f'ball_{s_}'][1]
+        heel = Vector((f0.x, f0.y + 0.06, 0.0)); toe = Vector((b1.x, b1.y - 0.03, 0.0))
+        c = (heel + toe) / 2; L_ = (toe - heel).length
+        fwd = (toe - heel).normalized(); right = Vector((fwd.y, -fwd.x, 0))
+        r = bmesh.new(); bmesh.ops.create_cube(r, size=1)
+        for v in r.verts:
+            v.co = c + right * (v.co.x * 0.1) + fwd * (v.co.y * L_) + Vector((0, 0, 0.008 + v.co.z * 0.016))
+        me = bpy.data.meshes.new(f'Sandal_{s_}'); r.to_mesh(me); r.free()
+        o = bpy.data.objects.new(f'Sandal_{s_}', me); bpy.context.collection.objects.link(o); o.data.materials.append(LEATHER); clothes.append(o)
 
 if C.get('armbands'):
     gold = mat('gold', (0.9, 0.68, 0.3), 0.3, 1.0)
