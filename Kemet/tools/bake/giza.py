@@ -103,6 +103,12 @@ for z in range(0, 90, 10):
     for sx in (-1, 1):
         L.box('ground', 'stone', (sx * 8, 1.2, z), (1.0, 2.4, 1.0))
 
+# 太陽の門：2本のオベリスクと、上にわたした金の横木
+for sx in (-1, 1):
+    L.box('ground', 'stone', (sx * 3.2, 0.5, 60), (2.2, 1.0, 2.2))
+    L.tbox('ground', 'stone', (sx * 3.2, 7, 60), (1.3, 12, 1.3), taper=0.6)
+L.box('ground', 'casing', (0, 12.6, 60), (8.6, 0.8, 1.0), collide=False)
+
 # ---------- 光（午後の低い日ざし：段の影が長く伸びる）
 L.sky('goegap.hdr', strength=1.0, rotation=math.radians(40))
 L.sun(elevation=30, azimuth=75, energy=4.2, color=(1.0, 0.88, 0.7))
@@ -114,8 +120,9 @@ C += [[-80, -74, -60, 100], [74, 80, -60, 100], [-80, 80, 96, 102]]   # 台地�
 C.remove([-80, 80, 96, 102]); C += [[-80, -4, 96, 102], [4, 80, 96, 102]]
 M['regions'] = [{'name': 'giza', 'box': [-1600, 1600, -1600, 1600], 'kind': 'outdoor', 'music': 'desert'}]
 M['spawns'] = {'default': {'x': 0, 'z': 88, 'face': math.pi}, 'necropolis': {'x': 0, 'z': 88, 'face': math.pi},
-               'pyramid': {'x': 0, 'z': FZ + 5, 'face': 0}}
-M['exits'] = [{'x': 0, 'z': 99, 'r': 3.2, 'to': 'necropolis'}, {'x': 0, 'z': FZ + 1.6, 'r': 2.2, 'to': 'pyramid'}]
+               'pyramid': {'x': 0, 'z': FZ + 5, 'face': 0}, 'sky': {'x': 0, 'z': 55, 'face': math.pi}}
+M['exits'] = [{'x': 0, 'z': 99, 'r': 3.2, 'to': 'necropolis'}, {'x': 0, 'z': FZ + 1.6, 'r': 2.2, 'to': 'pyramid'},
+              {'x': 0, 'z': 60, 'r': 2.2, 'to': 'sky', 'requires': 'pyrEscaped'}]   # 太陽の門（秘宝を持ち帰ると開く）
 M['enemies'] = [{'type': 'bandit', 'x': -30, 'z': 20}, {'type': 'bandit', 'x': 30, 'z': 44}, {'type': 'bandit', 'x': 46, 'z': -4}]
 M['chests'] = [{'x': 46, 'z': 12, 'ankh': 180}, {'x': -46, 'z': 70, 'ankh': 160}]
 M['waters'] = []
