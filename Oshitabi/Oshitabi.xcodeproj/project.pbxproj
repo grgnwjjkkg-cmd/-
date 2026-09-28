@@ -1,0 +1,548 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2A0030FBB7A880B1AEEE34B8 /* CardText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168CE803838AE765C5DED8CF /* CardText.swift */; };
+		2C16098D5E183D75135A6789 /* BattleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEC98A492EE1682C995B17C /* BattleView.swift */; };
+		410BB382AD9FE38398FFC130 /* AdventureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A808B3645FDF0C4AD866F53B /* AdventureView.swift */; };
+		4A28BE6163DC1C6AF5196AA8 /* Battle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E1528F23A11F7D434E28BF6 /* Battle.swift */; };
+		78DAA04D9F10DD5D26F4D276 /* Sprites in Resources */ = {isa = PBXBuildFile; fileRef = 641F0FDDD9B801DEDD51FCEA /* Sprites */; };
+		8DBC2E2C2FC5DA3014EC766D /* EngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 035873BEBF7A1AD4B4CDF041 /* EngineTests.swift */; };
+		8F43711272F608BAB8F203D0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0566BA0B277BEBB42C257D1B /* HomeView.swift */; };
+		999848E726EC199DE4540F36 /* RNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DA8200D52FE66CA969B08F /* RNG.swift */; };
+		9BA5A152473D6609A6179E94 /* PartyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D192A7662DA1BDFD63A304 /* PartyView.swift */; };
+		9BF1145FBF023F993FA8FAA3 /* Run.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97D5DF73193DB72D3BA65B8B /* Run.swift */; };
+		B45B8E9336D1E3528C3272D1 /* GameStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5CE472F40BE871A23B5EE02 /* GameStore.swift */; };
+		BC7641F318FF75ACFEB76E92 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22FBBB7D78036347CBD7AE00 /* Assets.xcassets */; };
+		C907523B2620F0CD8D51B3B2 /* OshitabiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F08E1ED51D93E45FF2A0C6 /* OshitabiApp.swift */; };
+		CB045EDB1D5139C9E05814DB /* Definitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D837D4C7894DB1A44F2EC141 /* Definitions.swift */; };
+		CBBC91E25CAFD35F49BA470C /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF387DB42FBC5BF58009DE09 /* Components.swift */; };
+		D631EB1A7E6A5BFD5001FB3A /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB9077AD35BADF1370FF9F7 /* Catalog.swift */; };
+		E3809EAACC5329DA27E4EAD9 /* RunScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E79E297E2D0D0D83DE0A46 /* RunScreens.swift */; };
+		F6986DFAC26EDDBA506B929D /* Progress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DF8F8AB335F54D5ADACE95 /* Progress.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6F87144931D3CC9337D28813 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C990C64066A81DE7C7C0C724 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BD0EECB0AF9DF7FF6AF82E9A;
+			remoteInfo = Oshitabi;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		020B27A329CCED447F31B47A /* OshitabiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OshitabiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		035873BEBF7A1AD4B4CDF041 /* EngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineTests.swift; sourceTree = "<group>"; };
+		04DF8F8AB335F54D5ADACE95 /* Progress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Progress.swift; sourceTree = "<group>"; };
+		0566BA0B277BEBB42C257D1B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		168CE803838AE765C5DED8CF /* CardText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardText.swift; sourceTree = "<group>"; };
+		22FBBB7D78036347CBD7AE00 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2E1528F23A11F7D434E28BF6 /* Battle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Battle.swift; sourceTree = "<group>"; };
+		641F0FDDD9B801DEDD51FCEA /* Sprites */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sprites; path = Oshitabi/Resources/Sprites; sourceTree = SOURCE_ROOT; };
+		81F08E1ED51D93E45FF2A0C6 /* OshitabiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OshitabiApp.swift; sourceTree = "<group>"; };
+		8DB9077AD35BADF1370FF9F7 /* Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalog.swift; sourceTree = "<group>"; };
+		97D5DF73193DB72D3BA65B8B /* Run.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Run.swift; sourceTree = "<group>"; };
+		99D192A7662DA1BDFD63A304 /* PartyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyView.swift; sourceTree = "<group>"; };
+		A808B3645FDF0C4AD866F53B /* AdventureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdventureView.swift; sourceTree = "<group>"; };
+		AF387DB42FBC5BF58009DE09 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		C546192600F5A80199EB4271 /* Oshitabi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Oshitabi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CFEC98A492EE1682C995B17C /* BattleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleView.swift; sourceTree = "<group>"; };
+		D1DA8200D52FE66CA969B08F /* RNG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNG.swift; sourceTree = "<group>"; };
+		D2E79E297E2D0D0D83DE0A46 /* RunScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunScreens.swift; sourceTree = "<group>"; };
+		D837D4C7894DB1A44F2EC141 /* Definitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Definitions.swift; sourceTree = "<group>"; };
+		E5CE472F40BE871A23B5EE02 /* GameStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		073BE728C617FC01334DF49D /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				E5CE472F40BE871A23B5EE02 /* GameStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		3E198D0A82EF3F410A452330 /* Adventure */ = {
+			isa = PBXGroup;
+			children = (
+				A808B3645FDF0C4AD866F53B /* AdventureView.swift */,
+				CFEC98A492EE1682C995B17C /* BattleView.swift */,
+				D2E79E297E2D0D0D83DE0A46 /* RunScreens.swift */,
+			);
+			path = Adventure;
+			sourceTree = "<group>";
+		};
+		4DB1B54A46D1BBB0B09BB814 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3E198D0A82EF3F410A452330 /* Adventure */,
+				C1A63DFD89D50969EEF8D8A6 /* Common */,
+				CD8C87212587C8874DCAFD1A /* Home */,
+				7D58A473E0D58FA954BE1E76 /* Party */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6CDD362C1271D278C7246654 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				2E1528F23A11F7D434E28BF6 /* Battle.swift */,
+				168CE803838AE765C5DED8CF /* CardText.swift */,
+				8DB9077AD35BADF1370FF9F7 /* Catalog.swift */,
+				D837D4C7894DB1A44F2EC141 /* Definitions.swift */,
+				04DF8F8AB335F54D5ADACE95 /* Progress.swift */,
+				D1DA8200D52FE66CA969B08F /* RNG.swift */,
+				97D5DF73193DB72D3BA65B8B /* Run.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		7D58A473E0D58FA954BE1E76 /* Party */ = {
+			isa = PBXGroup;
+			children = (
+				99D192A7662DA1BDFD63A304 /* PartyView.swift */,
+			);
+			path = Party;
+			sourceTree = "<group>";
+		};
+		C1A63DFD89D50969EEF8D8A6 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				AF387DB42FBC5BF58009DE09 /* Components.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		C4EB83C20E6CA1A57FB817F3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C546192600F5A80199EB4271 /* Oshitabi.app */,
+				020B27A329CCED447F31B47A /* OshitabiTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CD8C87212587C8874DCAFD1A /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				0566BA0B277BEBB42C257D1B /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		E1231AFA4202E66FADC4ABFE = {
+			isa = PBXGroup;
+			children = (
+				641F0FDDD9B801DEDD51FCEA /* Sprites */,
+				F92AF2D947DD9B673774BCD1 /* Oshitabi */,
+				EA390B32E7F12EE296C76027 /* OshitabiTests */,
+				C4EB83C20E6CA1A57FB817F3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E3FAA992A2F73DB83BFAD2F7 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				81F08E1ED51D93E45FF2A0C6 /* OshitabiApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		EA390B32E7F12EE296C76027 /* OshitabiTests */ = {
+			isa = PBXGroup;
+			children = (
+				035873BEBF7A1AD4B4CDF041 /* EngineTests.swift */,
+			);
+			path = OshitabiTests;
+			sourceTree = "<group>";
+		};
+		F92AF2D947DD9B673774BCD1 /* Oshitabi */ = {
+			isa = PBXGroup;
+			children = (
+				22FBBB7D78036347CBD7AE00 /* Assets.xcassets */,
+				E3FAA992A2F73DB83BFAD2F7 /* App */,
+				6CDD362C1271D278C7246654 /* Engine */,
+				073BE728C617FC01334DF49D /* Store */,
+				4DB1B54A46D1BBB0B09BB814 /* Views */,
+			);
+			path = Oshitabi;
+			sourceTree = "<group>";
+		};
+		"TEMP_71F0DBF5-4C68-4B8E-A421-A89150E10CB2" /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4DC19D8432F99D5F7C233F7E /* OshitabiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2050045040B4441100ECB98 /* Build configuration list for PBXNativeTarget "OshitabiTests" */;
+			buildPhases = (
+				DEEA3CFC56E008568BFC587D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6B18AFE8D1F21F894713B009 /* PBXTargetDependency */,
+			);
+			name = OshitabiTests;
+			packageProductDependencies = (
+			);
+			productName = OshitabiTests;
+			productReference = 020B27A329CCED447F31B47A /* OshitabiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		BD0EECB0AF9DF7FF6AF82E9A /* Oshitabi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8AC6ED5FA9D34027751FE1AD /* Build configuration list for PBXNativeTarget "Oshitabi" */;
+			buildPhases = (
+				2F96942612AF001C0F07D860 /* Sources */,
+				FF5B6B033BFC0565759C40BE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Oshitabi;
+			packageProductDependencies = (
+			);
+			productName = Oshitabi;
+			productReference = C546192600F5A80199EB4271 /* Oshitabi.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C990C64066A81DE7C7C0C724 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					BD0EECB0AF9DF7FF6AF82E9A = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F7C2332268DBBE3232310ED4 /* Build configuration list for PBXProject "Oshitabi" */;
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				ja,
+			);
+			mainGroup = E1231AFA4202E66FADC4ABFE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C4EB83C20E6CA1A57FB817F3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BD0EECB0AF9DF7FF6AF82E9A /* Oshitabi */,
+				4DC19D8432F99D5F7C233F7E /* OshitabiTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FF5B6B033BFC0565759C40BE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BC7641F318FF75ACFEB76E92 /* Assets.xcassets in Resources */,
+				78DAA04D9F10DD5D26F4D276 /* Sprites in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2F96942612AF001C0F07D860 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				410BB382AD9FE38398FFC130 /* AdventureView.swift in Sources */,
+				4A28BE6163DC1C6AF5196AA8 /* Battle.swift in Sources */,
+				2C16098D5E183D75135A6789 /* BattleView.swift in Sources */,
+				2A0030FBB7A880B1AEEE34B8 /* CardText.swift in Sources */,
+				D631EB1A7E6A5BFD5001FB3A /* Catalog.swift in Sources */,
+				CBBC91E25CAFD35F49BA470C /* Components.swift in Sources */,
+				CB045EDB1D5139C9E05814DB /* Definitions.swift in Sources */,
+				B45B8E9336D1E3528C3272D1 /* GameStore.swift in Sources */,
+				8F43711272F608BAB8F203D0 /* HomeView.swift in Sources */,
+				C907523B2620F0CD8D51B3B2 /* OshitabiApp.swift in Sources */,
+				9BA5A152473D6609A6179E94 /* PartyView.swift in Sources */,
+				F6986DFAC26EDDBA506B929D /* Progress.swift in Sources */,
+				999848E726EC199DE4540F36 /* RNG.swift in Sources */,
+				9BF1145FBF023F993FA8FAA3 /* Run.swift in Sources */,
+				E3809EAACC5329DA27E4EAD9 /* RunScreens.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DEEA3CFC56E008568BFC587D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8DBC2E2C2FC5DA3014EC766D /* EngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6B18AFE8D1F21F894713B009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BD0EECB0AF9DF7FF6AF82E9A /* Oshitabi */;
+			targetProxy = 6F87144931D3CC9337D28813 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1387303507C074BF0D9E90B3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		1DD6C3F4A3AF1502DEFDB9CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "オシタビ";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.oshitabi;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		3543567501AEC5E8AAE5CAF1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.oshitabi.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Oshitabi.app/Oshitabi";
+			};
+			name = Debug;
+		};
+		97056F83C60B8AB58FAD6540 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "オシタビ";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.oshitabi;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B53C855DAB1961D439F67047 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EA142E17C16057824B96D018 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.oshitabi.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Oshitabi.app/Oshitabi";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8AC6ED5FA9D34027751FE1AD /* Build configuration list for PBXNativeTarget "Oshitabi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DD6C3F4A3AF1502DEFDB9CA /* Debug */,
+				97056F83C60B8AB58FAD6540 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D2050045040B4441100ECB98 /* Build configuration list for PBXNativeTarget "OshitabiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3543567501AEC5E8AAE5CAF1 /* Debug */,
+				EA142E17C16057824B96D018 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F7C2332268DBBE3232310ED4 /* Build configuration list for PBXProject "Oshitabi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B53C855DAB1961D439F67047 /* Debug */,
+				1387303507C074BF0D9E90B3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C990C64066A81DE7C7C0C724 /* Project object */;
+}

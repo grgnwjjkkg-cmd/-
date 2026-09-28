@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+</head>
+<body>
+<script type="module">
+// キャラ・敵の3Dモデルを、アプリで使う画像（待機アニメのコマ・攻撃ポーズ・顔アイコン）に変換する。
+// render.js（Playwright）から window.renderOne(id) を呼んで使う。
+import * as THREE from 'three';
+import { GLTFLoader } from './lib/jsm/loaders/GLTFLoader.js';
+import { RoomEnvironment } from './lib/jsm/environments/RoomEnvironment.js';
+
+const B = './assets/base/Universal Base Characters[Standard]';
+const O = './assets/outfits/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits';
+const HAIR = n => `${B}/Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/${n}.gltf`;
+
+// 見た目の組み合わせ。shadow があるものは敵（影の姿）
+const DEFS = {
+  kai:  { sex: 'Male',   outfit: 'Ranger',  hair: ['Hair_SimpleParted', 'Eyebrows_Regular'], hairCol: '#3a2a22', tint: '#ffffff', idle: 'Idle_Loop',              attack: ['Sword_Attack', 0.35] },
+  sena: { sex: 'Female', outfit: 'Ranger',  hair: ['Hair_Long', 'Eyebrows_Female'],         hairCol: '#e8eef8', tint: '#9cc4ff', idle: 'Spell_Simple_Idle_Loop', attack: ['Spell_Simple_Shoot', 0.3] },
+  mio:  { sex: 'Female', outfit: 'Peasant', hair: ['Hair_Buns', 'Eyebrows_Female'],         hairCol: '#ff7aa8', tint: '#ffc4dc', idle: 'Dance_Loop',             attack: ['Spell_Simple_Shoot', 0.3] },
+  gald: { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_Buzzed', 'Hair_Beard', 'Eyebrows_Regular'], hairCol: '#b0542a', tint: '#e0d0b0', idle: 'Idle_Talking_Loop', attack: ['Punch_Cross', 0.4] },
+  rin:  { sex: 'Female', outfit: 'Ranger',  hood: true, hair: ['Eyebrows_Female'],          hairCol: '#222222', tint: '#8a8f9a', idle: 'Crouch_Idle_Loop',       attack: ['Punch_Jab', 0.35] },
+  leo:  { sex: 'Male',   outfit: 'Ranger',  hair: ['Hair_Buzzed', 'Eyebrows_Regular'],       hairCol: '#141414', tint: '#ffcf8a', idle: 'Idle_Loop',              attack: ['Punch_Cross', 0.4] },
+  e_minion: { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_SimpleParted'], idle: 'Idle_Loop', t: 0.5, shadow: '#2a1f3a', eye: '#ff3b5c' },
+  e_scout:  { sex: 'Female', outfit: 'Ranger', hood: true, hair: [], idle: 'Crouch_Idle_Loop', t: 0.4, shadow: '#1f2a3a', eye: '#59e0ff' },
+  e_dancer: { sex: 'Female', outfit: 'Peasant', hair: ['Hair_Buns'], idle: 'Dance_Loop', t: 1.1, shadow: '#3a1f33', eye: '#ff5ad1' },
+  e_smith:  { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_Buzzed', 'Hair_Beard'], idle: 'Idle_Talking_Loop', t: 1.3, shadow: '#3a241a', eye: '#ffb13b' },
+  e_blade:  { sex: 'Male',   outfit: 'Ranger', hair: ['Hair_Buzzed'], idle: 'Sword_Idle', t: 0.5, shadow: '#1a2a24', eye: '#6bff9e' },
+  e_king:   { sex: 'Male',   outfit: 'Ranger', hood: true, hair: [], idle: 'Spell_Simple_Idle_Loop', t: 0.6, shadow: '#2a0f18', eye: '#ff2a2a' },
+};
+
+const W = 480, H = 600, FRAMES = 24;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.NeutralToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const loader = new GLTFLoader();
+const load = u => new Promise((res, rej) => loader.load(u, res, undefined, rej));
+const animLib = load('./assets/anim/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb');
+
+// 服を着せるときは素体の頭と首だけ残す（体が服から突き抜けないように）
+function headOnly(o) {
+  const g = o.geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, bones = o.skeleton.bones;
+  const keep = new Set(bones.map((b, i) => /^(Head|neck_01)$/.test(b.name) ? i : -1).filter(i => i >= 0));
+  const ok = v => { let w = 0; for (let k = 0; k < 4; k++) if (keep.has(si.getComponent(v, k))) w += sw.getComponent(v, k); return w > 0.5; };
+  const idx = g.index.array, out = [];
+  for (let t = 0; t < idx.length; t += 3) if (ok(idx[t]) && ok(idx[t + 1]) && ok(idx[t + 2])) out.push(idx[t], idx[t + 1], idx[t + 2]);
+  g.setIndex(out);
+}
+
+async function build(d) {
+  const group = new THREE.Group(), scenes = [];
+  const parts = [`${B}/Base Characters/Godot - UE/Superhero_${d.sex}_FullBody.gltf`, `${O}/${d.sex}_${d.outfit}.gltf`, ...d.hair.map(HAIR)];
+  const shadowMat = d.shadow && new THREE.MeshStandardMaterial({ color: d.shadow, roughness: 0.55, metalness: 0.25 });
+  const eyeMat = d.shadow && new THREE.MeshBasicMaterial({ color: d.eye });
+  for (const [i, u] of parts.entries()) {
+    const g = await load(u);
+    g.scene.traverse(o => {
+      if (!o.isMesh) return;
+      o.castShadow = o.receiveShadow = true; o.frustumCulled = false;
+      const m = o.material;
+      if (i === 0 && o.isSkinnedMesh && /Superhero/.test(m.name)) headOnly(o);
+      if (/Hood/.test(o.name) && !d.hood) o.visible = false;
+      if (d.shadow) { o.material = /Eye/.test(o.name) ? eyeMat : shadowMat; return; }
+      if (/Hair/.test(m.name)) { m.color = new THREE.Color(d.hairCol); m.map = null; m.roughness = 0.45; m.needsUpdate = true; }
+      if (/Ranger|Peasant/.test(m.name)) m.color = new THREE.Color(d.tint);
+    });
+    scenes.push(g.scene); group.add(g.scene);
+  }
+  return { group, scenes };
+}
+
+function stage(shadow) {
+  const scene = new THREE.Scene(); scene.environment = env;
+  const key = new THREE.DirectionalLight('#fff3e6', shadow ? 1.2 : 2.6); key.position.set(2, 4, 3); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -1 }); key.shadow.radius = 6;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(shadow ? '#ff5ad1' : '#bcd4ff', shadow ? 5 : 2.2); rim.position.set(-3, 3, -3); scene.add(rim);
+  const rim2 = new THREE.DirectionalLight(shadow ? '#7a5cff' : '#ffe0c0', shadow ? 3 : 0.8); rim2.position.set(3, 2, -3); scene.add(rim2);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#8a7aa8', shadow ? 0.25 : 0.5));
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(0.9, 64), new THREE.ShadowMaterial({ opacity: 0.3 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = 0.002; floor.receiveShadow = true; scene.add(floor);
+  return scene;
+}
+
+function snap(scene, cam, w, h) {
+  renderer.setSize(w, h); renderer.setClearColor(0x000000, 0);
+  renderer.render(scene, cam);
+  return renderer.domElement.toDataURL('image/webp', 0.85);
+}
+
+function pose(scenes, clip, t) {
+  for (const s of scenes) { const m = new THREE.AnimationMixer(s); m.clipAction(clip).play(); m.setTime(t); }
+}
+
+window.renderOne = async (id) => {
+  const d = DEFS[id], lib = await animLib;
+  const clip = n => lib.animations.find(a => a.name === n);
+  const { group, scenes } = await build(d);
+  group.rotation.y = -0.3;
+  const scene = stage(!!d.shadow); scene.add(group);
+  // 全キャラ同じ縮尺になるよう、カメラは固定（身長約1.8m）
+  const cam = new THREE.PerspectiveCamera(24, W / H, 0.1, 100);
+  cam.position.set(0, 1.05, 5.4); cam.lookAt(0, 0.95, 0);
+  const out = {};
+  const idle = clip(d.idle);
+  if (d.shadow) {
+    pose(scenes, idle, d.t); out['idle.webp'] = snap(scene, cam, W, H);
+    return out;
+  }
+  for (let f = 0; f < FRAMES; f++) {
+    pose(scenes, idle, idle.duration * f / FRAMES);
+    out[`idle_${String(f).padStart(2, '0')}.webp`] = snap(scene, cam, W, H);
+  }
+  pose(scenes, clip(d.attack[0]), clip(d.attack[0]).duration * d.attack[1]);
+  out['attack.webp'] = snap(scene, cam, W, H);
+  // 顔アイコン：待機ポーズの頭を正面寄りから
+  pose(scenes, clip('Idle_Loop'), 0); group.rotation.y = -0.15; group.updateMatrixWorld(true);
+  let head = new THREE.Vector3();
+  scenes[0].getObjectByName('Head').getWorldPosition(head);
+  const pc = new THREE.PerspectiveCamera(22, 1, 0.1, 100);
+  pc.position.set(head.x, head.y + 0.02, head.z + 1.45); pc.lookAt(head.x, head.y - 0.02, head.z);
+  out['face.webp'] = snap(scene, pc, 256, 256);
+  return out;
+};
+// アプリアイコン（1024px、不透明）
+window.renderIcon = async (id) => {
+  const d = DEFS[id], lib = await animLib;
+  const { group, scenes } = await build(d);
+  const scene = stage(false); scene.add(group);
+  const idle = lib.animations.find(a => a.name === d.idle);
+  pose(scenes, idle, 0); group.rotation.y = -0.25; group.updateMatrixWorld(true);
+  const head = new THREE.Vector3(); scenes[0].getObjectByName('Head').getWorldPosition(head);
+  const c = document.createElement('canvas'); c.width = 4; c.height = 256;
+  const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#FF9ACB'); g.addColorStop(1, '#5B3FD6'); x.fillStyle = g; x.fillRect(0, 0, 4, 256);
+  const bg = new THREE.CanvasTexture(c); bg.colorSpace = THREE.SRGBColorSpace; scene.background = bg;
+  const cam = new THREE.PerspectiveCamera(22, 1, 0.1, 100);
+  cam.position.set(head.x, head.y + 0.02, head.z + 1.25); cam.lookAt(head.x, head.y - 0.12, head.z);
+  renderer.setSize(1024, 1024); renderer.render(scene, cam);
+  return renderer.domElement.toDataURL('image/png');
+};
+window.IDS = Object.keys(DEFS);
+window.READY = true;
+</script>
+</body>
+</html>
