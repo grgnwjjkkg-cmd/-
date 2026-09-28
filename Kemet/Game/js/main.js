@@ -11,6 +11,8 @@ import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, pla
 import { audio } from './audio.js';
 // 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
 const HERO_MODEL = 'human_hero';
+// まだ開いていない門に近づいたときのひとこと
+const LOCKED = { gateOpen: '西門は閉ざされている。衛兵の許しが必要だ', pyrEscaped: '太陽の門は閉ざされている。大ピラミッドの秘宝が鍵らしい' };
 // 世界地図（arrive は、その場所のどの入口に出るか）
 const AREAS = [
   { id: 'town', name: 'メンネフェルの町', icon: '🏛', desc: 'ナイルのほとりの町。市場と神殿、船着き場', hint: '', arrive: 'necropolis' },
@@ -997,7 +999,12 @@ class Game {
       }
       // 出口
       for (const ex of this.zone.exits) {
-        if (Math.hypot(this.player.pos.x - ex.x, this.player.pos.z - ex.z) < ex.r && (!ex.requires || this.save.flags[ex.requires])) {
+        const near = Math.hypot(this.player.pos.x - ex.x, this.player.pos.z - ex.z) < ex.r;
+        if (near && ex.requires && !this.save.flags[ex.requires]) {   // まだ開いていない門
+          if (this.time - (this.lockedTip || -99) > 6) { this.lockedTip = this.time; this.toast(LOCKED[ex.requires] || 'まだ先へは進めない'); }
+          continue;
+        }
+        if (near) {
           this.paused = true;
           const escaped = this.escape && ex.to === 'giza';
           if (escaped) this.escape = null;
