@@ -16,6 +16,7 @@ targets:
     sources:
       - path: Oshitabi
         excludes:
+          - "Resources/Sprites"
           - "Resources/Sprites/**"
       # キャラ画像はフォルダごと入れる（Sprites/<id>/xxx.webp のまま読む）
       - path: Oshitabi/Resources/Sprites

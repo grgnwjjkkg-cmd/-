@@ -92,8 +92,9 @@ struct BattleView: View {
         return ZStack(alignment: .top) {
             TimelineView(.animation) { context in
                 let t = context.date.timeIntervalSinceReferenceDate
+                let breathe = CGFloat(1 + 0.015 * sin(t * 2.2))
                 SpriteImage(id: enemy.sprite, name: "idle")
-                    .scaleEffect(1 + 0.015 * sin(t * 2.2), anchor: .bottom)
+                    .scaleEffect(breathe, anchor: .bottom)
                     .scaleEffect(enemy.tier == .boss ? 1.12 : 1, anchor: .bottom)
             }
             .shadow(color: .black.opacity(0.5), radius: 20)

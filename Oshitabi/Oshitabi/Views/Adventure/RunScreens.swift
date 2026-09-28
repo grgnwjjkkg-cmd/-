@@ -31,7 +31,7 @@ struct RunHeader: View {
             HStack(spacing: 6) {
                 ForEach(0..<Run.floorCount, id: \.self) { i in
                     Capsule()
-                        .fill(i < run.floor ? Palette.gold : i == run.floor ? .white : .white.opacity(0.2))
+                        .fill(i < run.floor ? Palette.gold : (i == run.floor ? Color.white : Color.white.opacity(0.2)))
                         .frame(height: 6)
                 }
             }
