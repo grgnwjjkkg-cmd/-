@@ -98,7 +98,7 @@ final class StatsTests: XCTestCase {
     @MainActor
     func testMenuFromStudyAndStartWorkout() throws {
         let container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
-                                           MenuTemplate.self, MenuItem.self,
+                                           MenuTemplate.self, MenuItem.self, BodyWeight.self,
                                            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = container.mainContext
         context.insert(Exercise(name: "スクワット", group: .legs, tracking: .weightReps))
@@ -137,7 +137,7 @@ final class StatsTests: XCTestCase {
     @MainActor
     func testFinishSummaryComparesWithPreviousWorkout() throws {
         let container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
-                                           MenuTemplate.self, MenuItem.self,
+                                           MenuTemplate.self, MenuItem.self, BodyWeight.self,
                                            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = container.mainContext
         let squat = Exercise(name: "スクワット", group: .legs, tracking: .weightReps)
@@ -171,7 +171,7 @@ final class StatsTests: XCTestCase {
     func testBackupRoundTrip() throws {
         func makeContainer() throws -> ModelContainer {
             try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
-                               MenuTemplate.self, MenuItem.self,
+                               MenuTemplate.self, MenuItem.self, BodyWeight.self,
                                configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         }
         let source = try makeContainer().mainContext

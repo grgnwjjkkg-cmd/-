@@ -11,7 +11,7 @@ struct EviTrainApp: App {
     init() {
         do {
             container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
-                                           MenuTemplate.self, MenuItem.self)
+                                           MenuTemplate.self, MenuItem.self, BodyWeight.self)
         } catch {
             fatalError("データベースを開けませんでした: \(error)")
         }

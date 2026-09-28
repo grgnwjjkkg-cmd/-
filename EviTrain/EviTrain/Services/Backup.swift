@@ -58,11 +58,18 @@ struct BackupFile: Codable {
         var items: [MenuItemData]
     }
 
+    struct BodyWeightData: Codable {
+        var date: Date
+        var kilograms: Double
+    }
+
     var version = 1
     var exportedAt: Date
     var exercises: [ExerciseData]
     var workouts: [WorkoutData]
     var menus: [MenuData]
+    /// 古いバックアップには無いので省略可
+    var bodyWeights: [BodyWeightData]? = nil
 
     static func encoder() -> JSONEncoder {
         let encoder = JSONEncoder()
@@ -132,7 +139,10 @@ enum BackupService {
                                                 sourcePMID: menu.sourcePMID, weeks: menu.weeks, perWeek: menu.perWeek,
                                                 items: items))
         }
-        return BackupFile(exportedAt: .now, exercises: exerciseData, workouts: workoutData, menus: menuData)
+        let weights: [BodyWeight] = (try? context.fetch(FetchDescriptor<BodyWeight>(sortBy: [SortDescriptor(\.date)]))) ?? []
+        let weightData = weights.map { BackupFile.BodyWeightData(date: $0.date, kilograms: $0.kilograms) }
+        return BackupFile(exportedAt: .now, exercises: exerciseData, workouts: workoutData, menus: menuData,
+                          bodyWeights: weightData)
     }
 
     /// バックアップを今のデータに足す。同じ日時の記録・同じ名前のメニューは重ねて入れない。
@@ -207,6 +217,11 @@ enum BackupService {
                 item.template = menu
             }
             result.menus += 1
+        }
+        let existingWeights = ((try? context.fetch(FetchDescriptor<BodyWeight>())) ?? []).map(\.date)
+        for data in backup.bodyWeights ?? [] {
+            let sameDay = existingWeights.contains { Calendar.current.isDate($0, inSameDayAs: data.date) }
+            if !sameDay { context.insert(BodyWeight(date: data.date, kilograms: data.kilograms)) }
         }
         try? context.save()
         return result

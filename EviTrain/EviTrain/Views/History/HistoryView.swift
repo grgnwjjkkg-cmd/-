@@ -7,6 +7,7 @@ struct HistoryView: View {
     enum Mode: String, CaseIterable, Identifiable {
         case workouts = "日付"
         case exercises = "種目"
+        case bodyWeight = "体重"
         var id: String { rawValue }
     }
 
@@ -18,6 +19,7 @@ struct HistoryView: View {
                 switch mode {
                 case .workouts: WorkoutHistoryList()
                 case .exercises: ExerciseHistoryList()
+                case .bodyWeight: BodyWeightView()
                 }
             }
             .themedBackground()
@@ -28,7 +30,7 @@ struct HistoryView: View {
                         ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 180)
+                    .frame(width: 240)
                 }
             }
         }
@@ -158,6 +160,7 @@ private struct ExerciseHistoryList: View {
 /// 種目ごとの伸び（グラフ）と、関連する論文。
 struct ExerciseProgressView: View {
     @Environment(StudyStore.self) private var studyStore
+    @Query(sort: \BodyWeight.date, order: .reverse) private var bodyWeights: [BodyWeight]
     let exercise: Exercise
 
     var body: some View {
@@ -174,6 +177,9 @@ struct ExerciseProgressView: View {
 
                 if let best = Stats.personalBest(for: exercise) {
                     LabeledContent("自己ベスト", value: best.short)
+                    if exercise.tracking == .weightReps, let weight = bodyWeights.first?.kilograms, weight > 0 {
+                        LabeledContent("体重あたり", value: "体重の\((best / weight).formatted(.number.precision(.fractionLength(2))))倍")
+                    }
                 }
                 LabeledContent("記録回数", value: "\(points.count)回")
                 if exercise.tracking == .distanceTime, let fastest = fastestSpeed {

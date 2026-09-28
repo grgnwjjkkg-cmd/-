@@ -79,3 +79,15 @@ final class MenuItem {
         return "\(sets)セット × \(body)"
     }
 }
+
+/// 体重の記録（1日1件。同じ日に入れ直すと上書き）。
+@Model
+final class BodyWeight {
+    var date: Date
+    var kilograms: Double
+
+    init(date: Date = .now, kilograms: Double) {
+        self.date = date
+        self.kilograms = kilograms
+    }
+}
