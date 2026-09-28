@@ -114,6 +114,8 @@ struct NewExerciseView: View {
     @State private var name: String
     @State private var group: MuscleGroup = .chest
     @State private var tracking: TrackingType = .weightReps
+    /// 0 は「設定の休憩時間に合わせる」
+    @State private var restSeconds: Double = 0
     let onCreate: (Exercise) -> Void
 
     init(initialName: String = "", onCreate: @escaping (Exercise) -> Void) {
@@ -137,6 +139,10 @@ struct NewExerciseView: View {
                 Picker("記録の仕方", selection: $tracking) {
                     ForEach(TrackingType.allCases) { Text($0.rawValue).tag($0) }
                 }
+                Picker("休憩時間", selection: $restSeconds) {
+                    Text("設定に合わせる").tag(0.0)
+                    ForEach(RestPicker.presets, id: \.self) { Text($0.clock).tag($0) }
+                }
             }
             .themedBackground()
             .navigationTitle("自作種目")
@@ -149,6 +155,7 @@ struct NewExerciseView: View {
                     Button("追加") {
                         let exercise = Exercise(name: trimmedName, group: group, tracking: tracking,
                                                 tags: defaultTags, isCustom: true)
+                        exercise.restSeconds = restSeconds > 0 ? restSeconds : nil
                         context.insert(exercise)
                         try? context.save()
                         dismiss()

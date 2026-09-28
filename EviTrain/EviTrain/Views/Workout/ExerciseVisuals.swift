@@ -15,59 +15,40 @@ extension MuscleGroup {
         case .cardio: Color(light: 0x4F8A1B, dark: 0x9AD65A)     // 有酸素: グリーン
         }
     }
-
-    /// 部位の代表の記号（Apple の SF Symbols）
-    var symbol: String {
-        switch self {
-        case .chest, .back, .shoulders, .arms: "figure.strengthtraining.traditional"
-        case .legs: "figure.strengthtraining.functional"
-        case .core: "figure.core.training"
-        case .sprint: "figure.run"
-        case .plyometric: "figure.step.training"
-        case .cardio: "figure.run.circle"
-        }
-    }
 }
 
-extension Exercise {
-    /// 種目ごとに近い形の記号を選ぶ（名前で判断。なければ部位の記号）。
-    var symbol: String {
-        let rules: [(String, String)] = [
-            ("懸垂", "figure.play"), ("ラット", "figure.play"), ("ロウ", "figure.rower"),
-            ("腕立て", "figure.cross.training"), ("ディップス", "figure.cross.training"),
-            ("プランク", "figure.core.training"), ("アブローラー", "figure.core.training"),
-            ("ジャンプ", "figure.jumprope"), ("跳", "figure.jumprope"), ("バウンディング", "figure.highintensity.intervaltraining"),
-            ("そり", "figure.strengthtraining.functional"), ("坂道", "figure.hiking"),
-            ("ランニング", "figure.run"), ("ダッシュ", "figure.run"),
-            ("クリーン", "figure.highintensity.intervaltraining"), ("メディシン", "figure.handball"),
-            ("レイズ", "figure.arms.open"), ("カール", "dumbbell.fill"), ("エクステンション", "dumbbell.fill"),
-        ]
-        return rules.first { name.contains($0.0) }?.1 ?? group.symbol
-    }
-}
-
-/// 種目のアイコン：部位の色のグラデーションに、種目の記号をのせる。
+/// 種目のアイコン：部位の色のグラデーションに、種目ごとのオリジナルのピクトグラムをのせる。
 struct ExerciseIcon: View {
     let exercise: Exercise?
     var size: CGFloat = 40
 
     var body: some View {
-        let color = exercise?.group.color ?? .gray
+        PictogramBadge(elements: exercise.map(Pictogram.elements(for:)) ?? [],
+                       color: exercise?.group.color ?? .gray, size: size)
+    }
+}
+
+/// 名前と部位だけでアイコンを出す（論文メニューの確認画面など、まだ種目が登録されていないとき）。
+struct PictogramBadge: View {
+    let elements: [Pictogram.Element]
+    let color: Color
+    var size: CGFloat = 40
+
+    var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                .fill(LinearGradient(colors: [color, color.opacity(0.65)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [color, color.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing))
             // 右下に薄い光の輪を重ねて立体感を出す
             Circle()
-                .fill(.white.opacity(0.16))
+                .fill(.white.opacity(0.14))
                 .frame(width: size * 0.9)
                 .offset(x: size * 0.32, y: size * 0.34)
-                .clipShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
-            Image(systemName: exercise?.symbol ?? "questionmark")
-                .font(.system(size: size * 0.5, weight: .semibold))
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.18), radius: 1, y: 1)
+            PictogramView(elements: elements)
+                .padding(size * 0.1)
+                .shadow(color: .black.opacity(0.15), radius: 0.5, y: 0.5)
         }
         .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
         .accessibilityHidden(true)
     }
 }

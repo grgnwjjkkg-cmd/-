@@ -171,9 +171,7 @@ private struct ThemeRow: View {
             Text(summary.question)
                 .font(.body.bold())
             HStack(spacing: 8) {
-                if let lead = summary.lead {
-                    VerdictChip(verdict: lead.verdictKind, prefix: false)
-                }
+                ThemeAnswerChip(answer: summary.answer)
                 StarsView(stars: summary.maxStars, font: .caption2)
                 Text("論文 \(summary.studies.count)本")
                     .font(.caption)
@@ -194,27 +192,33 @@ struct ThemeView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(summary.question)
                         .font(.title2.bold())
-                    if let lead = summary.lead {
-                        VerdictChip(verdict: lead.verdictKind, large: true)
+                    let answer = summary.answer
+                    ThemeAnswerChip(answer: answer, large: true)
+                    if let lead = answer.lead {
                         Text(lead.oneLine)
                             .font(.title3)
-                        Text("いちばん確かな研究（★\(lead.stars)）の答えです")
-                            .font(.caption)
-                            .foregroundStyle(Palette.subText)
+                    } else {
+                        Text("「はい」の研究と「そうでもない」研究があります。下の研究を1本ずつ見て、自分に近い条件のものを参考にしてください。")
+                            .font(.subheadline)
                     }
+                    Text(answer.basis)
+                        .font(.caption)
+                        .foregroundStyle(Palette.subText)
+                    VerdictBar(summary: summary)
                     verdictBreakdown
                 }
                 .padding(.vertical, 6)
             }
 
-            Section("研究でわかったこと") {
-                ForEach(summary.studies) { study in
+            Section("研究でわかったこと（1本ずつの答え）") {
+                ForEach(orderedStudies) { study in
                     NavigationLink {
                         StudyDetailView(study: study)
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(study.oneLine)
                             HStack(spacing: 6) {
+                                VerdictChip(verdict: study.verdictKind, prefix: false)
                                 StarsView(stars: study.stars, font: .caption2)
                                 Text("\(study.design)")
                             }
@@ -244,6 +248,12 @@ struct ThemeView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    /// 答えの代表の研究を先頭に、あとは★の多い順。
+    private var orderedStudies: [Study] {
+        guard let lead = summary.answer.lead else { return summary.studies }
+        return [lead] + summary.studies.filter { $0.pmid != lead.pmid }
+    }
+
     /// 研究ごとの答えの内訳（例: はい 1本・たぶん はい 3本）。
     private var verdictBreakdown: some View {
         let parts = Verdict.allCases.compactMap { verdict -> String? in
@@ -253,5 +263,47 @@ struct ThemeView: View {
         return Text("研究ごとの答え：" + parts.joined(separator: "・"))
             .font(.footnote)
             .foregroundStyle(Palette.subText)
+    }
+}
+
+/// テーマの答えのチップ。研究で分かれるときは紫系で「研究で分かれる」。
+struct ThemeAnswerChip: View {
+    let answer: ThemeAnswer
+    var large = false
+
+    var body: some View {
+        if let verdict = answer.verdict {
+            VerdictChip(verdict: verdict, prefix: large, large: large)
+        } else {
+            Text(large ? "研究の答え：研究で分かれる" : "研究で分かれる")
+                .font(large ? .headline : .caption.bold())
+                .padding(.horizontal, large ? 12 : 8)
+                .padding(.vertical, large ? 6 : 3)
+                .foregroundStyle(Color(light: 0x6B4FA0, dark: 0xC4B0F0))
+                .background(Color(light: 0xEEE8F8, dark: 0x2C2440), in: Capsule())
+        }
+    }
+}
+
+/// 研究ごとの答えの割合を色の帯で見せる（★の重みつき）。
+private struct VerdictBar: View {
+    let summary: StudyStore.ThemeSummary
+
+    var body: some View {
+        let parts = Verdict.allCases.map { verdict in
+            (verdict, summary.studies.filter { $0.verdictKind == verdict }.map(\.stars).reduce(0, +))
+        }.filter { $0.1 > 0 }
+        let total = max(parts.map(\.1).reduce(0, +), 1)
+        GeometryReader { proxy in
+            HStack(spacing: 2) {
+                ForEach(parts, id: \.0) { verdict, weight in
+                    Palette.verdict(verdict).text
+                        .frame(width: max(4, proxy.size.width * CGFloat(weight) / CGFloat(total) - 2))
+                }
+            }
+        }
+        .frame(height: 8)
+        .clipShape(Capsule())
+        .accessibilityHidden(true)
     }
 }

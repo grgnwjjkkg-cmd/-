@@ -47,6 +47,8 @@ final class Exercise {
     var tags: [String]
     var isCustom: Bool
     var createdAt: Date
+    /// この種目の休憩時間（最後に選んだものを記憶）。nil なら設定の休憩時間
+    var restSeconds: Double?
 
     @Relationship(deleteRule: .nullify, inverse: \WorkoutEntry.exercise)
     var entries: [WorkoutEntry] = []

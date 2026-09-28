@@ -13,7 +13,7 @@ enum MenuBuilder {
         for (index, item) in template.sortedItems.enumerated() {
             guard let exercise = item.exercise else { continue }
             let entry = WorkoutEntry(order: index, exercise: exercise)
-            entry.restSeconds = item.restSeconds
+            entry.restSeconds = item.restSeconds ?? exercise.restSeconds
             context.insert(entry)
             entry.workout = workout
             let previous = Stats.previousEntry(for: exercise, before: workout.startedAt)?.sortedSets
@@ -42,7 +42,7 @@ enum MenuBuilder {
         for (index, entry) in source.sortedEntries.enumerated() {
             guard let exercise = entry.exercise else { continue }
             let newEntry = WorkoutEntry(order: index, exercise: exercise)
-            newEntry.restSeconds = entry.restSeconds
+            newEntry.restSeconds = entry.restSeconds ?? exercise.restSeconds
             context.insert(newEntry)
             newEntry.workout = workout
             for (setIndex, set) in entry.sortedSets.filter(\.isDone).enumerated() {

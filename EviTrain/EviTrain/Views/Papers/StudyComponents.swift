@@ -46,7 +46,7 @@ struct VerdictChip: View {
 
     var body: some View {
         let colors = Palette.verdict(verdict)
-        Text(prefix ? "研究の答え：\(verdict.rawValue)" : verdict.rawValue)
+        Text(prefix ? "この研究の答え：\(verdict.rawValue)" : verdict.rawValue)
             .font(large ? .headline : .caption.bold())
             .padding(.horizontal, large ? 12 : 8)
             .padding(.vertical, large ? 6 : 3)

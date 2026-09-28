@@ -110,3 +110,72 @@ extension TimeInterval {
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
     }
 }
+
+/// トレーニング終了時の振り返り（お祝い画面用）。
+struct FinishSummary: Identifiable {
+    struct Result: Identifiable {
+        let id = UUID()
+        let name: String
+        let exercise: Exercise?
+        let tracking: TrackingType
+        let current: Double
+        let previous: Double?
+        let isRecord: Bool
+
+        /// 前回より良くなったか（スプリントはタイムが短いほど良い）
+        var improved: Bool {
+            guard let previous else { return false }
+            return tracking.higherIsBetter ? current > previous + 0.0001 : current < previous - 0.0001
+        }
+
+        var delta: Double? { previous.map { current - $0 } }
+
+        /// 何を比べているか（例: 推定1RM）
+        var metricName: String {
+            switch tracking {
+            case .weightReps: "推定1RM"
+            case .reps: "最高回数"
+            case .time: "最長時間"
+            case .distanceTime: "ベストタイム"
+            }
+        }
+
+        var unit: String {
+            switch tracking {
+            case .weightReps: "kg"
+            case .reps: "回"
+            case .time, .distanceTime: "秒"
+            }
+        }
+    }
+
+    let id = UUID()
+    let duration: TimeInterval
+    let setCount: Int
+    let volume: Double
+    let results: [Result]
+
+    var improvedCount: Int { results.filter(\.improved).count }
+    var recordCount: Int { results.filter(\.isRecord).count }
+}
+
+extension Stats {
+    /// 種目ごとに、今回の一番良い記録を前回（同じ種目の直近のトレーニング）と比べる。
+    /// 重さ×回数の種目は推定1RM（Epley 式）、自重は回数、時間は秒、ダッシュはタイムで比べる。
+    static func finishSummary(for workout: Workout) -> FinishSummary {
+        let records = Set(newRecords(in: workout).map(\.exercise.name))
+        let results = workout.sortedEntries.compactMap { entry -> FinishSummary.Result? in
+            guard let exercise = entry.exercise, let best = entry.bestMetric else { return nil }
+            let previous = previousEntry(for: exercise, before: workout.startedAt)?.bestMetric
+            return .init(name: exercise.name, exercise: exercise, tracking: exercise.tracking,
+                         current: best, previous: previous, isRecord: records.contains(exercise.name))
+        }
+        // 伸びた種目・自己ベストを先に見せる
+        let sorted = results.sorted { a, b in
+            if a.isRecord != b.isRecord { return a.isRecord }
+            return a.improved && !b.improved
+        }
+        return FinishSummary(duration: workout.duration, setCount: workout.completedSetCount,
+                             volume: workout.totalVolume, results: sorted)
+    }
+}

@@ -1,22 +1,22 @@
 import SwiftData
 import SwiftUI
 
-/// トレーニングの編集画面。進行中（isActive）なら経過時間・休憩タイマー・完了ボタンを出す。
+/// トレーニングの編集画面。進行中（isActive）なら経過時間・休憩タイマー・終了ボタンを出す。
 /// 過去の記録の修正（日付・重量の直し）にも同じ画面を使う。
 struct WorkoutEditorView: View {
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
     @Environment(RestTimer.self) private var restTimer
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
 
     @Bindable var workout: Workout
     let isActive: Bool
-    /// 完了時に呼ばれる（更新した自己ベストを渡す）。完了後はこの画面が閉じるため、結果の表示は呼び出し元で行う。
-    var onFinish: ([Stats.Record]) -> Void = { _ in }
+    /// 終了したときに呼ばれる（振り返りの内容を渡す）。終了後はこの画面が閉じるため、結果の表示は呼び出し元で行う。
+    var onFinish: (FinishSummary) -> Void = { _ in }
 
     @State private var showingPicker = false
     @State private var papersFor: Exercise?
     @State private var confirmingDiscard = false
+    @State private var confirmingUnfinished = false
     @State private var savingMenu = false
     @State private var menuName = ""
     @State private var savedMenuName: String?
@@ -32,10 +32,18 @@ struct WorkoutEditorView: View {
                     }
                 }
             }
+            .themedRow()
 
             ForEach(workout.sortedEntries) { entry in
-                EntrySection(entry: entry, workoutDate: workout.startedAt) { set in
-                    if isActive, set.isDone { restTimer.start(seconds: entry.restSeconds ?? defaultRestSeconds) }
+                EntrySection(entry: entry, workoutDate: workout.startedAt, isActive: isActive,
+                             restSeconds: restSeconds(for: entry)) { set in
+                    if isActive, set.isDone { restTimer.start(seconds: restSeconds(for: entry)) }
+                } onRestChange: { seconds in
+                    // この種目の休憩時間として記憶し、次からも使う
+                    entry.restSeconds = seconds
+                    entry.exercise?.restSeconds = seconds
+                } onStartRest: {
+                    restTimer.start(seconds: restSeconds(for: entry))
                 } onShowPapers: {
                     papersFor = entry.exercise
                 } onDelete: {
@@ -47,14 +55,22 @@ struct WorkoutEditorView: View {
                 Button {
                     showingPicker = true
                 } label: {
-                    Label("種目を追加", systemImage: "plus.circle.fill")
+                    Label("種目を追加（まとめて選べます）", systemImage: "plus.circle.fill")
                 }
                 TextField("メモ（体調・気づきなど）", text: $workout.note, axis: .vertical)
             }
+            .themedRow()
 
             if isActive {
                 Section {
-                    Button("このトレーニングを破棄", role: .destructive) { confirmingDiscard = true }
+                    HoldToFinishButton {
+                        if hasUnfinishedSets { confirmingUnfinished = true } else { finish() }
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                } footer: {
+                    Text("押し間違いで終わらないよう、1秒長押しで終了します。")
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
         }
@@ -63,19 +79,25 @@ struct WorkoutEditorView: View {
         .navigationTitle(isActive ? (workout.menuName ?? "トレーニング中") : "記録の編集")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if isActive {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完了", action: finish).bold()
-                }
-            }
-            ToolbarItem(placement: isActive ? .topBarLeading : .primaryAction) {
-                Button {
-                    menuName = workout.menuName ?? workout.startedAt.formatted(.dateTime.month().day()) + "のメニュー"
-                    savingMenu = true
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button {
+                        menuName = workout.menuName ?? workout.startedAt.formatted(.dateTime.month().day()) + "のメニュー"
+                        savingMenu = true
+                    } label: {
+                        Label("マイメニューに保存", systemImage: "star.square.on.square")
+                    }
+                    .disabled(workout.entries.isEmpty)
+                    if isActive {
+                        Button(role: .destructive) {
+                            confirmingDiscard = true
+                        } label: {
+                            Label("このトレーニングを破棄", systemImage: "trash")
+                        }
+                    }
                 } label: {
-                    Label("マイメニューに保存", systemImage: "star.square.on.square")
+                    Image(systemName: "ellipsis.circle")
                 }
-                .disabled(workout.entries.isEmpty)
             }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -100,7 +122,7 @@ struct WorkoutEditorView: View {
             }
             Button("キャンセル", role: .cancel) {}
         } message: {
-            Text("種目・セット数・重さと回数を、次から1タップで使えるメニューとして保存します。")
+            Text("種目・セット数・重さと回数・休憩時間を、次から1タップで使えるメニューとして保存します。")
         }
         .alert("保存しました", isPresented: Binding(get: { savedMenuName != nil }, set: { if !$0 { savedMenuName = nil } })) {
             Button("OK") { savedMenuName = nil }
@@ -114,10 +136,26 @@ struct WorkoutEditorView: View {
                 try? context.save()
             }
         }
+        .confirmationDialog("チェックしていないセットがあります", isPresented: $confirmingUnfinished, titleVisibility: .visible) {
+            Button("チェックしたセットだけ保存して終了") { finish() }
+            Button("続ける", role: .cancel) {}
+        } message: {
+            Text("✓ を付けていないセットは記録されません。")
+        }
+    }
+
+    private var hasUnfinishedSets: Bool {
+        workout.entries.contains { entry in entry.sets.contains { !$0.isDone } }
+    }
+
+    /// 種目の休憩時間：このトレーニングで選んだ時間 → 種目に記憶した時間 → 設定の休憩時間
+    private func restSeconds(for entry: WorkoutEntry) -> Double {
+        entry.restSeconds ?? entry.exercise?.restSeconds ?? defaultRestSeconds
     }
 
     private func add(_ exercise: Exercise) {
         let entry = WorkoutEntry(order: (workout.entries.map(\.order).max() ?? -1) + 1, exercise: exercise)
+        entry.restSeconds = exercise.restSeconds
         context.insert(entry)
         entry.workout = workout
         // 前回の1セット目を初期値にして入力の手間を減らす
@@ -152,7 +190,7 @@ struct WorkoutEditorView: View {
         workout.finishedAt = .now
         restTimer.stop()
         try? context.save()
-        onFinish(Stats.newRecords(in: workout))
+        onFinish(Stats.finishSummary(for: workout))
     }
 
     private func hideKeyboard() {
@@ -160,12 +198,16 @@ struct WorkoutEditorView: View {
     }
 }
 
-/// 1種目分のセクション（前回の記録・セット一覧・セット追加）。
+/// 1種目分のセクション（休憩時間・前回の記録・セット一覧・セット追加）。
 private struct EntrySection: View {
     @Environment(\.modelContext) private var context
     @Bindable var entry: WorkoutEntry
     let workoutDate: Date
+    let isActive: Bool
+    let restSeconds: Double
     let onToggle: (SetRecord) -> Void
+    let onRestChange: (Double) -> Void
+    let onStartRest: () -> Void
     let onShowPapers: () -> Void
     let onDelete: () -> Void
 
@@ -180,6 +222,7 @@ private struct EntrySection: View {
                 let sets = entry.sortedSets
                 for index in offsets { context.delete(sets[index]) }
             }
+            .themedRow()
 
             Button {
                 addSet()
@@ -187,29 +230,48 @@ private struct EntrySection: View {
                 Label("セットを追加", systemImage: "plus")
                     .font(.subheadline)
             }
+            .themedRow()
         } header: {
-            HStack(spacing: 10) {
-                ExerciseIcon(exercise: entry.exercise, size: 38)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.exercise?.name ?? "削除された種目")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                    if let previous {
-                        Text("前回: " + previous.sortedSets.filter(\.isDone).map { $0.summary(for: entry.tracking) }.joined(separator: ", "))
-                            .font(.caption)
-                            .lineLimit(1)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    ExerciseIcon(exercise: entry.exercise, size: 40)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(entry.exercise?.name ?? "削除された種目")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        if let previous {
+                            Text("前回: " + previous.sortedSets.filter(\.isDone).map { $0.summary(for: entry.tracking) }.joined(separator: ", "))
+                                .font(.caption)
+                                .lineLimit(1)
+                        }
+                    }
+                    Spacer()
+                    Menu {
+                        Button("関係する研究", systemImage: "doc.text.magnifyingglass", action: onShowPapers)
+                        Button("種目を削除", systemImage: "trash", role: .destructive, action: onDelete)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title3)
                     }
                 }
-                Spacer()
-                Menu {
-                    Button("関係する研究", systemImage: "doc.text.magnifyingglass", action: onShowPapers)
-                    Button("種目を削除", systemImage: "trash", role: .destructive, action: onDelete)
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.title3)
+                HStack(spacing: 8) {
+                    RestPicker(seconds: restSeconds, onChange: onRestChange)
+                    if isActive {
+                        Button(action: onStartRest) {
+                            Label("休憩スタート", systemImage: "play.fill")
+                                .font(.caption.bold())
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(.tint.opacity(0.14), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.tint)
+                    }
+                    Spacer()
                 }
             }
             .textCase(nil)
+            .padding(.bottom, 2)
         }
     }
 
@@ -220,6 +282,81 @@ private struct EntrySection: View {
                             seconds: last?.seconds ?? 0, meters: last?.meters ?? 0)
         context.insert(set)
         set.entry = entry
+    }
+}
+
+/// 休憩時間を選ぶチップ（よく使う時間から1タップで選べる）。
+struct RestPicker: View {
+    static let presets: [Double] = [30, 45, 60, 75, 90, 120, 150, 180, 240, 300]
+
+    let seconds: Double
+    let onChange: (Double) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(Self.presets, id: \.self) { value in
+                Button {
+                    onChange(value)
+                } label: {
+                    if value == seconds {
+                        Label(value.clock, systemImage: "checkmark")
+                    } else {
+                        Text(value.clock)
+                    }
+                }
+            }
+        } label: {
+            Label("休憩 \(seconds.clock)", systemImage: "timer")
+                .font(.caption.bold().monospacedDigit())
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.fill.tertiary, in: Capsule())
+                .foregroundStyle(.primary)
+        }
+        .accessibilityLabel("休憩時間 \(Int(seconds))秒。タップして変更")
+    }
+}
+
+/// 1秒長押しで終了するボタン（押している間ゲージがたまる）。
+struct HoldToFinishButton: View {
+    @Environment(\.appTheme) private var theme
+    let action: () -> Void
+    @State private var pressing = false
+    @State private var done = false
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(theme.card)
+            GeometryReader { proxy in
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(theme.accent)
+                    .frame(width: pressing || done ? proxy.size.width : 0)
+                    .animation(pressing ? .linear(duration: 1) : .easeOut(duration: 0.2), value: pressing)
+            }
+            HStack {
+                Spacer()
+                Label(pressing ? "そのまま押し続けて…" : "長押しでトレーニングを終える",
+                      systemImage: "flag.checkered")
+                    .font(.headline)
+                    .foregroundStyle(pressing ? theme.onAccent : theme.accent)
+                Spacer()
+            }
+        }
+        .frame(height: 58)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(theme.accent.opacity(0.6), lineWidth: 1.5))
+        .contentShape(Rectangle())
+        .onLongPressGesture(minimumDuration: 1.0, perform: {
+            done = true
+            action()
+        }, onPressingChanged: { isPressing in
+            pressing = isPressing
+        })
+        .sensoryFeedback(.impact(weight: .medium), trigger: pressing) { _, now in now }
+        .sensoryFeedback(.success, trigger: done) { _, now in now }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
     }
 }
 

@@ -5,30 +5,19 @@ import SwiftUI
 struct WorkoutHomeView: View {
     @Query(filter: #Predicate<Workout> { $0.finishedAt == nil }, sort: \Workout.startedAt)
     private var activeWorkouts: [Workout]
-    @State private var finishedRecords: [Stats.Record]?
+    @State private var finishSummary: FinishSummary?
 
     var body: some View {
         NavigationStack {
             if let workout = activeWorkouts.first {
-                WorkoutEditorView(workout: workout, isActive: true) { finishedRecords = $0 }
+                WorkoutEditorView(workout: workout, isActive: true) { finishSummary = $0 }
             } else {
                 StartScreen()
             }
         }
-        .alert("お疲れさまでした！", isPresented: Binding(
-            get: { finishedRecords != nil },
-            set: { if !$0 { finishedRecords = nil } }
-        )) {
-            Button("OK") { finishedRecords = nil }
-        } message: {
-            Text(finishMessage)
+        .fullScreenCover(item: $finishSummary) { summary in
+            FinishCelebrationView(summary: summary)
         }
-    }
-
-    private var finishMessage: String {
-        guard let records = finishedRecords, !records.isEmpty else { return "記録を保存しました。" }
-        let lines = records.map { "🏆 \($0.exercise.name): \($0.value.short)" }
-        return "自己ベスト更新！\n" + lines.joined(separator: "\n")
     }
 }
 

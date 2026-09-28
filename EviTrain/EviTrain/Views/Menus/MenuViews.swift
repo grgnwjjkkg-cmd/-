@@ -314,12 +314,8 @@ struct StudyMenuSheet: View {
                 Section("メニュー") {
                     ForEach(Array(menu.items.enumerated()), id: \.offset) { _, item in
                         HStack(alignment: .top, spacing: 12) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(item.muscleGroup.color.gradient)
-                                Image(systemName: item.muscleGroup.symbol).foregroundStyle(.white)
-                            }
-                            .frame(width: 36, height: 36)
+                            PictogramBadge(elements: Pictogram.elements(name: item.exercise, group: item.muscleGroup),
+                                           color: item.muscleGroup.color, size: 36)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(item.exercise).font(.subheadline.bold())
                                 if !item.detail.isEmpty { Text(item.detail).font(.subheadline) }

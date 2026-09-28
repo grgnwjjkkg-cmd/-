@@ -17,7 +17,34 @@ final class StudyStore {
         var id: String { field + "/" + theme }
         var maxStars: Int { studies.map(\.stars).max() ?? 0 }
         /// いちばん確かな研究（★が最多）の答えを、テーマの答えとして見せる
-        var lead: Study? { studies.first }
+        var lead: Study? { answer.lead ?? studies.first }
+
+        /// テーマとしての答え。まとめ研究があればその答え、なければ★の重みつき多数決。
+        /// 意見が割れているときは「研究で分かれる」とする（1本の研究の答えだけで決めない）。
+        var answer: ThemeAnswer {
+            let top = maxStars
+            if let review = studies.filter({ $0.design.contains("まとめ研究") }).max(by: { $0.stars < $1.stars }),
+               review.stars >= top - 1 {
+                return ThemeAnswer(verdict: review.verdictKind, basis: "まとめ研究（★\(review.stars)）の答え", lead: review)
+            }
+            var weights: [ThemeAnswer.Side: Int] = [:]
+            for study in studies { weights[ThemeAnswer.side(of: study.verdictKind), default: 0] += study.stars }
+            let total = max(weights.values.reduce(0, +), 1)
+            guard let best = weights.max(by: { $0.value < $1.value }),
+                  Double(best.value) / Double(total) >= 0.6 else {
+                return ThemeAnswer(verdict: nil, basis: "研究によって答えが違います", lead: nil)
+            }
+            let side = best.key
+            let members = studies.filter { ThemeAnswer.side(of: $0.verdictKind) == side }
+            let verdict: Verdict = switch side {
+            case .positive:
+                members.filter { $0.verdictKind == .yes }.map(\.stars).reduce(0, +)
+                    > members.filter { $0.verdictKind == .probably }.map(\.stars).reduce(0, +) ? .yes : .probably
+            case .negative: .no
+            case .unknown: .unknown
+            }
+            return ThemeAnswer(verdict: verdict, basis: "研究\(studies.count)本の多くの答え", lead: members.first)
+        }
 
         func count(of verdict: Verdict) -> Int { studies.filter { $0.verdictKind == verdict }.count }
     }
@@ -229,5 +256,24 @@ enum StudyMatcher {
         ]
         for (key, terms) in byName where name.contains(key) { words.formUnion(terms) }
         return words
+    }
+}
+
+/// テーマ（質問）としての答え。verdict が nil のときは「研究で分かれる」。
+struct ThemeAnswer: Hashable {
+    enum Side { case positive, negative, unknown }
+
+    let verdict: Verdict?
+    /// 何をもとにした答えか（例: まとめ研究（★4）の答え）
+    let basis: String
+    /// 答えの代表の研究
+    let lead: Study?
+
+    static func side(of verdict: Verdict) -> Side {
+        switch verdict {
+        case .yes, .probably: .positive
+        case .no: .negative
+        case .unknown: .unknown
+        }
     }
 }

@@ -65,6 +65,16 @@ final class StudyDataTests: XCTestCase {
         XCTAssertTrue(store.visibleStudies.contains(study), "印を外すと同梱の状態（公開OK）に戻る")
     }
 
+    @MainActor
+    func testThemeAnswerUsesReviewNotOffTopicStudy() throws {
+        let store = StudyStore()
+        let hill = try XCTUnwrap(store.themeSummaries().first { $0.theme == "坂道ダッシュ" })
+        // ★4 同士でも、本題から外れた実験（効果はなさそう）ではなく、まとめ研究（たぶん はい）を答えにする
+        XCTAssertEqual(hill.answer.verdict, .probably)
+        XCTAssertTrue(hill.answer.lead?.design.contains("まとめ研究") ?? false)
+        XCTAssertEqual(hill.lead?.pmid, hill.answer.lead?.pmid, "一覧の答えと、先頭に出す研究が一致する")
+    }
+
     func testMenusMatchQuotesAndStudies() throws {
         let studies = try StudyJSON.decoder().decode([Study].self, from: data("summaries"))
         let menus = try StudyJSON.decoder().decode([StudyMenu].self, from: data("menus"))
@@ -122,6 +132,39 @@ final class StatsTests: XCTestCase {
         let dash = SetRecord(order: 0, seconds: 4.5, meters: 30)
         XCTAssertEqual(dash.speedKmh ?? 0, 24, accuracy: 0.001)
         XCTAssertNil(SetRecord(order: 0).speedKmh)
+    }
+
+    @MainActor
+    func testFinishSummaryComparesWithPreviousWorkout() throws {
+        let container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
+                                           MenuTemplate.self, MenuItem.self,
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = container.mainContext
+        let squat = Exercise(name: "スクワット", group: .legs, tracking: .weightReps)
+        context.insert(squat)
+        func workout(daysAgo: Double, weight: Double) -> Workout {
+            let workout = Workout(startedAt: Date.now.addingTimeInterval(-daysAgo * 86_400))
+            context.insert(workout)
+            let entry = WorkoutEntry(order: 0, exercise: squat)
+            context.insert(entry)
+            entry.workout = workout
+            let set = SetRecord(order: 0, weight: weight, reps: 10)
+            set.isDone = true
+            context.insert(set)
+            set.entry = entry
+            workout.finishedAt = workout.startedAt.addingTimeInterval(3600)
+            return workout
+        }
+        _ = workout(daysAgo: 2, weight: 60)
+        let today = workout(daysAgo: 0, weight: 62.5)
+        try context.save()
+
+        let summary = Stats.finishSummary(for: today)
+        let result = try XCTUnwrap(summary.results.first)
+        XCTAssertTrue(result.improved)
+        XCTAssertEqual(result.delta ?? 0, 62.5 * (1 + 10.0 / 30) - 60 * (1 + 10.0 / 30), accuracy: 0.001, "推定1RM で比べる")
+        XCTAssertTrue(result.isRecord)
+        XCTAssertEqual(summary.improvedCount, 1)
     }
 
     @MainActor
