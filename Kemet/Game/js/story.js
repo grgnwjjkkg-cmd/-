@@ -125,6 +125,10 @@ export function script(id, s) {
       ];
 
     case 'seti':
+      if (f.chapterClear) return [
+        say('seti', 'ところで……この船着き場の先、河口の海の底に、昔の神殿の町が沈んでるって話を知ってるか？'),
+        say('seti', '潜った仲間が、倒れた巨像を見たそうだ。船着き場の先から行ける。息が続くならな。'),
+      ];
       if (f.clueCloth) return [say('seti', '黒ジャッカルの連中は西岸の墓地に巣くってる。西門から行けるが、気をつけな。')];
       if (!f.clueDocks) return [say('seti', '今日はナイルの機嫌がいい。魚もよく跳ねる。')];
       return [
@@ -146,6 +150,11 @@ export function script(id, s) {
       ];
 
     case 'kem':
+      if (f.pyrEscaped) return [say('kem', 'ホルスの眼を持ち帰ったとな！ ……ギザの「太陽の門」が光っておった。天へ通じる門だという言い伝えじゃ。')];
+      if (f.chapterClear) return [
+        say('kem', '月のスカラベの手がかりじゃが……ギザの大ピラミッドの奥に、封印された王の間があるという。'),
+        say('kem', '墓地から西へ続く道の先がギザじゃ。中の石板を3つ集めれば、封印が解けるそうじゃ。'),
+      ];
       if (f.clueTwo) return [say('kem', '対のスカラベ……月のスカラベは、いまどこにあるのやら。')];
       return [
         say('kem', 'ふむ、太陽のスカラベが盗まれたそうじゃな。'),
