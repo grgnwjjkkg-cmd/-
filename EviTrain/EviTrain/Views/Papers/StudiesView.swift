@@ -13,13 +13,14 @@ struct StudiesView: View {
     @State private var field: String?
     @State private var starFilter: StarFilter = .all
     @State private var bookmarksOnly = false
+    @State private var menusOnly = false
 
     var body: some View {
         NavigationStack {
             Group {
                 if store.visibleStudies.isEmpty {
                     emptyState
-                } else if !searchText.isEmpty || bookmarksOnly {
+                } else if !searchText.isEmpty || bookmarksOnly || menusOnly {
                     studyList
                 } else {
                     themeList
@@ -61,6 +62,9 @@ struct StudiesView: View {
                 }
                 Button { bookmarksOnly.toggle() } label: {
                     FilterChip(title: "保存した論文", isSelected: bookmarksOnly)
+                }
+                Button { menusOnly.toggle() } label: {
+                    FilterChip(title: "練習メニューあり", isSelected: menusOnly)
                 }
                 Button { field = nil } label: {
                     FilterChip(title: "すべて", isSelected: field == nil)
@@ -128,6 +132,7 @@ struct StudiesView: View {
             if study.stars < minStars { continue }
             if let field, study.field != field { continue }
             if bookmarksOnly && !store.isBookmarked(study) { continue }
+            if menusOnly && store.menu(for: study) == nil { continue }
             if !searchText.isEmpty && !study.contains(searchText) { continue }
             result.append(study)
         }

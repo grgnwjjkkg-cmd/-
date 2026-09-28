@@ -171,6 +171,11 @@ struct StudyRow: View {
                 VerdictChip(verdict: study.verdictKind, prefix: false)
                 StarsView(stars: study.stars, font: .caption2)
                 Spacer()
+                if store.menu(for: study) != nil {
+                    Label("メニュー", systemImage: "figure.strengthtraining.traditional")
+                        .font(.caption2.bold())
+                        .foregroundStyle(.tint)
+                }
                 if store.isBookmarked(study) {
                     Image(systemName: "bookmark.fill").font(.caption).foregroundStyle(.tint)
                 }
