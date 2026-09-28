@@ -230,7 +230,8 @@ private struct EntrySection: View {
             ForEach(Array(entry.sortedSets.enumerated()), id: \.element.id) { index, set in
                 SetRowView(set: set, number: index + 1, tracking: entry.tracking,
                            previous: previous?.sortedSets[safe: index], onToggle: onToggle,
-                           onDuplicate: { duplicate(set) }, onApplyToFollowing: { applyToFollowing(set) })
+                           onDuplicate: { duplicate(set) }, onApplyToFollowing: { applyToFollowing(set) },
+                           onWarmup: { addWarmups(before: set) })
             }
             .onDelete { offsets in
                 let sets = entry.sortedSets
@@ -299,6 +300,18 @@ private struct EntrySection: View {
                              seconds: source.seconds, meters: source.meters)
         context.insert(copy)
         copy.entry = entry
+    }
+
+    /// 本番の重さの 40%・60%・80% のウォームアップを、そのセットの前に入れる。
+    private func addWarmups(before working: SetRecord) {
+        let warmups = PlateMath.warmups(for: working.weight)
+        guard !warmups.isEmpty else { return }
+        for set in entry.sets where set.order >= working.order { set.order += warmups.count }
+        for (index, warmup) in warmups.enumerated() {
+            let set = SetRecord(order: working.order - warmups.count + index, weight: warmup.weight, reps: warmup.reps)
+            context.insert(set)
+            set.entry = entry
+        }
     }
 
     /// まだ ✓ していない以降のセットを、同じ重さ・回数などにそろえる。

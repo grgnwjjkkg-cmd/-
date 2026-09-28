@@ -10,6 +10,8 @@ struct SetRowView: View {
     let onToggle: (SetRecord) -> Void
     var onDuplicate: () -> Void = {}
     var onApplyToFollowing: () -> Void = {}
+    var onWarmup: () -> Void = {}
+    @State private var showingPlates = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -34,6 +36,7 @@ struct SetRowView: View {
         }
         .listRowBackground(set.isDone ? Color.green.opacity(0.12) : theme.card)
         .contextMenu { quickActions }
+        .sheet(isPresented: $showingPlates) { PlateCalculatorView(target: set.weight) }
     }
 
     /// 長押しで出す、入力を速くするための操作。
@@ -56,6 +59,10 @@ struct SetRowView: View {
             Button("タイム +0.05秒", systemImage: "plus") { set.seconds += 0.05 }
         }
         Divider()
+        if tracking == .weightReps && set.weight > 20 {
+            Button("ウォームアップのセットを前に入れる", systemImage: "flame", action: onWarmup)
+            Button("プレート計算", systemImage: "circle.grid.2x1") { showingPlates = true }
+        }
         Button("このセットを複製", systemImage: "plus.square.on.square", action: onDuplicate)
         Button("この値を以降のセットにそろえる", systemImage: "arrow.down.to.line", action: onApplyToFollowing)
     }
