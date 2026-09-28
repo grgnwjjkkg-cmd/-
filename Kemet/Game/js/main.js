@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Assets, Actor } from './actor.js';
 import { Player, NPC, Enemy, ENEMY_TYPES } from './entities.js';
 import { buildTown } from './world/zones.js';
-import { loadBakedZone } from './world/baked.js';
+import { loadBakedZone, disposeZone } from './world/baked.js';
 import { skyTexture } from './world/textures.js';
 import * as B from './world/builders.js';
 import { PEOPLE, TOWN_NPCS, CLUES, FINDS, objective, script } from './story.js';
@@ -189,8 +189,11 @@ class Game {
   // ---------- 場所の切り替え ----------
   async enterZone(name, initial = false, arrivalFrom = null) {
     if (!initial) { $('fade').classList.add('on'); await wait(500); }
-    if (this.zone) this.scene.remove(this.zone.root);
-    for (const e of [...this.npcs, ...this.enemies]) this.scene.remove(e.root);
+    if (this.zone) { this.scene.remove(this.zone.root); disposeZone(this.zone); }
+    for (const e of [...this.npcs, ...this.enemies]) {
+      this.scene.remove(e.root);
+      e.root.traverse(o => { if (o.isSkinnedMesh) o.skeleton.dispose(); if (o.isMesh) [].concat(o.material).forEach(m => m.dispose()); });   // 骨のデータと複製した材質を解放
+    }
     for (const c of this.chests) this.scene.remove(c.group);
     for (const p of this.pickups) this.scene.remove(p.mesh);
     this.npcs = []; this.enemies = []; this.chests = []; this.pickups = [];

@@ -19,6 +19,25 @@ function tex(url, srgb = true) {
   }
   return texCache.get(url);
 }
+/** 場所を出るときに、その場所の形と画像をGPUから消す（iPhoneのメモリ不足を防ぐ） */
+export function disposeZone(zone) {
+  if (!zone?.root) return;
+  const texs = new Set();
+  zone.root.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    o.getRenderTarget?.()?.dispose();                       // 水面の映り込み
+    for (const m of [].concat(o.material || [])) {
+      for (const v of Object.values(m)) if (v?.isTexture) texs.add(v);
+      for (const u of Object.values(m.uniforms || {})) if (u?.value?.isTexture) texs.add(u.value);
+      m.dispose();
+    }
+  });
+  for (const t of texs) {
+    for (const [url, c] of texCache) if (c === t) texCache.delete(url);
+    t.dispose();
+  }
+  zone.sky?.dispose?.();
+}
 const loadTex = url => new Promise((res, rej) => texLoader.load(url, t => res(t), undefined, rej));
 
 // 場所の種類ごとの明るさ（キャラ用のリアルタイムの光）
