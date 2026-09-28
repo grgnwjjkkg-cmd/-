@@ -324,8 +324,8 @@ class Game {
     if (!this.player) return null;
     const p = this.player.pos;
     let best = null, bd = Infinity;
-    for (const n of this.npcs) { const d = n.root.position.distanceTo(p); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'npc', npc: n, label: '話す' }; } }
-    if (this.zone.pot) { const d = Math.hypot(p.x - this.zone.pot.x, p.z - this.zone.pot.z); if (d < 3 && d < bd) { bd = d; best = { kind: 'pot', label: '祈る' }; } }
+    for (const n of this.npcs) { const d = n.root.position.distanceTo(p); if (d < 3.2 && d < bd) { bd = d; best = { kind: 'npc', npc: n, label: '話す' }; } }
+    if (this.zone.pot) { const d = Math.hypot(p.x - this.zone.pot.x, p.z - this.zone.pot.z); if (d < 4 && d < bd) { bd = d; best = { kind: 'pot', label: '祈る' }; } }
     for (const c of this.chests) if (!c.opened) { const d = Math.hypot(p.x - c.x, p.z - c.z); if (d < 2 && d < bd) { bd = d; best = { kind: 'chest', chest: c, label: '開ける' }; } }
     for (const k of this.pickups) { const d = Math.hypot(p.x - k.mesh.position.x, p.z - k.mesh.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'pickup', pickup: k, label: '拾う' }; } }
     return best;
