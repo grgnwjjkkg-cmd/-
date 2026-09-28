@@ -673,7 +673,11 @@ class Game {
     } else {
       body = `<button class="btn sub" id="bgmBtn">BGM・効果音：${save.bgm ? 'オン' : 'オフ'}</button>
         <div class="note" style="margin-top:14px">操作：左下のスティックで移動（倒す量で歩く／走る）。右側をなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。「回避」でかわせます。</div>
-        <div class="note" style="margin-top:14px">3Dモデル・アニメーション：Quaternius（CC0）</div>`;
+        <div class="note" style="margin-top:14px">3Dモデル・アニメーション：Quaternius（CC0）／実写素材：Poly Haven（CC0）</div>
+        <div class="clue" style="margin-top:16px;border-color:#ff8a5a"><b>テスト用（完成版では消します）</b>
+          <button class="btn sub" id="warpNecro">墓地へワープ</button>
+          <button class="btn sub" id="warpTown">町へ戻る</button>
+          <button class="btn sub" id="addAnkh">+1000 アンク</button></div>`;
     }
     this.openPanel(`<div class="pHead"><h2>メニュー</h2><button class="close">✕</button></div>${tabs}${body}`, root => {
       root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => this.openMenu(b.dataset.tab));
@@ -683,6 +687,20 @@ class Game {
         if (k === 'weapon') save.weapon = null; else save.amulets[+k[1]] = null;
         this.equipVisual(); this.openMenu('equip');
       });
+      const warp = async to => {
+        this.closePanel();
+        if (to === 'necropolis') {
+          Object.assign(save.flags, { metNefer: true, clueDocks: true, clueCloth: true, gateOpen: true });
+          if (!save.weapon) { this.addItem('travel_sword'); save.weapon = 'travel_sword'; }
+        }
+        this.paused = true;
+        await this.enterZone(to, false, to === 'necropolis' ? 'town' : 'necropolis');
+        this.paused = false;
+        this.refreshHUD();
+      };
+      root.querySelector('#warpNecro')?.addEventListener('click', () => warp('necropolis'));
+      root.querySelector('#warpTown')?.addEventListener('click', () => warp('town'));
+      root.querySelector('#addAnkh')?.addEventListener('click', () => { this.gainAnkh(1000); this.openMenu('settings'); });
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };
     });
@@ -832,7 +850,6 @@ class Game {
       this.player.actor.update(dt);
     }
     for (const n of this.npcs) n.update(dt, this.player);
-    for (const f of this.finds || []) { const d = Math.hypot(p.x - f.def.x, p.z - f.def.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'find', find: f, label: '調べる' }; } }
     for (const f of this.finds || []) { f.fx.rotation.y += dt * 0.8; f.fx.material.opacity = 0.55 + Math.sin(this.time * 3 + f.def.x) * 0.35; }
     for (const k of this.pickups) { k.mesh.rotation.y += dt * 1.5; k.mesh.position.y = 1 + Math.sin(this.time * 2) * 0.15; }
     this.telegraphs = this.telegraphs.filter(t => {
