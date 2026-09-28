@@ -51,6 +51,9 @@ private struct StartScreen: View {
                     StatTile(title: "今週", value: "\(Stats.countThisWeek(finishedWorkouts))回", systemImage: "calendar", tint: theme.accent)
                 }
 
+                BadgeStrip(badges: Badges.all(.init(workouts: finishedWorkouts, menus: menus,
+                                                    bookmarkCount: studyStore.bookmarks.count)))
+
                 if let last = finishedWorkouts.first {
                     LastWorkoutCard(workout: last) { MenuBuilder.startWorkout(copying: last, in: context) }
                 }

@@ -214,6 +214,25 @@ final class StatsTests: XCTestCase {
     }
 
     @MainActor
+    func testBadgesLongestStreak() throws {
+        let container = try ModelContainer(for: Workout.self, WorkoutEntry.self, SetRecord.self, Exercise.self,
+                                           MenuTemplate.self, MenuItem.self, BodyWeight.self,
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let calendar = Calendar(identifier: .gregorian)
+        let base = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 1, hour: 10)))
+        let workouts = [0, 1, 2, 5, 6].map { day -> Workout in
+            let workout = Workout(startedAt: calendar.date(byAdding: .day, value: day, to: base)!)
+            workout.finishedAt = workout.startedAt
+            container.mainContext.insert(workout)
+            return workout
+        }
+        XCTAssertEqual(Badges.longestStreak(workouts, calendar: calendar), 3)
+        let badges = Badges.all(.init(workouts: workouts, menus: [], bookmarkCount: 0))
+        XCTAssertEqual(badges.first { $0.id == "streak3" }?.earned, true)
+        XCTAssertEqual(badges.first { $0.id == "streak7" }?.earned, false)
+    }
+
+    @MainActor
     func testStreakDays() throws {
         let container = try ModelContainer(for: Workout.self, WorkoutEntry.self, SetRecord.self, Exercise.self,
                                            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
