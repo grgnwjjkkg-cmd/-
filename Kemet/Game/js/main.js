@@ -1117,7 +1117,7 @@ class Game {
     this.hemi.intensity = lerp(this.hemi.intensity, look.hemi);
     this.lantern.intensity = lerp(this.lantern.intensity, look.lantern);
     this.lantern.position.set(p.x, 2.6, p.z);
-    this.renderer.toneMappingExposure = lerp(this.renderer.toneMappingExposure, look.exposure);
+    this.renderer.toneMappingExposure = lerp(this.renderer.toneMappingExposure, look.exposure * (z.exposureMul || 1));
     if (z.sky) {
       this.scene.environment = z.sky;
       this.scene.environmentIntensity = lerp(this.scene.environmentIntensity ?? 1, look.env);

@@ -237,7 +237,7 @@ export async function loadBakedZone(name, game) {
       if (i >= 0) C.boxes.splice(i, 1);
     },
     sky, skyRot,
-    seal, relic: meta.relic, waters: meta.waters,
+    seal, relic: meta.relic, waters: meta.waters, exposureMul: meta.exposureMul || 1,
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
       exitFx.forEach((m, i) => { m.material.opacity = 0.12 + Math.sin(t * 2 + i) * 0.05; });

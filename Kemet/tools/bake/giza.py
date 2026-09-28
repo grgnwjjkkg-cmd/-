@@ -127,5 +127,6 @@ M['enemies'] = [{'type': 'bandit', 'x': -30, 'z': 20}, {'type': 'bandit', 'x': 3
 M['chests'] = [{'x': 46, 'z': 12, 'ankh': 180}, {'x': -46, 'z': 70, 'ankh': 160}]
 M['waters'] = []
 M['beams'] = []
+M['exposureMul'] = 0.72   # 白い砂がまぶしすぎないように
 
 L.bake_and_export()
