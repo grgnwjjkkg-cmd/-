@@ -40,7 +40,7 @@ class Game {
     this.scene.background = sky;
     this.fogOut = new THREE.Fog('#ecd2a0', 70, 380);
     this.scene.fog = this.fogOut;
-    this.camera = new THREE.PerspectiveCamera(55, 1, 0.1, 900);
+    this.camera = new THREE.PerspectiveCamera(55, 1, 0.1, 3000);
 
     this.sun = new THREE.DirectionalLight('#fff0d6', 2.8);
     this.sun.castShadow = true;
@@ -915,6 +915,8 @@ class Game {
     this.lantern.position.set(p.x, 2.4, p.z);
     this.renderer.toneMappingExposure = 1.05;
     this.scene.environment = null;
+    audio.ambience(this.zone?.name === 'town' ? 'town' : k > 0.5 ? 'tomb' : 'desert');
+    audio.surface = this.zone?.name === 'town' || k > 0.5 ? 'stone' : 'sand';
     if (k > 0.5) {
       if (this.scene.fog !== this.fogIn) { this.fogIn = this.fogIn || new THREE.Fog('#140c06', 4, 34); this.scene.fog = this.fogIn; this.scene.background = new THREE.Color('#0c0704'); }
       if (this.zone.name === 'necropolis' && !this.boss) audio.play('tomb');
@@ -953,6 +955,11 @@ class Game {
     // 場所ごとの曲
     const region = z.region(p);
     if (!this.titleMode && !this.boss && region.name !== this.lastRegion) { this.lastRegion = region.name; audio.play(region.music); }
+    // 環境音と足音の種類
+    const amb = region.name === 'town' || this.zone.name === 'town' ? 'town' : region.kind === 'outdoor' ? 'desert' : region.kind === 'cave' ? 'cave' : 'tomb';
+    audio.ambience(this.titleMode ? (this.zone.name === 'town' ? 'town' : 'desert') : amb);
+    const inWater = (z.waters || []).some(w => p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1);
+    audio.surface = inWater ? 'water' : region.kind === 'outdoor' && amb !== 'town' ? 'sand' : 'stone';
   }
 
   updateHUD() {

@@ -49,6 +49,19 @@ export class Audio {
       this.reverb.connect(wet).connect(this.master);
       this.sfxBus.connect(this.master);
       this.noiseBuf = this.noiseBuffer(1);
+      // 場所の響き（墓の中や洞窟では足音や剣の音が反響する）
+      this.room = this.ctx.createConvolver();
+      this.room.buffer = this.impulse(3.6, 3.2);
+      this.roomWet = this.ctx.createGain();
+      this.roomWet.gain.value = 0;
+      this.sfxBus.connect(this.room);
+      this.ambBus = this.ctx.createGain();
+      this.ambBus.gain.value = 0.9;
+      this.ambBus.connect(this.master);
+      this.ambBus.connect(this.room);
+      this.room.connect(this.roomWet).connect(this.master);
+      this.beds = {};
+      if (this.pendingAmb) { const k = this.pendingAmb; this.pendingAmb = null; this.ambience(k); }
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
     if (this.pendingTheme) { const t = this.pendingTheme; this.pendingTheme = null; this.play(t); }
@@ -275,6 +288,104 @@ export class Audio {
 
   // ---------- 効果音 ----------
 
+  // ---------- 環境音 ----------
+  // kind: 'desert'（乾いた風）| 'town'（風・人のざわめき・鳥）| 'tomb'（低いうなり・しずく・遠くの物音）| 'cave'（深い反響・水滴・地鳴り）
+  static AMB = {
+    desert: { wet: 0.04, music: 0.5, events: ['sand'], rate: 0.12 },
+    town: { wet: 0.03, music: 0.5, events: ['bird', 'bird', 'clatter'], rate: 0.25 },
+    tomb: { wet: 0.55, music: 0.28, events: ['drip', 'drip', 'steps', 'stone', 'sigh'], rate: 0.2 },
+    cave: { wet: 0.75, music: 0.25, events: ['drip', 'drip', 'drip', 'rumble', 'stone', 'steps'], rate: 0.28 },
+  };
+
+  ambience(kind) {
+    if (!this.ctx) { this.pendingAmb = kind; return; }
+    if (this.ambKind === kind) return;
+    this.ambKind = kind;
+    const c = this.ctx, t = c.currentTime, A = Audio.AMB[kind];
+    for (const [k, bed] of Object.entries(this.beds)) bed.gain.gain.setTargetAtTime(k === kind ? 1 : 0, t, 0.8);
+    if (kind && !this.beds[kind]) this.beds[kind] = this.makeBed(kind);
+    this.roomWet.gain.setTargetAtTime(A ? A.wet : 0, t, 0.5);
+    this.musicBus.gain.setTargetAtTime(A ? A.music * this.musicVolume / 0.5 : this.musicVolume, t, 1);
+    clearTimeout(this.ambTimer);
+    if (!A) return;
+    const tickEvt = () => {
+      if (this.ambKind !== kind) return;
+      if (Math.random() < A.rate) this.ambEvent(A.events[Math.floor(Math.random() * A.events.length)]);
+      this.ambTimer = setTimeout(tickEvt, 1000);
+    };
+    this.ambTimer = setTimeout(tickEvt, 1500);
+  }
+
+  /** ずっと鳴っている音の層（ループする雑音をフィルタで風やうなりにする） */
+  makeBed(kind) {
+    const c = this.ctx, t = c.currentTime;
+    const gain = c.createGain(); gain.gain.value = 0; gain.gain.setTargetAtTime(1, t, 0.8);
+    gain.connect(this.ambBus);
+    if (!this.longNoise) this.longNoise = this.noiseBuffer(4);
+    const noiseLayer = (type, freq, q, vol, lfoHz = 0, lfoDepth = 0, gustHz = 0) => {
+      const n = c.createBufferSource(); n.buffer = this.longNoise; n.loop = true;
+      const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = c.createGain(); g.gain.value = vol;
+      n.connect(f).connect(g).connect(gain); n.start(t, Math.random() * 3);
+      if (lfoHz) { const o = c.createOscillator(), d = c.createGain(); o.frequency.value = lfoHz; d.gain.value = lfoDepth; o.connect(d).connect(f.frequency); o.start(t); }
+      if (gustHz) { const o = c.createOscillator(), d = c.createGain(); o.frequency.value = gustHz; d.gain.value = vol * 0.8; o.connect(d).connect(g.gain); o.start(t); }
+    };
+    const hum = (hz, vol, wobble = 0.07) => {
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = hz;
+      const g = c.createGain(); g.gain.value = vol;
+      const l = c.createOscillator(), d = c.createGain(); l.frequency.value = wobble; d.gain.value = vol * 0.7; l.connect(d).connect(g.gain); l.start(t);
+      o.connect(g).connect(gain); o.start(t);
+    };
+    if (kind === 'desert' || kind === 'town') {
+      const k = kind === 'town' ? 0.55 : 1;
+      noiseLayer('bandpass', 520, 0.8, 0.10 * k, 0.07, 260, 0.05);   // 風の音（ゆっくり強くなったり弱くなったり）
+      noiseLayer('bandpass', 1700, 2.5, 0.025 * k, 0.11, 700, 0.09); // 砂が流れるさらさら音
+      noiseLayer('lowpass', 110, 0.7, 0.10 * k);                     // 低い風のうなり
+      if (kind === 'town') { noiseLayer('bandpass', 420, 1.4, 0.035, 0.6, 120, 0.3); noiseLayer('bandpass', 950, 2.2, 0.018, 0.45, 200, 0.23); } // 遠くの人のざわめき
+    } else {
+      const k = kind === 'cave' ? 1.3 : 1;
+      hum(49, 0.05 * k, 0.05); hum(73.4, 0.03 * k, 0.08); hum(98.5, 0.012 * k, 0.03); // 不穏な低いうなり
+      noiseLayer('lowpass', 180, 0.8, 0.07 * k, 0.03, 60);             // 空気の流れ
+      noiseLayer('bandpass', 900, 6, 0.006 * k, 0.04, 300, 0.02);      // すきま風の笛のような音
+    }
+    return { gain };
+  }
+
+  /** ときどき鳴る音（左右のどこかから） */
+  ambEvent(name) {
+    const c = this.ctx, t = c.currentTime + 0.05;
+    const pan = c.createStereoPanner(); pan.pan.value = Math.random() * 1.6 - 0.8;
+    const far = c.createBiquadFilter(); far.type = 'lowpass'; far.frequency.value = 900 + Math.random() * 2500;
+    far.connect(pan).connect(this.ambBus);
+    const tone = (at, f0, f1, dur, vol, type = 'sine') => {
+      const o = c.createOscillator(), g = c.createGain(); o.type = type;
+      o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      o.connect(g).connect(far); o.start(at); o.stop(at + dur + 0.05);
+    };
+    const noise = (at, type, f0, f1, q, dur, vol) => {
+      const n = c.createBufferSource(); n.buffer = this.noiseBuf;
+      const f = c.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, at); f.frequency.exponentialRampToValueAtTime(f1, at + dur);
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + dur * 0.15); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      n.connect(f).connect(g).connect(far); n.start(at, Math.random() * 0.5); n.stop(at + dur + 0.05);
+    };
+    switch (name) {
+      case 'drip': { const f = 1400 + Math.random() * 1600; tone(t, f, f * 1.9, 0.07, 0.05); if (Math.random() < 0.4) tone(t + 0.3 + Math.random() * 0.5, f * 1.1, f * 2, 0.06, 0.03); break; }
+      case 'steps': { // 誰かの足音が遠くで数歩だけ……
+        const n = 3 + Math.floor(Math.random() * 4), gap = 0.45 + Math.random() * 0.2;
+        far.frequency.value = 380;
+        for (let i = 0; i < n; i++) { noise(t + i * gap, 'lowpass', 500, 150, 0.7, 0.12, 0.09); tone(t + i * gap, 90, 50, 0.1, 0.05); }
+        break;
+      }
+      case 'stone': noise(t, 'bandpass', 260, 120, 1.5, 1.4 + Math.random(), 0.05); noise(t + 1.2, 'lowpass', 400, 100, 0.7, 0.2, 0.06); break;
+      case 'sigh': noise(t, 'bandpass', 500, 300, 4, 2.6, 0.02); break;
+      case 'rumble': noise(t, 'lowpass', 90, 40, 0.7, 3.2, 0.12); tone(t, 38, 30, 3, 0.05); break;
+      case 'sand': noise(t, 'bandpass', 2500, 1200, 1.2, 1.8 + Math.random(), 0.035); break;
+      case 'bird': { const f = 2600 + Math.random() * 1200, n = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) tone(t + i * 0.13, f, f * 1.25, 0.08, 0.02, 'triangle'); break; }
+      case 'clatter': tone(t, 700, 500, 0.08, 0.02, 'triangle'); tone(t + 0.12, 620, 480, 0.08, 0.015, 'triangle'); break;
+    }
+  }
+
   sfx(name) {
     if (!this.ctx) return;
     const c = this.ctx, t = c.currentTime, out = this.sfxBus;
@@ -298,7 +409,11 @@ export class Audio {
       case 'hit': tone(160, 0.18, 'triangle', 0.5, 0, 60); noise(0.12, 'lowpass', 2500, 0.7, 0.4); break;
       case 'hurt': tone(220, 0.25, 'sawtooth', 0.18, 0, 110); noise(0.15, 'lowpass', 1200, 0.7, 0.3); break;
       case 'roll': noise(0.3, 'lowpass', 600, 0.7, 0.25, 200); break;
-      case 'step': noise(0.06, 'lowpass', 500 + Math.random() * 300, 0.7, 0.08); break;
+      case 'step': // 地面によって足音を変える
+        if (this.surface === 'water') { noise(0.28, 'bandpass', 900 + Math.random() * 400, 1.2, 0.16, 400); noise(0.12, 'highpass', 3000, 0.7, 0.05); }
+        else if (this.surface === 'stone') { noise(0.05, 'bandpass', 1500 + Math.random() * 600, 1.4, 0.12); tone(110, 0.06, 'sine', 0.08, 0, 70); }
+        else { noise(0.14, 'bandpass', 2200 + Math.random() * 500, 0.9, 0.05, 900); noise(0.07, 'lowpass', 380, 0.7, 0.07); }
+        break;
       case 'coin': tone(1320, 0.12, 'square', 0.06); tone(1760, 0.2, 'square', 0.06, 0.07); break;
       case 'talk': tone(660 + Math.random() * 120, 0.05, 'triangle', 0.05); break;
       case 'ui': tone(880, 0.06, 'triangle', 0.08); break;

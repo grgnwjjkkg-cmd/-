@@ -110,9 +110,9 @@ L.box('city', 'wood', (41, 0.25, 1.35), (0.9, 0.5, 0.9), collide=False)   # 漁�
 L.box('ground', 'sand', (60, -0.8, 0), (40, 0.4, 260), collide=False)     # 川底
 
 # ---------- 遠景 ----------
-L.pyramid('far', 'pyr', -230, -60, 120, 77)
-L.pyramid('far', 'pyr', -300, 60, 150, 96)
-L.pyramid('far', 'pyr', -190, 120, 70, 45)
+L.pyramid('far', 'pyr', -420, -80, 300, 190)
+L.pyramid('far', 'pyr', -560, 160, 260, 165)
+L.pyramid('far', 'pyr', -330, 260, 130, 82)
 for i, z in enumerate(range(-120, 130, 14)):   # 対岸の崖
     L.rock('far', 'cliff', (150 + (i % 3) * 6, 6, z), (9, 12, 8), seed=200 + i, rough=0.3, subdiv=2)
 

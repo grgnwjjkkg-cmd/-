@@ -43,32 +43,41 @@ L.terrain('ext', 'sand', -80, 80, -14, 140, 64, 62, dune)
 # 崖（北の壁）：大きな岩を並べる。入口（x=0）のところは空ける
 for i, x in enumerate(range(-76, 80, 7)):
     if abs(x) < 7: continue
-    h = 9 + (i * 37 % 7)
-    L.rock('ext', 'cliff', (x, h * 0.55, -10 - (i % 3)), (6.5, h, 6), seed=i, rough=0.3, subdiv=3)
-L.rock('ext', 'cliff', (-4, 14, -13), (6, 8, 5), seed=91)
-L.rock('ext', 'cliff', (4, 14, -13), (6, 8, 5), seed=92)
-L.rock('ext', 'cliff', (0, 17, -12), (9, 5, 6), seed=93)
+    h = 24 + (i * 37 % 11)
+    L.rock('ext', 'cliff', (x, h * 0.5, -11 - (i % 3)), (7.5, h, 7), seed=i, rough=0.3, subdiv=3)
+L.rock('ext', 'cliff', (-5, 22, -13), (7, 14, 6), seed=91)
+L.rock('ext', 'cliff', (5, 22, -13), (7, 14, 6), seed=92)
+L.rock('ext', 'cliff', (0, 30, -13), (11, 8, 7), seed=93)
 L.meta['colliders']['boxes'] += [[-80, -2.2, -16, -5.0], [2.2, 80, -16, -5.0]]
 
-# 墓の入口（崖に彫られた門）
+# 墓の入口（崖に彫られた門）：人の9倍の高さの座像が両わきに座る
 for sx in (-1, 1):
-    L.box('ext', 'blocks', (sx * 4.2, 3.8, -4.6), (4.4, 7.6, 1.6))                    # 門の両わき
-    L.box('ext', 'stone', (sx * 3.4, 2.2, -2.9), (1.4, 4.4, 1.8))                    # 座像の台
-    L.box('ext', 'stone', (sx * 3.4, 5.0, -3.2), (1.1, 1.4, 1.2), collide=False)    # 座像の体
-    L.box('ext', 'stone', (sx * 3.4, 6.0, -3.2), (0.6, 0.7, 0.6), collide=False)    # 頭
-L.box('ext', 'blocks', (0, 7.2, -4.6), (4.4, 1.4, 1.8), collide=False)              # まぐさ石
-L.box('ext', 'stone', (0, 8.2, -4.4), (13.2, 0.6, 2.4), collide=False)              # 軒
+    L.box('ext', 'blocks', (sx * 4.2, 8, -4.6), (4.4, 16, 1.6))                     # 門の両わき
+    X = sx * 10.5
+    L.box('ext', 'blocks', (X, 1.5, -4.2), (6.4, 3, 7))                             # 座像の台
+    L.box('ext', 'stone', (X, 5.2, -5.4), (4.6, 4.4, 4.6), collide=False)          # 座（腰）
+    L.box('ext', 'stone', (X, 4.6, -1.8), (4.4, 3.2, 3.0), collide=False)          # ひざ
+    L.box('ext', 'stone', (X - 1.2, 1.5 + 1.6, -0.9), (1.4, 3.2, 1.6), collide=False)   # すね
+    L.box('ext', 'stone', (X + 1.2, 1.5 + 1.6, -0.9), (1.4, 3.2, 1.6), collide=False)
+    L.tbox('ext', 'stone', (X, 10.6, -5.6), (4.6, 7, 3.2), taper=0.8)              # 胴
+    L.box('ext', 'stone', (X, 15.0, -5.4), (1.8, 1.8, 1.8), collide=False)          # 首
+    L.box('ext', 'stone', (X, 16.8, -5.2), (2.6, 3.0, 2.8), collide=False)          # 頭
+    L.tbox('ext', 'stone', (X, 17.6, -5.6), (4.2, 3.6, 3.2), taper=0.7)            # 頭巾（ネメス）
+    L.tbox('ext', 'stone', (X, 20.6, -5.6), (2.0, 2.6, 2.0), taper=0.45)           # 冠
+L.box('ext', 'blocks', (0, 12.5, -4.6), (4.4, 7, 1.8), collide=False)               # まぐさ石
+L.box('ext', 'stone', (0, 16.4, -4.4), (30, 0.9, 2.6), collide=False)               # 軒
+L.box('ext', 'blocks', (0, 20, -4.9), (30, 6.4, 1.4), collide=False)                # 上の壁
 
 # 崩れた神殿（西側）：石の床、折れた柱、倒れた柱、低い壁
 L.box('ext', 'pave', (-20, 0.12, 55), (22, 0.25, 30), collide=False)
 for zi, z in enumerate(range(44, 68, 6)):
     for xi, x in enumerate((-28, -12)):
-        h = [5.5, 2.4, 6.5, 3.2, 1.2, 4.8, 6.2, 2.0][(zi * 2 + xi) % 8]
-        L.cyl('ext', 'stone', x, z, 0.25, h, 0.75, 0.7)
-        if h > 5: L.box('ext', 'stone', (x, 0.25 + h + 0.2, z), (1.9, 0.4, 1.9), collide=False)
-L.cyl('ext', 'stone', -19, 60, 0.7, 6.0, 0.7, 0.7, collide=False, lying=0.4)
-L.meta['colliders']['circles'] += [[-21.5, 58.8, 0.8], [-19, 60, 0.8], [-16.5, 61.2, 0.8]]
-L.box('ext', 'blocks', (-30.5, 1.1, 55), (1.2, 2.2, 26))
+        h = [12.5, 4.4, 14.0, 6.2, 2.2, 9.6, 13.2, 3.4][(zi * 2 + xi) % 8]
+        L.cyl('ext', 'stone', x, z, 0.25, h, 1.25, 1.15)
+        if h > 12: L.cyl('ext', 'stone', x, z, 0.25 + h, 1.2, 1.15, 1.8, collide=False); L.box('ext', 'stone', (x, 0.25 + h + 1.5, z), (3.8, 0.6, 3.8), collide=False)
+L.cyl('ext', 'stone', -19, 60, 1.15, 9.0, 1.15, 1.15, collide=False, lying=0.4)
+L.meta['colliders']['circles'] += [[-22.8, 58.2, 1.2], [-19, 60, 1.2], [-15.2, 61.8, 1.2]]
+L.box('ext', 'blocks', (-31, 2.2, 55), (1.6, 4.4, 26))
 L.box('ext', 'blocks', (-24, 0.9, 41.5), (12, 1.8, 1.2))
 L.box('ext', 'blocks', (-9.5, 0.6, 67), (1.2, 1.2, 10))
 # 神殿の奥の小さな祠（宝箱）
@@ -77,8 +86,8 @@ L.box('ext', 'blocks', (-23, 1.8, 66), (1, 3.6, 5))
 L.box('ext', 'blocks', (-17, 1.8, 66), (1, 3.6, 5))
 L.box('ext', 'stone', (-20, 3.8, 66), (7.4, 0.5, 5.6), collide=False)
 # 倒れたオベリスクと石のかたまり
-L.box('ext', 'stone', (14, 0.7, 34), (1.4, 1.4, 11), rot=0.5)
-L.meta['colliders']['circles'] += [[11.4, 29.4, 1.2], [14, 34, 1.2], [16.6, 38.6, 1.2]]
+L.box('ext', 'stone', (14, 1.2, 34), (2.4, 2.4, 20), rot=0.5)
+L.meta['colliders']['circles'] += [[9.2, 25.6, 1.6], [11.6, 29.8, 1.6], [14, 34, 1.6], [16.4, 38.2, 1.6], [18.8, 42.4, 1.6]]
 for i in range(26):
     x = random.choice([-1, 1]) * random.uniform(9, 30); z = random.uniform(8, 100)
     s = random.uniform(0.5, 1.6)
@@ -87,12 +96,13 @@ for i in range(26):
 # 道の両わきの石の目印
 for z in range(10, 100, 12):
     for sx in (-1, 1):
-        L.box('ext', 'stone', (sx * 6, 0.8, z), (0.9, 1.6, 0.9), rot=0.0)
+        L.box('ext', 'stone', (sx * 6, 1.6, z), (1.2, 3.2, 1.2), rot=0.0)
 
 # 遠景のピラミッド
-L.pyramid('far', 'pyr', -170, 40, 140, 90)
-L.pyramid('far', 'pyr', 190, 70, 110, 70)
-L.pyramid('far', 'pyr', -120, 170, 60, 38)
+L.pyramid('far', 'pyr', 40, -420, 330, 210)      # 崖の向こうの大ピラミッド
+L.pyramid('far', 'pyr', -420, -60, 260, 165)
+L.pyramid('far', 'pyr', 400, 120, 230, 146)
+L.pyramid('far', 'pyr', -330, 330, 120, 76)
 
 # ============================================================
 # 墓の中（暗い）：入口通路 → 前室 → 通路 → 浸水した柱の広間
@@ -132,21 +142,21 @@ def room(group, x0, x1, z0, z1, h=H, mat='blocks', ceil='stone', floor='pave', h
     for side in 'nsew': wall(side)
 
 # 入口通路（崖の中）
-room('tomb', -1.8, 1.8, -18, -5.2, h=4.6, doors=[('s', 0, 3.6), ('n', 0, 3.6)])
+room('tomb', -1.8, 1.8, -18, -5.2, h=8, doors=[('s', 0, 3.6), ('n', 0, 3.6)])
 # 前室
-room('tomb', -6, 6, -30, -18, h=6, doors=[('s', 0, 3.6), ('n', 0, 3.2)])
+room('tomb', -6, 6, -30, -18, h=11, doors=[('s', 0, 3.6), ('n', 0, 3.2)])
 L.box('tomb', 'stone', (-4.2, 0.5, -27), (1.4, 1.0, 2.6))                  # 石棺
 L.box('tomb', 'blocks', (-4.2, 1.1, -27), (1.5, 0.25, 2.7), collide=False)
 # 通路
-room('tomb', -1.6, 1.6, -38, -30, h=4.6, doors=[('s', 0, 3.2), ('n', 0, 3.2)])
+room('tomb', -1.6, 1.6, -38, -30, h=8, doors=[('s', 0, 3.2), ('n', 0, 3.2)])
 # 浸水した柱の広間（天井の穴から日の光）
 HALL = (-9, 9, -80, -38)
-room('tomb', *HALL, h=7, holes=[(-3, -48), (3, -60), (-2, -71)], doors=[('s', 0, 3.2), ('e', -60, 3.6)])
+room('tomb', *HALL, h=15, holes=[(-3, -48), (3, -60), (-2, -71)], doors=[('s', 0, 3.2), ('e', -60, 3.6)])
 for z in (-44, -52, -60, -68, -76):
     for x in (-4.5, 4.5):
-        L.cyl('tomb', 'stone', x, z, 0.0, 5.9, 0.95, 0.85)
-        L.cyl('tomb', 'stone', x, z, 5.8, 1.0, 0.85, 1.25, collide=False)
-        L.box('tomb', 'stone', (x, 6.9, z), (2.6, 0.2, 2.6), collide=False)
+        L.cyl('tomb', 'stone', x, z, 0.0, 12.8, 1.35, 1.2)
+        L.cyl('tomb', 'stone', x, z, 12.7, 1.6, 1.2, 1.8, collide=False)
+        L.box('tomb', 'stone', (x, 14.6, z), (3.8, 0.8, 3.8), collide=False)
 for z in (-50, -66):
     L.box('tomb', 'stone', (7.2, 0.5, z), (1.4, 1.0, 2.6))
     L.box('tomb', 'blocks', (7.2, 1.1, z), (1.5, 0.25, 2.7), collide=False)
@@ -190,10 +200,10 @@ L.rock('cave', 'rock', (31, 0.1, -86), (2.2, 0.35, 3.2), seed=301, rough=0.2)
 # ============================================================
 # 盗賊団の間（たいまつで明るめ）
 # ============================================================
-room('lair', 52, 76, -106, -84, h=8, doors=[('w', -95, 4.6)])
+room('lair', 52, 76, -106, -84, h=12, doors=[('w', -95, 4.6)])
 for x in (58, 70):
     for z in (-90, -100):
-        L.cyl('lair', 'stone', x, z, 0, 7.9, 0.8, 0.8)
+        L.cyl('lair', 'stone', x, z, 0, 11.9, 1.1, 1.0)
 for i in range(16):
     L.cyl('lair', 'stone', 56 + (i % 8) * 2.4, -104 + (i // 8) * 1.3, 0, 0.9 + (i % 3) * 0.25, 0.35, 0.28, seg=16, collide=False)
 L.meta['colliders']['boxes'].append([55, 74, -105.8, -102])
@@ -218,7 +228,7 @@ L.area((31, 7.5, -75), 1.6, 3000, (1.0, 0.92, 0.78), (0, -1, 0))  # 洞窟の天
 # ============================================================
 M = L.meta
 M['waters'] = [{'x0': -9, 'x1': 9, 'z0': -80, 'z1': -38, 'y': 0.12}, {'x0': 28.5, 'x1': 33.5, 'z0': -90, 'z1': -82, 'y': 0.18}]
-M['beams'] = [[-3, -48, 7], [3, -60, 7], [-2, -71, 7], [31, -75, 6]]
+M['beams'] = [[-3, -48, 15], [3, -60, 15], [-2, -71, 15], [31, -75, 6]]
 M['regions'] = [
     {'name': 'desert', 'box': [-90, 90, -5, 150], 'kind': 'outdoor', 'music': 'desert'},
     {'name': 'tomb', 'box': [-12, 10, -82, -5], 'kind': 'indoor', 'music': 'tomb'},
