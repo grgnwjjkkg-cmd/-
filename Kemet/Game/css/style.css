@@ -136,3 +136,4 @@ table.rates td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.1)
 #continueBtn { background: rgba(255,255,255,.14); color: #fff; border: 1.5px solid var(--gold); }
 #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .5s; }
 #fade.on { opacity: 1; }
+.item[disabled] { opacity: 0.45; }

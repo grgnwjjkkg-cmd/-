@@ -11,6 +11,15 @@ import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, pla
 import { audio } from './audio.js';
 // 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
 const HERO_MODEL = 'human_hero';
+// 世界地図（arrive は、その場所のどの入口に出るか）
+const AREAS = [
+  { id: 'town', name: 'メンネフェルの町', icon: '🏛', desc: 'ナイルのほとりの町。市場と神殿、船着き場', hint: '', arrive: 'necropolis' },
+  { id: 'necropolis', name: '西岸の墓地', icon: '⚱', desc: '巨像が守る岩の墓、水没した柱の広間、洞窟', hint: '町の西門の向こう', arrive: 'town' },
+  { id: 'giza', name: 'ギザの台地', icon: '△', desc: '段々に積まれた大ピラミッドと石の墓の通り', hint: '墓地から西へ続く道の先', arrive: 'necropolis' },
+  { id: 'pyramid', name: '大ピラミッドの中', icon: '▲', desc: '大回廊、女王の間、封印された王の間', hint: '大ピラミッドのふもとの穴', arrive: 'giza' },
+  { id: 'sunken', name: '海に沈んだ神殿', icon: '🌊', desc: '倒れた巨像と柱が眠る海の底', hint: '漁師の船着き場の先', arrive: 'town' },
+  { id: 'sky', name: '天空都市ヘリオポリス', icon: '☀', desc: '雲の上に浮かぶ太陽神ラーの都', hint: 'ギザの「太陽の門」が開いたら', arrive: 'giza' },
+];
 import { EffectComposer } from '../lib/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../lib/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '../lib/jsm/postprocessing/UnrealBloomPass.js';
@@ -189,6 +198,7 @@ class Game {
     this.zone = await loadBakedZone(name, this).catch(e => { if (name !== 'town') throw e; return buildTown(); });
     this.scene.add(this.zone.root);
     this.save.zone = name;
+    if (!(this.save.visited ||= []).includes(name)) this.save.visited.push(name);
 
     if (!this.player) {
       this.player = new Player(new Actor(await this.assets.makeChar(HERO_MODEL), this.assets));
@@ -773,7 +783,7 @@ class Game {
     if (!this.player || this.titleMode) return;
     audio.sfx('ui');
     const s = this.stats, save = this.save;
-    const tabs = `<div class="tabs">${[['equip', '装備'], ['clues', 'ヒント帳'], ['settings', '設定']].map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['equip', '装備'], ['map', '地図'], ['clues', 'ヒント帳'], ['settings', '設定']].map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (tab === 'equip') {
       const slot = (cap, id, key) => {
@@ -791,6 +801,14 @@ class Game {
         <div class="stats"><div>攻撃<b>${s.atk}</b></div><div>HP<b>${s.maxHP}</b></div><div>会心<b>${Math.round(s.crit * 100)}%</b></div><div>リーチ<b>${s.reach}m</b></div></div>
         <div class="note" style="margin-bottom:8px">タップで装備／外す。同じものを重ねて手に入れると強化されます（最大+5）。</div>
         <div class="list">${owned.length ? owned.sort((a, b) => itemDef(b).rarity - itemDef(a).rarity).map(row).join('') : '<div class="note">まだ何も持っていません。ハトラの店か、神殿前の神託の壺へ。</div>'}</div>`;
+    } else if (tab === 'map') {
+      // 行ったことのある場所へ移動できる（未踏の場所は「？」）
+      const visited = save.visited || [];
+      body = `<div class="note" style="margin-bottom:8px">行ったことのある場所へ移動できます。</div><div class="list">` + AREAS.map(a => {
+        const known = visited.includes(a.id), here = this.zone?.name === a.id;
+        return `<button class="item ${here ? 'equipped' : ''}" ${known && !here && !this.escape ? `data-go="${a.id}"` : 'disabled'}><div class="icon">${known ? a.icon : '？'}</div>
+          <div class="t"><b>${known ? a.name : '？？？'}</b>${known ? a.desc : a.hint}</div><div class="r">${here ? 'いまここ' : known ? '移動' : ''}</div></button>`;
+      }).join('') + '</div>';
     } else if (tab === 'clues') {
       body = save.clues.length ? save.clues.map(id => `<div class="clue"><b>${CLUES[id].title}</b>${CLUES[id].text}</div>`).join('') : '<div class="note">まだ手がかりはありません。</div>';
       body = `<div class="clue" style="border-color:#6fd39a"><b>いまやること</b>${objective(save)}</div>` + body;
@@ -809,6 +827,12 @@ class Game {
     }
     this.openPanel(`<div class="pHead"><h2>メニュー</h2><button class="close">✕</button></div>${tabs}${body}`, root => {
       root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => this.openMenu(b.dataset.tab));
+      root.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
+        this.closePanel(); this.paused = true;
+        const to = b.dataset.go, a = AREAS.find(x => x.id === to);
+        await this.enterZone(to, false, a.arrive);
+        this.paused = false; this.refreshHUD();
+      });
       root.querySelectorAll('[data-item]').forEach(b => b.onclick = () => this.toggleEquip(b.dataset.item));
       root.querySelectorAll('[data-slot]').forEach(b => b.onclick = () => {
         const k = b.dataset.slot;
