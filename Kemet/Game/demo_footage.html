@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>墓の記録映像（試作）</title>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: ui-monospace, Menlo, monospace; }
+  canvas { display: block; width: 100%; height: 100%; }
+  #cam { position: fixed; inset: 0; pointer-events: none; color: rgba(255,255,240,.85); font-size: 15px; text-shadow: 0 0 4px rgba(0,0,0,.6); }
+  .c { position: absolute; width: 28px; height: 28px; border: 2px solid rgba(255,255,240,.7); }
+  .tl { left: 22px; top: 22px; border-right: none; border-bottom: none; } .tr { right: 22px; top: 22px; border-left: none; border-bottom: none; }
+  .bl { left: 22px; bottom: 22px; border-right: none; border-top: none; } .br { right: 22px; bottom: 22px; border-left: none; border-top: none; }
+  #rec { position: absolute; left: 60px; top: 30px; } #rec b { color: #ff3b30; }
+  #tc { position: absolute; right: 60px; top: 30px; }
+  #info { position: absolute; left: 60px; bottom: 30px; font-size: 12px; opacity: .8; }
+</style>
+</head>
+<body>
+<div id="cam">
+  <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
+  <div id="rec"><b>●</b> REC</div><div id="tc">00:03:12</div>
+  <div id="info">SAQQARA — TOMB 7 / 1923.11.04</div>
+</div>
+<script type="module">
+// 「記録映像」風の画作りの試作：実写の石のテクスチャ（Poly Haven, CC0）＋水面の反射＋光の筋＋カメラの質感（ゆがみ・色ずれ・粒子・周辺減光）
+import * as THREE from 'three';
+import { EffectComposer } from './lib/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from './lib/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from './lib/jsm/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from './lib/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from './lib/jsm/postprocessing/OutputPass.js';
+import { Reflector } from './lib/jsm/objects/Reflector.js';
+import { hieroglyphs } from './js/world/textures.js';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2('#3a3222', 0.018);
+const camera = new THREE.PerspectiveCamera(78, innerWidth / innerHeight, 0.05, 200);
+
+// ---------- 材質（実写テクスチャ） ----------
+const loader = new THREE.TextureLoader();
+function pbr(id, repeat, extra = {}) {
+  const t = n => { const x = loader.load(`assets/tex/${id}_${n}.jpg`); x.wrapS = x.wrapT = THREE.RepeatWrapping; x.repeat.set(...repeat); x.anisotropy = 8; return x; };
+  const map = t('diff'); map.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map, normalMap: t('nor'), roughnessMap: t('rough'), normalScale: new THREE.Vector2(1.2, 1.2), ...extra });
+}
+const wallMat = pbr('large_sandstone_blocks_01', [4, 2]);
+const pillarMat = pbr('sandstone_blocks_08', [2, 3]);
+const floorMat = pbr('red_sandstone_pavement', [8, 8], { color: '#b8a58a' });
+const ceilMat = pbr('sandstone_blocks_08', [6, 6], { color: '#8a7a64' });
+// 壁画（うっすら残る彩色）
+const hiero = hieroglyphs('#ffffff', true, 21).clone(); hiero.needsUpdate = true; hiero.repeat.set(3, 1);
+const muralMat = new THREE.MeshStandardMaterial({ map: hiero, transparent: true, opacity: 0.32, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+
+const W = 18, L = 44, H = 7;
+const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; scene.add(m); return m; };
+
+// 床・天井・壁
+add(new THREE.PlaneGeometry(W, L).rotateX(-Math.PI / 2), floorMat, 0, -0.6, -L / 2 + 4);
+add(new THREE.PlaneGeometry(W, L).rotateX(Math.PI / 2), ceilMat, 0, H, -L / 2 + 4);
+for (const s of [-1, 1]) {
+  add(new THREE.BoxGeometry(1, H + 1, L), wallMat, s * (W / 2 + 0.5), H / 2 - 0.5, -L / 2 + 4);
+  const mural = add(new THREE.PlaneGeometry(L - 8, 3), muralMat, s * (W / 2 - 0.01), 3.2, -L / 2 + 4, -s * Math.PI / 2);
+  mural.castShadow = false;
+}
+add(new THREE.BoxGeometry(W, H + 1, 1), wallMat, 0, H / 2 - 0.5, -L + 3.5);
+// 奥の出入口（光が漏れる）
+const door = add(new THREE.PlaneGeometry(2.4, 3.6), new THREE.MeshBasicMaterial({ color: '#ffe2a8' }), 0, 1.2, -L + 4.02);
+door.castShadow = false;
+// 通路の段差（手前の高い歩道と階段）
+add(new THREE.BoxGeometry(W, 0.6, 6), floorMat, 0, -0.3, 3);
+for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(5, 0.15 * (4 - i), 0.5), floorMat, 0, -0.6 + 0.075 * (4 - i), -0.2 - i * 0.5);
+
+// 太い柱（パピルス柱）
+const colGeo = new THREE.CylinderGeometry(0.85, 0.95, H, 32, 1);
+const capGeo = new THREE.CylinderGeometry(1.25, 0.85, 1.1, 32, 1);
+for (let z = -4; z > -L + 6; z -= 7) for (const x of [-4.5, 4.5]) {
+  add(colGeo, pillarMat, x, H / 2 - 0.6, z);
+  add(capGeo, pillarMat, x, H - 0.9, z);
+}
+// 石棺
+const sarco = add(new THREE.BoxGeometry(1.4, 1.1, 2.8), pillarMat, 6.5, -0.05, -16);
+add(new THREE.BoxGeometry(1.5, 0.25, 2.9), wallMat, 6.5, 0.6, -16);
+
+// 浸水した床：水面の反射
+const water = new Reflector(new THREE.PlaneGeometry(W, L - 6), { textureWidth: 1024, textureHeight: 1024, color: '#8a8270', clipBias: 0.003 });
+water.rotation.x = -Math.PI / 2; water.position.set(0, -0.12, -L / 2 + 1);
+scene.add(water);
+// 水の濁りと波（反射の上に重ねる）
+const murk = new THREE.Mesh(new THREE.PlaneGeometry(W, L - 6, 1, 1).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false,
+  uniforms: { time: { value: 0 } },
+  vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
+  fragmentShader: `uniform float time; varying vec3 vW;
+    void main(){
+      float r = sin(vW.x*1.7+time*.8)*sin(vW.z*1.3-time*.6) + sin((vW.x-vW.z)*3.1+time*1.4)*.4;
+      float a = .42 + r*.06;
+      gl_FragColor = vec4(vec3(.09,.11,.08) + r*.02, a);
+    }`,
+}));
+murk.position.set(0, -0.1, -L / 2 + 1); scene.add(murk);
+
+// ---------- 光 ----------
+scene.add(new THREE.HemisphereLight('#8a7e64', '#2a2014', 0.9));
+// 天井の穴から差し込む光の筋
+const shafts = [[-2, -10], [3, -24], [-1.5, -33]];
+for (const [x, z] of shafts) {
+  const sp = new THREE.SpotLight('#fff1cf', 150, 30, 0.28, 0.6, 1.4);
+  sp.position.set(x, H + 6, z); sp.target.position.set(x + 0.5, 0, z + 1);
+  sp.castShadow = true; sp.shadow.mapSize.set(1024, 1024); sp.shadow.bias = -0.0005;
+  scene.add(sp, sp.target);
+  add(new THREE.PlaneGeometry(1.4, 1.4).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#fff6dc' }), x, H - 0.01, z).castShadow = false;
+  // 光の柱（ちり）
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.3, H + 0.6, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#ffe7b0', transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  beam.position.set(x + 0.25, H / 2 - 0.3, z + 0.5); beam.rotation.x = 0.07; scene.add(beam);
+}
+// 壁ぞいのたいまつ（あたたかい補助光）
+for (let z = -2; z > -L + 6; z -= 10) for (const x of [-W / 2 + 0.8, W / 2 - 0.8]) {
+  const l = new THREE.PointLight('#ff9a4a', 18, 9, 1.8); l.position.set(x, 2.6, z); scene.add(l);
+  add(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffb866' }), x, 2.6, z).castShadow = false;
+}
+// 奥の出入口の光
+const back = new THREE.PointLight('#ffcf8a', 60, 18, 1.6); back.position.set(0, 2, -L + 5); scene.add(back);
+// 手持ちライト（カメラ）
+const torch = new THREE.SpotLight('#fff4e0', 10, 22, 0.5, 0.8, 1.5); torch.castShadow = true; scene.add(torch, torch.target);
+
+// ちり
+const dust = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(Array.from({ length: 3000 }, (_, i) => i % 3 === 0 ? (Math.random() - .5) * W : i % 3 === 1 ? Math.random() * H : -Math.random() * (L - 4) + 4), 3)),
+  new THREE.PointsMaterial({ color: '#fff0c8', size: 0.025, transparent: true, opacity: 0.55, depthWrite: false }));
+scene.add(dust);
+
+// ---------- カメラの質感 ----------
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.7, 0.82));
+const footage = new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, aspect: { value: innerWidth / innerHeight } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float time; uniform float aspect; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c, vec2(12.9898,78.233))) * 43758.5453); }
+    vec2 barrel(vec2 uv, float k){ vec2 c = uv - .5; c.x *= aspect; float r2 = dot(c,c); c *= 1. + k*r2; c.x /= aspect; return c + .5; }
+    void main(){
+      vec2 uv = barrel(vUv, .12);
+      if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.) { gl_FragColor = vec4(0.,0.,0.,1.); return; }
+      vec2 d = (uv - .5) * .006;
+      vec3 col = vec3(texture2D(tDiffuse, uv + d).r, texture2D(tDiffuse, uv).g, texture2D(tDiffuse, uv - d).b);
+      // 色：古いビデオのような黄緑がかったセピア
+      float l = dot(col, vec3(.299,.587,.114));
+      col = mix(col, vec3(l) * vec3(1.04, 1.0, .82), .55);
+      col = pow(col, vec3(.95)) * vec3(1.0, .98, .9);
+      // 周辺減光・粒子・わずかな走査線
+      vec2 v = vUv - .5; col *= 1. - dot(v, v) * 1.1;
+      col += (rand(vUv * 480. + time) - .5) * .07;
+      col *= .97 + .03 * sin(vUv.y * 900. + time * 30.);
+      gl_FragColor = vec4(col, 1.);
+    }`,
+});
+composer.addPass(footage);
+composer.addPass(new OutputPass());
+
+// ---------- 手持ちカメラの動き ----------
+const shots = [
+  { p: [0.6, 1.25, 4.5], t: [-0.4, 1.0, -12], roll: -0.04 },
+  { p: [-2.6, 1.0, -4.8], t: [3.0, 1.4, -19], roll: 0.05 },
+  { p: [3.2, 1.3, -11.0], t: [6.5, 0.3, -16.5], roll: -0.06 },
+  { p: [0.0, 1.4, -26], t: [0.0, 1.3, -41], roll: 0.02 },
+];
+window.setShot = (i, time = 0) => {
+  const s = shots[i];
+  const sway = new THREE.Vector3(Math.sin(time * 1.3) * 0.04, Math.sin(time * 2.1) * 0.03, 0);
+  camera.position.set(...s.p).add(sway);
+  camera.lookAt(new THREE.Vector3(...s.t).add(sway.multiplyScalar(3)));
+  camera.rotateZ(s.roll + Math.sin(time * 0.9) * 0.01);
+  torch.position.copy(camera.position).add(new THREE.Vector3(0.2, -0.2, 0));
+  torch.target.position.set(...s.t);
+};
+window.draw = time => {
+  murk.material.uniforms.time.value = time;
+  footage.uniforms.time.value = time;
+  dust.rotation.y = time * 0.01;
+  composer.render();
+  const sec = 192 + Math.floor(time);
+  document.getElementById('tc').textContent = `00:${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+};
+let shot = 0, t0 = performance.now();
+setShot(0);
+if (!location.hash.includes('still')) {
+  (function loop() {
+    requestAnimationFrame(loop);
+    const t = (performance.now() - t0) / 1000;
+    shot = Math.floor(t / 6) % shots.length;
+    setShot(shot, t);
+    draw(t);
+  })();
+}
+window.addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); footage.uniforms.aspect.value = camera.aspect; });
+window.camera = camera;
+window.READY = true;
+</script>
+</body>
+</html>
