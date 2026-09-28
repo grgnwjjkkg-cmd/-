@@ -16,6 +16,8 @@ export class Assets {
 
   async init(onProgress = () => {}) {
     const anims = await load(this.base + 'anims.glb');
+    this.animRig = anims.scene;
+    this.retargeted = new Map();
     for (const clip of anims.animations) {
       // 腰の位置の移動（ルートモーション）は消して、その場で動くようにする
       clip.tracks = clip.tracks.filter(t => !/^root\.position/.test(t.name));
@@ -45,7 +47,14 @@ export class Assets {
 
   /** キャラを複製（材質も複製して、ダメージの点滅を個別にできるように） */
   async makeChar(id) {
-    const model = SkeletonUtils.clone(await this.charTemplate(id));
+    const tpl = await this.charTemplate(id);
+    const model = SkeletonUtils.clone(tpl);
+    // 別の骨組みのリアルな人（MakeHuman）は、アニメをその骨に合わせて変換して使う
+    let real = false; tpl.traverse(o => { if (o.userData?.realHuman) real = true; });
+    if (real) {
+      if (!this.retargeted.has(id)) this.retargeted.set(id, { tpl, clips: new Map(), handFix: restFix(this.animRig, tpl, 'hand_r') });
+      model.userData.rig = this.retargeted.get(id);
+    }
     model.traverse(o => {
       if (o.isMesh) {
         o.castShadow = true; o.receiveShadow = false;
@@ -112,7 +121,12 @@ export class Actor {
 
   action(name) {
     if (!this.actions.has(name)) {
-      const clip = this.assets.clips.get(name);
+      const rig = this.model.userData.rig;
+      let clip = this.assets.clips.get(name);
+      if (clip && rig) {
+        if (!rig.clips.has(name)) rig.clips.set(name, retargetClip(clip, this.assets.animRig, rig.tpl));
+        clip = rig.clips.get(name);
+      }
       if (!clip) return null;
       this.actions.set(name, this.mixer.clipAction(clip));
     }
@@ -161,6 +175,8 @@ export class Actor {
     holder.scale.setScalar(1 / (ws.x || 1));
     holder.rotation.set(0, 0, -Math.PI / 2);
     holder.position.set(0.02, 0.03, 0);
+    const fix = this.model.userData.rig?.handFix;
+    if (fix) { holder.quaternion.premultiply(fix); holder.position.applyQuaternion(fix); }
     weapon.scale.setScalar(length);
     weapon.rotation.set(0, Math.PI / 2, 0);
     holder.add(weapon);
@@ -189,4 +205,76 @@ export function turnTowards(a, b, t) {
   while (d > Math.PI) d -= Math.PI * 2;
   while (d < -Math.PI) d += Math.PI * 2;
   return a + d * Math.min(1, t);
+}
+
+// ---------- アニメの乗せかえ（骨の向きがちがうキャラに、同じ動きをさせる） ----------
+function restWorld(root) {
+  root.updateMatrixWorld(true);
+  const m = new Map();
+  root.traverse(o => { if (o.name) m.set(o.name, { q: o.getWorldQuaternion(new THREE.Quaternion()), p: o.getWorldPosition(new THREE.Vector3()), o }); });
+  return m;
+}
+
+/** 基本の姿勢で、src の骨の向きを dst の骨の向きへ直す回転 */
+function restFix(src, dst, name) {
+  const a = restWorld(src).get(name), b = restWorld(dst).get(name);
+  if (!a || !b) return null;
+  return b.q.clone().invert().multiply(a.q);
+}
+
+/** 基本の姿勢からの「世界での回転の差」を同じにして、動きを別の骨組みへ移す */
+function retargetClip(clip, srcRoot, dstRoot) {
+  const src = SkeletonUtils.clone(srcRoot), dst = dstRoot;
+  const sRest = restWorld(src), dRest = restWorld(dst);
+  const sLocal = new Map(); src.traverse(o => sLocal.set(o.name, { q: o.quaternion.clone(), p: o.position.clone() }));
+  const byName = new Map(); src.traverse(o => byName.set(o.name, o));
+  const bones = []; dst.traverse(o => { if (o.isBone) bones.push(o); });
+  const tracks = clip.tracks.filter(t => /\.(quaternion|position)$/.test(t.name));
+  const interp = tracks.map(t => {
+    const [node, prop] = t.name.split('.');
+    return { node: byName.get(node), prop, f: t.createInterpolant() };
+  }).filter(x => x.node);
+  const animated = new Set(interp.filter(x => x.prop === 'quaternion').map(x => x.node.name));
+  let times = [];
+  for (const t of tracks) if (t.times.length > times.length) times = Array.from(t.times);
+  const hip = 'pelvis', ratio = dRest.get(hip) && sRest.get(hip) ? dRest.get(hip).p.y / sRest.get(hip).p.y : 1;
+  const outQ = new Map(bones.map(b => [b.name, []])), outP = [];
+  const wq = new Map(), tmp = new THREE.Quaternion(), wqS = new THREE.Quaternion(), wp = new THREE.Vector3();
+  for (const t of times) {
+    for (const [n, r] of sLocal) { const o = byName.get(n); o.quaternion.copy(r.q); o.position.copy(r.p); }
+    for (const x of interp) {
+      const v = x.f.evaluate(t);
+      if (x.prop === 'quaternion') x.node.quaternion.fromArray(v);
+      else if (x.node.name !== 'root') x.node.position.fromArray(v);
+    }
+    src.updateMatrixWorld(true);
+    wq.clear();
+    for (const b of bones) {
+      const pq = b.parent?.isBone ? wq.get(b.parent.name) : dRest.get(b.parent?.name)?.q || new THREE.Quaternion();
+      let w;
+      const sb = byName.get(b.name);
+      if (sb && animated.has(b.name) && sRest.get(b.name)) {
+        sb.getWorldQuaternion(wqS);
+        w = wqS.clone().multiply(sRest.get(b.name).q.clone().invert()).multiply(dRest.get(b.name).q);
+      } else {
+        w = pq.clone().multiply(b.quaternion);
+      }
+      wq.set(b.name, w);
+      tmp.copy(pq).invert().multiply(w);
+      outQ.get(b.name).push(tmp.x, tmp.y, tmp.z, tmp.w);
+      if (b.name === hip && sb) {
+        // 腰の上下の動き：身長の比でのばして、骨の親の向きで表す
+        sb.getWorldPosition(wp).sub(sRest.get(hip).p).multiplyScalar(ratio).add(dRest.get(hip).p);
+        const par = b.parent, pp = par.isBone ? null : dRest.get(par.name);
+        const parentPos = par.isBone ? par.getWorldPosition(new THREE.Vector3()) : pp.p;
+        const s = new THREE.Vector3(); par.getWorldScale(s);
+        wp.sub(parentPos).applyQuaternion(pq.clone().invert()).divideScalar(s.x || 1);
+        outP.push(wp.x, wp.y, wp.z);
+      }
+    }
+  }
+  const out = [];
+  for (const b of bones) out.push(new THREE.QuaternionKeyframeTrack(`${b.name}.quaternion`, times, outQ.get(b.name)));
+  if (outP.length) out.push(new THREE.VectorKeyframeTrack(`${hip}.position`, times, outP));
+  return new THREE.AnimationClip(clip.name, clip.duration, out);
 }

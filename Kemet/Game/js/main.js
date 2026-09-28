@@ -9,6 +9,8 @@ import * as B from './world/builders.js';
 import { PEOPLE, TOWN_NPCS, CLUES, FINDS, objective, script } from './story.js';
 import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, playerStats, expToNext } from './items.js';
 import { audio } from './audio.js';
+// 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
+const HERO_MODEL = 'human_hero';
 import { EffectComposer } from '../lib/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../lib/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '../lib/jsm/postprocessing/UnrealBloomPass.js';
@@ -110,7 +112,7 @@ class Game {
     const set = p => { bar.style.width = Math.round(p * 100) + '%'; };
     await this.assets.init(set);
     const models = [...new Set(Object.values(WEAPONS).map(w => w.model))];
-    await this.assets.preload(['hero', ...TOWN_NPCS.map(n => n.model), 'bandit', 'mummy', 'jackal'], models, set);
+    await this.assets.preload([HERO_MODEL, ...TOWN_NPCS.map(n => n.model), 'bandit', 'mummy', 'jackal'], models, set);
     await this.makeIcons(models);
     await this.enterZone(this.save.zone, true);
     $('loadText').textContent = 'ナイルのほとり、古代の都メンネフェル。';
@@ -189,7 +191,7 @@ class Game {
     this.save.zone = name;
 
     if (!this.player) {
-      this.player = new Player(new Actor(await this.assets.makeChar('hero'), this.assets));
+      this.player = new Player(new Actor(await this.assets.makeChar(HERO_MODEL), this.assets));
       this.scene.add(this.player.root);
     }
     await this.equipVisual();

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>キャラ確認</title>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#1a140e}canvas{display:block;width:100%;height:100%}</style>
+</head><body>
+<script type="module">
+// キャラの見た目と動きを確認するページ: char_view.html?c=human_hero,hero&a=Walk_Loop
+import * as THREE from 'three';
+import { RGBELoader } from './lib/jsm/loaders/RGBELoader.js';
+import { Assets, Actor } from './js/actor.js';
+const q = new URLSearchParams(location.search);
+const ids = (q.get('c') || 'human_hero').split(','), anim = q.get('a') || 'Idle_Loop';
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(1); r.setSize(innerWidth, innerHeight);
+r.toneMapping = THREE.AgXToneMapping; r.toneMappingExposure = 1.1; r.shadowMap.enabled = true;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#2a2018');
+const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 100);
+const sun = new THREE.DirectionalLight('#fff1dc', 3); sun.position.set(3, 5, 4); sun.castShadow = true; scene.add(sun);
+scene.add(new THREE.HemisphereLight('#cfe0ff', '#6b5238', 0.6));
+const env = await new RGBELoader().loadAsync('assets/hdri/goegap.hdr'); env.mapping = THREE.EquirectangularReflectionMapping; scene.environment = env; scene.environmentIntensity = 0.5;
+const floor = new THREE.Mesh(new THREE.CircleGeometry(6, 48).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#8a7355', roughness: 1 })); floor.receiveShadow = true; scene.add(floor);
+const assets = new Assets('assets/'); await assets.init();
+const actors = [];
+for (const [i, id] of ids.entries()) {
+  const a = new Actor(await assets.makeChar(id), assets);
+  a.root.position.x = (i - (ids.length - 1) / 2) * 1.1; scene.add(a.root); a.play(anim); actors.push(a);
+  if (q.get('w')) a.hold(await assets.makeWeapon(q.get('w')), 1);
+}
+const view = q.get('v') || 'front';
+const d = +(q.get('d') || 4.2 + ids.length * 0.6), yaw = { front: 0, side: Math.PI / 2, back: Math.PI, q: 0.6 }[view] ?? 0;
+cam.position.set(Math.sin(yaw) * d, 1.15, Math.cos(yaw) * d); cam.lookAt(0, 0.95, 0);
+if (q.get('face')) { cam.fov = 14; cam.updateProjectionMatrix(); cam.position.set(Math.sin(yaw) * 2.4, 1.62, Math.cos(yaw) * 2.4); cam.lookAt(0, 1.6, 0); }
+window.step = t => { for (const a of actors) a.update(t); r.render(scene, cam); };
+window.step(+(q.get('t') || 0.01));
+window.READY = true;
+</script></body></html>

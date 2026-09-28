@@ -1,3 +1,5 @@
 node_modules/
 Game/assets/ph/
 Game/assets/levels/**/lm_*.png
+build/
+__pycache__/
