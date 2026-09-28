@@ -78,9 +78,16 @@ quote        … 数字の根拠となる要旨の原文（空白の違いを除
 |---|---|
 | summaries.json / charts.json（アプリが読むデータ） | `EviTrain/EviTrain/Resources/Studies/` |
 | themes.json（テーマごとの質問文 98件） | `EviTrain/EviTrain/Resources/Studies/` |
-| approvals.json（人が「公開OK」にした pmid の一覧） | `EviTrain/EviTrain/Resources/Studies/` |
+| approvals.json（人が「公開OK」にした pmid の一覧。2026-09-28 に714本すべて公開OK） | `EviTrain/EviTrain/Resources/Studies/` |
+| menus.json（論文 → 練習メニュー 50本。作り方は `rules/メニューの作り方.md`） | `EviTrain/EviTrain/Resources/Studies/` |
+| menus_skipped.json（メニューにしなかった80本と理由） | この `ronbun/data/` |
 | topics.json・未要約の論文・ルール・仕様・取得スクリプト | この `ronbun/` フォルダ |
 
 - summaries_kintore.json は summaries.json の一部なので、アプリには入れていない（全714本を入れ、公開OKのものだけ表示する）
 - 要約を追加・修正したら `EviTrain/EviTrain/Resources/Studies/summaries.json` を更新し、新しいテーマがあれば themes.json に質問文を足す
 - 公開OKの付け方: 開発用ビルドの「論文」タブ右上の「確認」→ 要約を読んで「公開OK」→「approvals.json を書き出す」→ 書き出したファイルで `Resources/Studies/approvals.json` を置き換える
+
+### 論文メニュー（menus.json）
+- 要旨（PubMed）をもとに作成係が下書き → 別の点検係が要旨と照合 → プログラムで「数字がすべて要旨にある・引用が原文どおり」を確認、の3段階
+- すべて `status: 確認待ち`。開発用ビルドでは表示、App Store 版では `公開OK` にしたものだけ「このメニューで練習する」ボタンが出る
+- 公開するときは menus.json の該当メニューの status を "公開OK" に変える

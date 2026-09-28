@@ -1,0 +1,1456 @@
+[
+ {
+  "pmid": "23820566",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "階段ダッシュ（1段ずつ）",
+  "group_label": "1段ずつ上った組（1S）",
+  "weeks": 4,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "階段ダッシュ（1段ずつ）",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 10,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "1段ずつ駆け上がり、合計68段。セットの間は2.5分休む"
+   }
+  ],
+  "quote": "The 1S and 2S groups trained twice per week, for 4 weeks, performing 10 sets of climbing 68 total stairs with 2.5-minute rest between trials.",
+  "caution": "大学の男子陸上選手の研究。階段のパワーは伸びたが、40mダッシュのパワーは変わらなかった。"
+ },
+ {
+  "pmid": "25034547",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "1000m走インターバル",
+  "group_label": "インターバル走の組",
+  "weeks": null,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "1000m走",
+    "tracking": "distanceTime",
+    "group": "有酸素",
+    "sets": 5,
+    "reps": null,
+    "meters": 1000,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "初日の9本から毎日本数を減らして5本に。速さは毎回上げる。5日連続で行う"
+   }
+  ],
+  "quote": "randomly assigned to either an interval (9 to 5 X 1000 m) or continuous (9000 to 5000 m) training group ... While the number of intervals or total distance was reduced every day, speed was increased in each session throughout the five days of both training programs.",
+  "caution": "17〜18歳のサッカー選手のシーズン前の研究。持久力は伸びたが、ジャンプなどの瞬発力は下がった。"
+ },
+ {
+  "pmid": "25627646",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "メディシンボール投げ",
+  "group_label": "メディシンボールで投げた組",
+  "weeks": 8,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "メディシンボールの投げる動き",
+    "tracking": "reps",
+    "group": "肩",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "ハンドボールの投げる動きをメディシンボールで行う。ボールの重さ・回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "a specific resistance training program (throwing movement with a medicine ball) ... Over the 8-week in season, the athletes performed 3 times per week according to an assigned training program alongside their normal team handball training.",
+  "caution": "18歳前後の男子エリートハンドボール選手のシーズン中の研究。ふだんの練習に加えて行った。"
+ },
+ {
+  "pmid": "25798601",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "20mダッシュ×15本（全力）",
+  "group_label": "全力で走った組（100UNSUP）",
+  "weeks": 7,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "20mダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": 15,
+    "meters": 20,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "全力（100%）",
+    "note": "いつものサッカー練習に週1回追加した。休みの長さは要旨に書かれていない"
+   }
+  ],
+  "quote": "a 7-week intervention period ... Three training groups performed a weekly repeated-sprint training session in addition to their regular soccer training sessions performed at A) 100% intensity without supervision (100UNSUP, n = 13) ... Repetitions x distance for the sprint-training sessions were 15 x 20 m for 100UNSUP",
+  "caution": "17歳前後の男子サッカー選手の研究。この研究では足の速さははっきり伸びなかった"
+ },
+ {
+  "pmid": "25939101",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "30秒全力バーピー",
+  "group_label": "短時間・高強度（HIT）の組",
+  "weeks": 4,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "バーピー",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 4,
+    "reps": null,
+    "meters": null,
+    "seconds": 30,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "4〜7セット。セットの間は4分、軽く動きながら休む"
+   }
+  ],
+  "quote": "completed 4 weeks of exercise training 3 days · wk(-1) consisting of either approximately 60 minutes of typical physical training or HIT whole-body calisthenics involving 4 to 7 sets of 30-second \"all out\" burpees separated by 4 minutes of active recovery",
+  "caution": "大学生の士官候補生の研究。ふつうの約60分の練習と比べて体力の差はなかった。"
+ },
+ {
+  "pmid": "27300278",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "自転車インターバル（長→短）",
+  "group_label": "インターバルを長い順に進めた組",
+  "weeks": 12,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "自転車インターバル（16分）",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 4,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "1〜4週目。1回ごとにやり切れる最大の強さ"
+   },
+   {
+    "exercise": "自転車インターバル（8分）",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 4,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "5〜8週目。1回ごとにやり切れる最大の強さ"
+   },
+   {
+    "exercise": "自転車インターバル（4分）",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 4,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "9〜12週目。1回ごとにやり切れる最大の強さ"
+   }
+  ],
+  "quote": "The increasing HIT group (n = 23) performed interval training as 4 × 16 min in weeks 1-4, 4 × 8 min in weeks 5-8, and 4 × 4 min in weeks 9-12.",
+  "caution": "よく鍛えた自転車選手の研究。12週間で24回のインターバルに加えて、ゆっくりの練習も多く行っていた。順番を変えた組と差はなかった。"
+ },
+ {
+  "pmid": "27310598",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ベンチ投げ（重さを知らせない）",
+  "group_label": "重さを知らせない組（UL）",
+  "weeks": 4,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "ベンチプレス・スロー",
+    "tracking": "weightReps",
+    "group": "胸",
+    "sets": 4,
+    "reps": 6,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の30%・50%・70%",
+    "note": "1セットで各重さを2回ずつ、順番はばらばら。やる人には重さを知らせない"
+   }
+  ],
+  "quote": "Both groups performed two sessions weekly consisting of four sets of six repetitions of the bench press throw exercise, using the 30%, 50% and 70% of subjects' individual 1 repetition maximum (1RM). In each set, two repetitions with each load were performed, but the order of the loads was randomised.",
+  "caution": "ジュニアのハンドボール選手の研究。バーを投げ上げるので、安全に受け止められる環境で行う。"
+ },
+ {
+  "pmid": "27457913",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "柔道選手の筋トレ7種目",
+  "group_label": "日ごとに重さを変える組み方（DUP）",
+  "weeks": 4,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": "日ごとに重さを変えた"
+   },
+   {
+    "exercise": "レッグカール",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": ""
+   },
+   {
+    "exercise": "クリーン＆ジャーク",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": ""
+   },
+   {
+    "exercise": "スナッチ",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": ""
+   },
+   {
+    "exercise": "ベンチプレス",
+    "tracking": "weightReps",
+    "group": "胸",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": ""
+   },
+   {
+    "exercise": "バーベルベンチプル",
+    "tracking": "weightReps",
+    "group": "背中",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": ""
+   },
+   {
+    "exercise": "ラットプルダウン",
+    "tracking": "weightReps",
+    "group": "背中",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜90%",
+    "note": "4週間で12回の練習。セット数・回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "two 4-week strength training mesocycles (each with 12 sessions) with either traditional (TP) or daily undulating (DUP) periodization ... Strength training was performed as lifting and lowering of weights using squats, knee flexion curl, clean & jerk, snatch, bench press, barbell bench pull, and lat pull-down. The mesocycles were equated for the number of repetitions and different intensity zones (50-90% of 1 repetition maximum [1RM])",
+  "caution": "筋トレ経験のある14歳前後の柔道選手の研究。いつもの柔道練習に足して行った"
+ },
+ {
+  "pmid": "27671996",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ダンベルでチェストプレス",
+  "group_label": "ダンベルで行った組",
+  "weeks": 10,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "ダンベルチェストプレス",
+    "tracking": "weightReps",
+    "group": "胸",
+    "sets": 4,
+    "reps": 6,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "重さは要旨に書かれていない"
+   }
+  ],
+  "quote": "randomized to train chest press 2 days week-1 for 10 week (6 repetitions × 4 series) using a Swiss ball, Smith machine or dumbbells",
+  "caution": "筋トレ経験のある男性の研究。練習した種目そのものが特に伸びやすかった。"
+ },
+ {
+  "pmid": "28292885",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "下半身筋トレ4種目（3セット）",
+  "group_label": "持久練習に筋トレを足した組（E+S）",
+  "weeks": 11,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "下半身の筋トレ（4種目）",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": 3,
+    "reps": 4,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "4〜10回が限界の重さ（4〜10RM）",
+    "note": "種目名は要旨に書かれていない。ふだんの持久力の練習に加えて行う"
+   }
+  ],
+  "quote": "The strength training consisted of four lower body exercises [3 × 4-10 repetition maximum (RM)] twice a week for 11 weeks.",
+  "caution": "よく鍛えた女子デュアスロン選手の研究。重い重さを使うので、フォームを確かめながら行う。"
+ },
+ {
+  "pmid": "29176383",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "30秒連続ジャンプ",
+  "group_label": "ジャンプインターバルを足した組",
+  "weeks": 4,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "ランニング",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最高有酸素速度の70%",
+    "note": "40分、週3回（両方の組が行った）"
+   },
+   {
+    "exercise": "連続垂直ジャンプ",
+    "tracking": "time",
+    "group": "ジャンプ",
+    "sets": 4,
+    "reps": null,
+    "meters": null,
+    "seconds": 30,
+    "rest_seconds": null,
+    "load": "",
+    "note": "4〜6本。本と本の間は5分"
+   }
+  ],
+  "quote": "(40-minute running at 70% of peak aerobic velocity, 3 times per week for 4 weeks) ... the EG performed the JIT twice per week, which consisted of 4-6 bouts of continuous vertical jumping (30 seconds) with 5-minute intervals",
+  "caution": "趣味で走る市民ランナーの研究。走りの効率（ランニングエコノミー）は変わらなかった。"
+ },
+ {
+  "pmid": "29182895",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "下り坂ランニング（20分）",
+  "group_label": "下り坂を走った組",
+  "weeks": 5,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "下り坂ランニング",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "乳酸閾値に当たる心拍数",
+    "note": "-10%の下り坂を1回20分走る"
+   }
+  ],
+  "quote": "conducted either DR (DR group (DRG), n = 10: -10% slope) or LR (LR group (LRG), n = 8) training at a target heart rate (HR) associated with lactate threshold (LT) for 20 min·session-1, 3 sessions·week-1, for 5 weeks",
+  "caution": "健康な若い男性の研究。下り坂の組は全身持久力（最大酸素摂取量）は伸びなかった。"
+ },
+ {
+  "pmid": "30596338",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "30秒全力走×5〜6本",
+  "group_label": "スプリントインターバルの組",
+  "weeks": 4,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "30秒全力ダッシュ",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 5,
+    "reps": null,
+    "meters": null,
+    "seconds": 30,
+    "rest_seconds": 30,
+    "load": "全力",
+    "note": "5〜6本行う"
+   }
+  ],
+  "quote": "Intervention group performed 5 to 6, 30 second \"all out\" running sprints, interspersed with 30-second rest intervals, 3 times per week, for 4 consecutive weeks",
+  "caution": "学校で行った高校生年代の研究。全力で走るので体力に合わせて本数を調整する。"
+ },
+ {
+  "pmid": "31022105",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "スクワット＋軽いそり引き",
+  "group_label": "スクワット＋軽いそり引きの組（SQ + LST）",
+  "weeks": 8,
+  "per_week": 1,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の40〜55%",
+    "note": "セット数・回数は要旨に書かれていない"
+   },
+   {
+    "exercise": "そり引きダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "体重の12.5%",
+    "note": "週1回の練習。距離・本数は要旨に書かれていない"
+   }
+  ],
+  "quote": "Training took place once per week for 8 weeks. ... SQ + LST combined squat with 12.5% BM load resisted sprint. The loads used in squat ranged from 40 to 55% 1RM",
+  "caution": "運動習慣のある男性の研究。重さは体力に合わせて調整する"
+ },
+ {
+  "pmid": "31332988",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ノルディックハムストリング",
+  "group_label": "ノルディックの組（NHE）",
+  "weeks": 4,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "ノルディックハムストリング",
+    "tracking": "reps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "セット数・回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "Participants were randomly allocated to either a NHE training or sprint training group. Two sessions per week for four-weeks of training was performed",
+  "caution": "16歳前後の研究。ダッシュ練習の組のほうが最高スピードの伸びは大きかった。"
+ },
+ {
+  "pmid": "33009351",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "重いそり引き20mダッシュ",
+  "group_label": "速さが10%落ちたら止める組（G10）",
+  "weeks": 11,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "そり引きダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": 20,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "体重の45%から65%へ少しずつ重くした",
+    "note": "走る速さが10%落ちたところでやめる。本数・週の回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "a 11-week moderate-to-heavy sled training intervention ... 10% of velocity decrease (G10, n = 8) ... The velocity-based sled training consisted of 20-m resisted sprints with a progressive loading increase from 45 to 65% of body-mass throughout the intervention",
+  "caution": "プロのサッカー選手の研究。速さを測る道具が必要で、重さは体力に合わせて調整する"
+ },
+ {
+  "pmid": "33337706",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "そり引きダッシュ（体重40%）",
+  "group_label": "体重の40%のそりを引いた組（G40%）",
+  "weeks": 8,
+  "per_week": 1,
+  "items": [
+   {
+    "exercise": "そり引きダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "体重の40%のそり",
+    "note": "週1回。距離・本数・休みは5つの組で同じだが、数字は要旨に書かれていない"
+   }
+  ],
+  "quote": "All 5 experimental groups trained once a week for a period of 8 weeks completing the same training program ... Therefore, our findings suggest that resisted sprint training with moderate loads (i.e., 40% BM) may have a positive effect on unresisted and resisted sprint performance.",
+  "caution": "運動習慣のある男性の研究。重すぎるそり（体重の80%）の組では、重いそりでのダッシュが遅くなった。"
+ },
+ {
+  "pmid": "36383389",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ノルディックハムストリング（週2回）",
+  "group_label": "週2日に分けた組",
+  "weeks": null,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "ノルディックハムストリング",
+    "tracking": "reps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "1週間の合計量は週1日の組と同じにそろえ、2日に分ける。セット数・回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "Nordic hamstring exercise (NHE) training, executed at frequencies of 1- or 2-days per week",
+  "caution": "10歳前後の男子サッカー選手の研究。週1日の組と大きな差はなかった。"
+ },
+ {
+  "pmid": "36649725",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "30m助走つきダッシュ（9割）",
+  "group_label": "ダッシュ練習をした組",
+  "weeks": 6,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "30mダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": 30,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最高スピードの90〜95%",
+    "note": "助走をつけて走る（フライング）。週1回。本数は要旨に書かれていない"
+   }
+  ],
+  "quote": "The training group performed a weekly sprint-training session consisting of 30-m flying sprints at 90% to 95% of Vmax",
+  "caution": "ふだん運動している大人の研究。全力より少し抑えた速さで走る。"
+ },
+ {
+  "pmid": "36863354",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "そり引きダッシュ（中くらいの重さ）",
+  "group_label": "中くらいの重さの組（速さが15%落ちる重さ）",
+  "weeks": 8,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "そり引きダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "何も引かないときより速さが15%落ちる重さ",
+    "note": "距離・本数は要旨に書かれていない"
+   }
+  ],
+  "quote": "We examined the effects of two 8-week resisted-sprint training programs ... players who trained with sled loads that induced 15%VL relative to unloaded sprint velocity",
+  "caution": "高いレベルの成人サッカー選手の研究。速さが40%落ちる重い組とも差はなかった。"
+ },
+ {
+  "pmid": "37536676",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "そり引き20mダッシュ",
+  "group_label": "そりを引いてダッシュした組（RSS）",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "そり引きダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": 2,
+    "reps": 3,
+    "meters": 20,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "体重の12.6%のおもりをのせたそり",
+    "note": "3セットのうち2セットをそり引きで行った"
+   },
+   {
+    "exercise": "20mダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": 1,
+    "reps": 3,
+    "meters": 20,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "何も引かない",
+    "note": "残りの1セットは何も引かずに走った"
+   }
+  ],
+  "quote": "8 weeks of training, 2 sessions/wk of sprint-specific training program. The RSS group performed sprints by towing a sled overloaded with 12.6% of body mass for 2 of the 3 sets of 3 × 20-m sprints, plus one set was carried out with unresisted modality",
+  "caution": "運動習慣のある男性ラグビー選手の研究。休みの長さは要旨に書かれていない"
+ },
+ {
+  "pmid": "37639674",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "4秒全力バーピー×10",
+  "group_label": "バーピーの組（BIT）",
+  "weeks": null,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "バーピー",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 10,
+    "reps": null,
+    "meters": null,
+    "seconds": 4,
+    "rest_seconds": 30,
+    "load": "全力",
+    "note": "4秒全力・30秒休みを10本。5日間行った"
+   }
+  ],
+  "quote": "Subjects in SIT and BIT performed 5 days of 10 × 4 second \"all-out\" efforts with 30 seconds of recovery",
+  "caution": "活動的で健康な大人の研究。5日間だけの短い研究"
+ },
+ {
+  "pmid": "37917965",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "自転車5秒スプリント反復",
+  "group_label": "通常の空気（低酸素ではない環境）で行った組",
+  "weeks": null,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "自転車全力スプリント",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 4,
+    "reps": 5,
+    "meters": null,
+    "seconds": 5,
+    "rest_seconds": 25,
+    "load": "全力",
+    "note": "1本ごとの休みは25秒、セットの間は3分。9日間で4回行った"
+   }
+  ],
+  "quote": "4 × 5 × 5-s cycle sprints-25-s intersprint recovery ... with 3-min interset rest in normoxia for both groups",
+  "caution": "世界トップレベルの女子7人制ラグビー選手の研究。この練習の前後で50m走の速さは変わらなかった。"
+ },
+ {
+  "pmid": "38569204",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "30秒階段かけ上がり×3",
+  "group_label": "階段かけ上がりの組（ES）",
+  "weeks": 6,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "階段かけ上がり",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 3,
+    "reps": null,
+    "meters": null,
+    "seconds": 30,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "6階分・126段を全力で上がる。1本ごとに1時間以上あける"
+   }
+  ],
+  "quote": "ES (n = 14) and MICT (n = 13) groups performed three sessions per week over 6 weeks ... ES involved 3 × 30 s \"all-out\" stair-climbing (6 flight, 126 steps, and 18.9 m total height) bouts separated by >1 h rest",
+  "caution": "運動習慣のない若い大人の研究。体力に合わせて本数を調整する"
+ },
+ {
+  "pmid": "38587921",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "4分走×5本（7日で10回）",
+  "group_label": "低強度走を足さなかった組（HSM）",
+  "weeks": null,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ランニング",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 5,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大心拍数の90〜95%",
+    "note": "1本4分。7日間で10回行う短期集中の練習。本と本の間の休みの長さは要旨に書かれていない"
+   }
+  ],
+  "quote": "HSM, 10 running-based HIIT sessions (5 × 4 min at 90%-95% maximal heart rate) over 7 d",
+  "caution": "持久系の練習を積んだ大人の研究。7日間で10回と負担が大きいので、体力に合わせて調整する。"
+ },
+ {
+  "pmid": "38781181",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "縦横ミックスのジャンプ練習",
+  "group_label": "縦と横のジャンプを組み合わせた組（V+HPT）",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "縦方向・横方向のジャンプ",
+    "tracking": "reps",
+    "group": "ジャンプ",
+    "sets": null,
+    "reps": 100,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "1回の練習で足の接地が合計100回。上へ跳ぶ種目と前へ跳ぶ種目を組み合わせる。具体的な種目名は要旨に書かれていない"
+   }
+  ],
+  "quote": "undertook eight weeks of PT, executing 100 foot contacts per session, twice weekly",
+  "caution": "成人男子サッカー選手の研究。縦・横・組み合わせの3つの方法のうち、どれかがはっきり上回ったわけではない。"
+ },
+ {
+  "pmid": "38841640",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "6秒全力走（休み長め）",
+  "group_label": "休みが走る時間の9倍の組（1:9）",
+  "weeks": 7,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "6秒全力ダッシュ",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 4,
+    "reps": 6,
+    "meters": null,
+    "seconds": 6,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "1セット6〜10本。休みは走った時間の9倍（1:9）"
+   }
+  ],
+  "quote": "each performing 4 sets of 6-10 repetitions of 6-second all-out running with rest intervals at ratios of 1:3, 1:6, and 1:9 ... the 7-week training period",
+  "caution": "若い男子サッカー選手の研究。休みが短い組（1:3）は全身持久力の伸びが大きかった。"
+ },
+ {
+  "pmid": "39157534",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "2分インターバル×3",
+  "group_label": "HIITの組",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "高強度インターバル（2分）",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": 3,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大心拍数の80〜85%",
+    "note": "2分運動して2分休む（休みは最大心拍数の50〜55%）。運動の種類は要旨に書かれていない。1回12分"
+   }
+  ],
+  "quote": "HIIT group performed 3 sets of 2 min of work (80-85%HRmax) / 2 min of rest (50-55%HRmax).",
+  "caution": "高校の体育の時間に行った研究。運動の種類が書かれていないので、走る・こぐなど体力に合わせて選ぶ。"
+ },
+ {
+  "pmid": "39374924",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ハングパワークリーン90%",
+  "group_label": "最大の90%で行った組（HPC90%）",
+  "weeks": 7,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ハングパワークリーン",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の90%",
+    "note": "バーベルを腰の高さから一気に肩まで挙げる。練習量は50%の組とそろえた。セット数・回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "7 weeks of training with different hang-power-clean (HPC) intensities ... randomly assigned to a group with HPC at 90% (HPC90%) or 50% (HPC50%) of HPC 1-repetition maximum (1RM). The training volume was equalized between groups",
+  "caution": "ハングパワークリーンの経験が1年以上あるプロの女子ハンドボール選手の研究。重さは体力に合わせて調整する"
+ },
+ {
+  "pmid": "39444266",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "コペンハーゲン・アダクション",
+  "group_label": "コペンハーゲン・アダクション（CA）の組",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "コペンハーゲン・アダクション",
+    "tracking": "reps",
+    "group": "脚",
+    "sets": 2,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "内ももの種目。回数は段階的に増やす（具体的な回数は要旨に書かれていない）"
+   }
+  ],
+  "quote": "were individually randomized to an 8-week progressive dynamic training protocol with the CA or an isometric training protocol with the SQ twice per week ... performed with two sets twice a week",
+  "caution": "16〜17歳の男子サッカー選手の研究。内ももを押しつぶす種目（SQ）の組と筋力の差はなかった。"
+ },
+ {
+  "pmid": "39481368",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ベンチプレス1セット",
+  "group_label": "中くらいの量の組（MOD）",
+  "weeks": 8,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ベンチプレス",
+    "tracking": "weightReps",
+    "group": "胸",
+    "sets": 1,
+    "reps": 8,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の70%から85%へ上げた",
+    "note": "70%で15回、75%で12回、80%で10回、85%で8回。1回ごとに短い休みをはさむ"
+   }
+  ],
+  "quote": "The intensities increased from 70% to 85% of 1-repetition maximum (1RM) over the 8-week training period. Each session consisted of only 1 set with short interrepetition rest periods. ... MOD completed 15, 12, 10, and 8 repetitions per session with 70%, 75%, 80%, and 85% 1RM, respectively",
+  "caution": "筋トレ経験のある男性の研究。週の回数は要旨に書かれていない"
+ },
+ {
+  "pmid": "39649571",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "5秒全力ダッシュ×6×2",
+  "group_label": "週3回の組（3sSIT）",
+  "weeks": 6,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "全力ダッシュ（5秒）",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 2,
+    "reps": 6,
+    "meters": null,
+    "seconds": 5,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "休みの長さは要旨に書かれていない"
+   }
+  ],
+  "quote": "three times weekly (3sSIT = 2 sets of 6 × 5 sec all-out runs)",
+  "caution": "若い男子サッカー選手がふだんの練習に加えた研究。週1回・週2回の組とも同じくらい伸びた。"
+ },
+ {
+  "pmid": "39679645",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ベンチプレス4回×4（85%）",
+  "group_label": "最大筋力を狙った組（MST）",
+  "weeks": 8,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "ベンチプレス",
+    "tracking": "weightReps",
+    "group": "胸",
+    "sets": 4,
+    "reps": 4,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の85%以上",
+    "note": ""
+   }
+  ],
+  "quote": "MST performed 4 × 4 repetitions bench press at ≥85% of one-repetition maximum (1RM).",
+  "caution": "ある程度鍛えている男女の研究。1週間に3回の練習だった。"
+ },
+ {
+  "pmid": "40046213",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ドロップジャンプ練習",
+  "group_label": "台から落ちてすぐ跳ぶジャンプの組（DJ）",
+  "weeks": 8,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "ドロップジャンプ",
+    "tracking": "reps",
+    "group": "ジャンプ",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "台から落ちて着地したらすぐ跳ぶ。セット数・回数・台の高さは要旨に書かれていない"
+   }
+  ],
+  "quote": "The AEL and DJ groups trained three times per week for 8 weeks",
+  "caution": "体育を学ぶ男子学生の研究。この研究では30mダッシュのタイムは伸びなかった"
+ },
+ {
+  "pmid": "40272398",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ミッドサイプル＋脚の筋トレ",
+  "group_label": "ふつうの（動かす）筋トレの組（TST）",
+  "weeks": 6,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ミッドサイ・プル（クリーンプル）",
+    "tracking": "weightReps",
+    "group": "背中",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "セット数・回数・重さは要旨に書かれていない"
+   },
+   {
+    "exercise": "スプリットスクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "セット数・回数・重さは要旨に書かれていない"
+   },
+   {
+    "exercise": "ヒップスラスト",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "セット数・回数・重さは要旨に書かれていない"
+   }
+  ],
+  "quote": "Each group completed 12 training intervention sessions over six weeks, which comprised either an isometric or dynamic variation of a mid-thigh (clean) pull, split squat, and hip thrust.",
+  "caution": "17歳前後のサッカー育成選手の研究。止めて力を出す（アイソメトリック）組と伸びに差はなかった。"
+ },
+ {
+  "pmid": "40360150",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "スクワット＋坂バウンディング",
+  "group_label": "上り傾斜でバウンディングした組",
+  "weeks": 6,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": 3,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の85%（1RM）",
+    "note": "この直後にバウンディングを行う（コンプレックストレーニング）"
+   },
+   {
+    "exercise": "バウンディング",
+    "tracking": "reps",
+    "group": "ジャンプ",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "9°の上り傾斜の台の上で、速さを意識して行う。回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "Both intervention groups completed 3 repetitions of back-squat exercise (85% 1-repetition maximum), followed by speed bounding on either a 9° or 0° platform, twice weekly for 6 weeks",
+  "caution": "14〜16歳の男子短距離選手の研究。ふだんの練習に加えて行った。"
+ },
+ {
+  "pmid": "40489412",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ノルディックハムストリング",
+  "group_label": "ふつうのセットで行った組（TS）",
+  "weeks": 6,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ノルディックハムストリング",
+    "tracking": "reps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "自分の体重",
+    "note": "1週の合計回数を6回から18回へ少しずつ増やした。セットの分け方の詳細は要旨に書かれていない"
+   }
+  ],
+  "quote": "Both groups performed a 6-week NHE program, increasing weekly volume from 6 to 18 repetitions",
+  "caution": "平均13.93歳の女子選手の研究。体力に合わせて回数を調整する"
+ },
+ {
+  "pmid": "40555411",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "両足ジャンプ＋10mダッシュ",
+  "group_label": "両足でジャンプした組（BG）",
+  "weeks": 4,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "両足の前方ジャンプ",
+    "tracking": "reps",
+    "group": "ジャンプ",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "前へ全力で跳ぶ。4週間で合計837回（片足の組と同じ回数）"
+   },
+   {
+    "exercise": "10mダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": 10,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "4週間で合計280本"
+   }
+  ],
+  "quote": "Plyometric training involved bipedal (BG, n = 13) or unipedal (UG, n = 11) horizontal maximum-intensity jumps, and linear sprint training involved maximal-intensity 10-m sprints. The 2 training groups completed an equal number of total jumps (n = 837) and sprints (n = 280)",
+  "caution": "育成年代のトップフットサル選手がふだんの練習に加えた研究。1回あたりの回数は要旨に書かれていない。"
+ },
+ {
+  "pmid": "40602610",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "自転車ダッシュ6秒×8本×3",
+  "group_label": "ふつうの空気で練習した組（RSN）",
+  "weeks": 3,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "自転車こぎダッシュ（6秒）",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 3,
+    "reps": 8,
+    "meters": null,
+    "seconds": 6,
+    "rest_seconds": 24,
+    "load": "全力",
+    "note": "6秒こいで24秒休むを8本で1セット。3週間で計6回の練習"
+   }
+  ],
+  "quote": "Repeated-sprint training involved six cycling sessions over 3 weeks, consisting of three sets of 8 × 6 s sprint with 24 s of recovery.",
+  "caution": "ほどよく鍛えている人の研究。3つの組の伸びに差はなかったので、ふつうの空気で行う組の内容を写している。"
+ },
+ {
+  "pmid": "41101720",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "5秒全力ダッシュ×12本×3",
+  "group_label": "バスケ練習の前に行った組",
+  "weeks": 6,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "5秒全力ダッシュ",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 3,
+    "reps": 12,
+    "meters": null,
+    "seconds": 5,
+    "rest_seconds": null,
+    "load": "全力",
+    "note": "休みの長さは要旨に書かれていない。この組はバスケ練習の前に行った"
+   }
+  ],
+  "quote": "a 6-week sprint interval training (SIT) program ... The SIT regimen consisted of 3 sets of 12 repetitions of 5-second all-out sprints, conducted 3 times a week",
+  "caution": "若いバスケットボール選手の研究。体力に合わせて本数を調整する"
+ },
+ {
+  "pmid": "41171729",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "バーベルスクワット4×8",
+  "group_label": "バーベルスクワットの組（BST）",
+  "weeks": 6,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": 4,
+    "reps": 8,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の80%",
+    "note": "セットの間は3分休む"
+   }
+  ],
+  "quote": "Both groups trained twice weekly over six weeks ... the BST group completed 4 × 8 back-squat repetitions at 80% of their pre-test one-repetition maximum (1RM); all sets were separated by 3-minute rest intervals",
+  "caution": "大学の女子バスケットボール選手の研究で、この組はダッシュ・切り返しがはっきり伸びなかった比べる側の組"
+ },
+ {
+  "pmid": "41210082",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "スクワット週4回に分ける",
+  "group_label": "週4回に分けた条件",
+  "weeks": null,
+  "per_week": 4,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の80%（1RM）",
+    "note": "バーの速さが20%落ちたらそのセットを終える。週に合計12セットを4回に分けて行う"
+   }
+  ],
+  "quote": "all participants performed three training frequency conditions (four, three, or two sessions per week) in randomized order. Each condition involved 12 total sets of back squats at 80% one repetition maximum (1RM) with a 20% VL, the total training sets evenly distributed across sessions.",
+  "caution": "よく鍛えた男性の研究。速さを測る機器を使って行った。"
+ },
+ {
+  "pmid": "41351337",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "そり引きダッシュ（体重の80%）",
+  "group_label": "重いそりの組（体重の80%）",
+  "weeks": 6,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "そり引きダッシュ",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "体重の80%",
+    "note": "距離・本数は要旨に書かれていない"
+   }
+  ],
+  "quote": "allocated into HL (80% of body mass [BM]), LL (20% of BM), and CON (0% of BM) groups, performed RST twice weekly over 6weeks",
+  "caution": "そり引きの経験がないプロのサッカー選手・審判の小さな研究。重いそりなので、体力に合わせて重さを調整する。"
+ },
+ {
+  "pmid": "41361237",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ジャンプ着地ドリル",
+  "group_label": "ジャンプ中心の練習（PT）の組",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "両脚・片脚のジャンプ着地",
+    "tracking": "reps",
+    "group": "ジャンプ",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "",
+    "note": "両脚と片脚で跳んで着地する練習。ふだんのサッカー練習に加えて行う。回数は要旨に書かれていない"
+   }
+  ],
+  "quote": "This study compared 8 weeks of NMT versus PT ... Both groups trained twice weekly in addition to regular soccer practice. ... PT focused on bilateral and unilateral jump-landing drills.",
+  "caution": "12歳前後の男子サッカー選手の研究。種目の細かい中身と回数は要旨に書かれていないので、体力に合わせて調整する。"
+ },
+ {
+  "pmid": "41762201",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "スクワット＋ベンチ交互",
+  "group_label": "交互に行う組（スーパーセット）",
+  "weeks": 6,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の75%",
+    "note": "ベンチプレスと交互に行う。1回の練習で合計18回。種目の間は1分、交互の組の間は3分休む"
+   },
+   {
+    "exercise": "ベンチプレス",
+    "tracking": "weightReps",
+    "group": "胸",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の75%",
+    "note": "スクワットと交互に行う。1回の練習で合計18回"
+   }
+  ],
+  "quote": "completed a 6-week full-body resistance training program. Both groups trained squat (SQ) and bench press (BP) with matched volume (18 repetitions per exercise per session) and intensity (75% 1RM). SS alternated SQ and BP with 1-min between exercises and 3-min between supersets",
+  "caution": "アマチュアの男性バスケットボール選手の研究。1セットの回数とセット数は要旨に書かれていない"
+ },
+ {
+  "pmid": "41765942",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "自転車10秒ダッシュ×6×5",
+  "group_label": "くり返しダッシュの組（RST）",
+  "weeks": 4,
+  "per_week": 3,
+  "items": [
+   {
+    "exercise": "自転車こぎダッシュ（10秒）",
+    "tracking": "time",
+    "group": "スプリント",
+    "sets": 5,
+    "reps": 6,
+    "meters": null,
+    "seconds": 10,
+    "rest_seconds": 180,
+    "load": "全力",
+    "note": "10秒全力でこいで5秒休むを6本で1セット。セットの間は180秒休む"
+   }
+  ],
+  "quote": "RST consisted of 5 sets of 6 × (10 s all-out / 5 s rest) with 180 s recovery between sets",
+  "caution": "国の代表レベルのスキー選手の研究。4週間で計12回の練習だった。"
+ },
+ {
+  "pmid": "41855389",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "スクワット＋ランニング",
+  "group_label": "速さが15%落ちたら止める組（VL15）",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "スクワット",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の70〜85%",
+    "note": "挙げる速さが15%落ちたらセットをやめる。セット数・回数は要旨に書かれていない"
+   },
+   {
+    "exercise": "ランニング",
+    "tracking": "time",
+    "group": "有酸素",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大有酸素速度の90〜105%",
+    "note": "スクワットの10分後に走る。走る時間は18分から8分へ変えた"
+   }
+  ],
+  "quote": "Forty-one moderately trained men were randomly assigned to one of four groups: CT with RT at 0% (VL0; n = 10), 15% (VL15; n = 10), or 40% (VL40; n = 11) VL ... Over 8 weeks, CT groups performed squat-based RT at 70%-85% of one-repetition maximum followed by ET (separated by 10 min), consisting of running at 90%-105% (from 18 to 8 min) of maximal aerobic speed (MAS) two times per week",
+  "caution": "ある程度鍛えている男性の研究。挙げる速さを測る道具が必要"
+ },
+ {
+  "pmid": "42086213",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ベストを着てダッシュ",
+  "group_label": "体重の10%のベストを着た組",
+  "weeks": 4,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ダッシュ（重りベスト）",
+    "tracking": "distanceTime",
+    "group": "スプリント",
+    "sets": null,
+    "reps": null,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "体重の10%のベスト",
+    "note": "距離と本数は要旨に書かれていない。4週間で計12回の練習"
+   }
+  ],
+  "quote": "Both groups completed a 4-week (12-session) sprint training program. The experimental group trained wearing a vest equivalent to 10% of body mass, whereas the control group trained unloaded.",
+  "caution": "平均13歳の少年野球選手の研究。ベストなしの組と伸びに差はなかった。"
+ },
+ {
+  "pmid": "42479598",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "片脚レッグプレス（下ろし3秒）",
+  "group_label": "片脚ずつの組（UG）",
+  "weeks": 8,
+  "per_week": 2,
+  "items": [
+   {
+    "exercise": "レッグプレス",
+    "tracking": "weightReps",
+    "group": "脚",
+    "sets": 3,
+    "reps": 10,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の30%から120%へ上げていく",
+    "note": "片脚ずつ行う。下ろす動きを3秒、押す動きを1秒"
+   }
+  ],
+  "quote": "performed a leg-press resistance exercise consisting of 3 sets of 10 (3-s eccentric, 1-s concentric) contractions in a session, twice weekly for 8 weeks. The UG completed the leg-press exercise for each leg separately within a session",
+  "caution": "筋トレ経験のない若い男性の研究。体力に合わせて重さを調整する。"
+ },
+ {
+  "pmid": "42487231",
+  "status": "確認待ち",
+  "checked": "AI点検済み",
+  "name": "ジャンプスクワット（5×8回）",
+  "group_label": "ジャンプスクワット（JS）の組",
+  "weeks": 6,
+  "per_week": null,
+  "items": [
+   {
+    "exercise": "ジャンプスクワット",
+    "tracking": "weightReps",
+    "group": "ジャンプ",
+    "sets": 5,
+    "reps": 8,
+    "meters": null,
+    "seconds": null,
+    "rest_seconds": null,
+    "load": "最大の50〜55%（1RM）",
+    "note": "1回ごとに全力の速さで行う。6週間で合計12回の練習"
+   }
+  ],
+  "quote": "Both groups completed 12 training sessions (5 sets of 8 repetitions at 50%-55% 1RM) over 6 weeks.",
+  "caution": "よく鍛えた男子短距離選手の研究。休みの長さは要旨に書かれていない。"
+ }
+]
