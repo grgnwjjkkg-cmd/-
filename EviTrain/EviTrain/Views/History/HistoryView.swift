@@ -140,6 +140,9 @@ struct ExerciseProgressView: View {
                     LabeledContent("自己ベスト", value: best.short)
                 }
                 LabeledContent("記録回数", value: "\(points.count)回")
+                if exercise.tracking == .distanceTime, let fastest = fastestSpeed {
+                    LabeledContent("最高平均速度", value: "\(fastest.short) km/h")
+                }
                 if !exercise.tracking.higherIsBetter {
                     Text("タイムは小さいほど速い記録です")
                         .font(.caption)
@@ -161,5 +164,14 @@ struct ExerciseProgressView: View {
             }
         }
         .navigationTitle(exercise.name)
+    }
+
+    private var fastestSpeed: Double? {
+        exercise.entries
+            .filter { $0.workout?.finishedAt != nil }
+            .flatMap(\.sets)
+            .filter(\.isDone)
+            .compactMap(\.speedKmh)
+            .max()
     }
 }

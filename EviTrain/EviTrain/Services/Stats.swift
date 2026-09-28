@@ -24,6 +24,26 @@ enum Stats {
         return workouts.filter { week.contains($0.startedAt) }.count
     }
 
+    /// 今週、部位ごとに完了したセット数（スプリント・ジャンプ・有酸素は除く）。
+    struct GroupSets: Identifiable {
+        let group: MuscleGroup
+        let sets: Int
+        var id: MuscleGroup { group }
+    }
+
+    static func weeklySets(_ workouts: [Workout], calendar: Calendar = .current, now: Date = .now) -> [GroupSets] {
+        guard let week = calendar.dateInterval(of: .weekOfYear, for: now) else { return [] }
+        var counts: [MuscleGroup: Int] = [:]
+        for workout in workouts where week.contains(workout.startedAt) {
+            for entry in workout.entries {
+                guard let group = entry.exercise?.group else { continue }
+                counts[group, default: 0] += entry.sets.filter(\.isDone).count
+            }
+        }
+        let strengthGroups: [MuscleGroup] = [.chest, .back, .legs, .shoulders, .arms, .core]
+        return strengthGroups.map { GroupSets(group: $0, sets: counts[$0] ?? 0) }
+    }
+
     /// 完了済みのトレーニングのうち、指定日時より前で一番新しい同じ種目の記録。
     static func previousEntry(for exercise: Exercise, before date: Date) -> WorkoutEntry? {
         exercise.entries

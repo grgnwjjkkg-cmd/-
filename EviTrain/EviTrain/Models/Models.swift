@@ -163,13 +163,19 @@ final class SetRecord {
         }
     }
 
+    /// 平均速度（km/h）。距離とタイムがあるときだけ。
+    var speedKmh: Double? {
+        guard meters > 0, seconds > 0 else { return nil }
+        return meters / seconds * 3.6
+    }
+
     /// 「60kg × 8」のような短い表示。
     func summary(for tracking: TrackingType) -> String {
         switch tracking {
         case .weightReps: "\(weight.formatted())kg × \(reps)"
         case .reps: "\(reps)回"
         case .time: "\(seconds.formatted())秒"
-        case .distanceTime: "\(meters.formatted())m \(seconds.formatted())秒"
+        case .distanceTime: "\(meters.formatted())m \(seconds.formatted())秒" + (speedKmh.map { "（\($0.short)km/h）" } ?? "")
         }
     }
 }

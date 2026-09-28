@@ -42,6 +42,20 @@ URLが未設定のあいだは、アプリに同梱したサンプル（`EviTrai
 | `summary` | ✅ | 要約 |
 | `keyPoints` | ✅ | 箇条書きのポイント（空配列でも可） |
 | `originalTitle` `authors` `journal` `year` `doi` `url` `studyType` `practical` | − | あれば表示される |
+| `action` | − | 論文の内容をワンタップで設定に反映するボタン（下記） |
+
+### action（論文 → 行動）
+
+```json
+"action": { "kind": "restTimer", "value": 180, "label": "休憩タイマーを3分にする" }
+```
+
+| kind | value の意味 |
+|---|---|
+| `restTimer` | 休憩タイマーの秒数 |
+| `weeklySets` | 部位ごとの週の目標セット数（ホームに進み具合が表示される） |
+
+アプリが知らない `kind` は無視される（ボタンが出ないだけ）ので、あとから種類を増やしても古いアプリは壊れません。
 
 ## 種目とのひも付け（このアプリの特徴）
 

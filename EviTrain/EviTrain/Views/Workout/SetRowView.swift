@@ -46,6 +46,12 @@ struct SetRowView: View {
         case .distanceTime:
             NumberField(value: $set.meters, unit: "m", placeholder: previous?.meters, decimal: true)
             NumberField(value: $set.seconds, unit: "秒", placeholder: previous?.seconds, decimal: true)
+            if let speed = set.speedKmh {
+                Text("\(speed.short)\nkm/h")
+                    .font(.caption2.monospacedDigit())
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.tint)
+            }
         }
     }
 

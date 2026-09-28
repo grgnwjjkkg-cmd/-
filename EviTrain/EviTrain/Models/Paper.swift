@@ -28,6 +28,8 @@ struct Paper: Codable, Identifiable, Hashable {
     var keyPoints: [String]
     /// トレーニングへの活かし方
     var practical: String?
+    /// 論文の内容をアプリの設定にワンタップで反映するボタン
+    var action: PaperAction?
 
     var doiURL: URL? { doi.flatMap { URL(string: "https://doi.org/\($0)") } }
     var articleURL: URL? { url.flatMap(URL.init(string:)) }
@@ -40,4 +42,20 @@ struct Paper: Codable, Identifiable, Hashable {
     func relevance(to keywords: Set<String>) -> Int {
         Set(tags).union([category]).intersection(keywords).count
     }
+}
+
+/// 論文から実行できる操作。未知の kind は無視されるよう文字列で持つ。
+struct PaperAction: Codable, Hashable {
+    enum Kind: String {
+        /// 休憩タイマーの秒数を value にする
+        case restTimer
+        /// 部位ごとの週の目標セット数を value にする
+        case weeklySets
+    }
+
+    var kind: String
+    var value: Double
+    var label: String
+
+    var knownKind: Kind? { Kind(rawValue: kind) }
 }

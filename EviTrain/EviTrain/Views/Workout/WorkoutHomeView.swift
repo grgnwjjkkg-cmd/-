@@ -9,6 +9,8 @@ struct WorkoutHomeView: View {
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt, order: .reverse)
     private var finishedWorkouts: [Workout]
     @State private var finishedRecords: [Stats.Record]?
+    @Environment(PaperStore.self) private var paperStore
+    @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
 
     var body: some View {
         NavigationStack {
@@ -43,6 +45,22 @@ struct WorkoutHomeView: View {
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
+            }
+
+            if let paper = paperStore.paperOfTheDay() {
+                Section {
+                    DailyPaperCard(paper: paper)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
+            }
+
+            if weeklySetTarget > 0 {
+                Section {
+                    WeeklySetsCard(counts: Stats.weeklySets(finishedWorkouts), target: weeklySetTarget)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
             }
 
             Section {

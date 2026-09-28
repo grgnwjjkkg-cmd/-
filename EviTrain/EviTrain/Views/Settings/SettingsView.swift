@@ -6,15 +6,30 @@ struct SettingsView: View {
     @Environment(PaperStore.self) private var paperStore
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
     @AppStorage(PaperStore.feedURLKey) private var feedURL = ""
+    @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
+    @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.dark
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt)
     private var workouts: [Workout]
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("トレーニング") {
+                Section {
                     Stepper(value: $defaultRestSeconds, in: 15...600, step: 15) {
                         LabeledContent("休憩タイマー", value: defaultRestSeconds.clock)
+                    }
+                    Stepper(value: $weeklySetTarget, in: 0...30) {
+                        LabeledContent("週の目標セット数（部位ごと）", value: weeklySetTarget == 0 ? "表示しない" : "\(weeklySetTarget)")
+                    }
+                } header: {
+                    Text("トレーニング")
+                } footer: {
+                    Text("論文の「設定にする」ボタンからも変更できます。")
+                }
+
+                Section("表示") {
+                    Picker("テーマ", selection: $appearance) {
+                        ForEach(Appearance.allCases) { Text($0.rawValue).tag($0) }
                     }
                 }
 

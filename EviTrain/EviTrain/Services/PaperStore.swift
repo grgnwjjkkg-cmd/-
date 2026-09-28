@@ -40,6 +40,13 @@ final class PaperStore {
         return papers.map(\.category).filter { seen.insert($0).inserted }
     }
 
+    /// 日替わりで1本選ぶ（同じ日は同じ論文）。
+    func paperOfTheDay(calendar: Calendar = .current, date: Date = .now) -> Paper? {
+        guard !papers.isEmpty else { return nil }
+        let day = calendar.ordinality(of: .day, in: .era, for: date) ?? 0
+        return papers[day % papers.count]
+    }
+
     func isBookmarked(_ paper: Paper) -> Bool { bookmarks.contains(paper.id) }
 
     func toggleBookmark(_ paper: Paper) {

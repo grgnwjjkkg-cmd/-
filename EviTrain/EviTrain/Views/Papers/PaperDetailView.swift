@@ -48,6 +48,10 @@ struct PaperDetailView: View {
                     .background(.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
                 }
 
+                if let action = paper.action {
+                    PaperActionButton(action: action)
+                }
+
                 VStack(alignment: .leading, spacing: 12) {
                     if let url = paper.articleURL {
                         Link(destination: url) {

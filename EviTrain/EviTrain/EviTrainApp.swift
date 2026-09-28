@@ -28,6 +28,8 @@ struct EviTrainApp: App {
 }
 
 struct RootView: View {
+    @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.dark
+
     var body: some View {
         TabView {
             WorkoutHomeView()
@@ -39,5 +41,6 @@ struct RootView: View {
             SettingsView()
                 .tabItem { Label("設定", systemImage: "gearshape") }
         }
+        .preferredColorScheme(appearance.colorScheme)
     }
 }
