@@ -39,6 +39,12 @@ private struct WorkoutHistoryList: View {
     @Environment(\.modelContext) private var context
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt, order: .reverse)
     private var workouts: [Workout]
+    @State private var selectedDay: Date?
+
+    private var shownWorkouts: [Workout] {
+        guard let selectedDay else { return workouts }
+        return workouts.filter { Calendar.current.isDate($0.startedAt, inSameDayAs: selectedDay) }
+    }
 
     var body: some View {
         if workouts.isEmpty {
@@ -46,16 +52,33 @@ private struct WorkoutHistoryList: View {
                                    description: Text("「記録」タブからトレーニングを始めましょう"))
         } else {
             List {
-                ForEach(workouts) { workout in
-                    NavigationLink {
-                        WorkoutEditorView(workout: workout, isActive: false)
-                    } label: {
-                        WorkoutRow(workout: workout)
-                    }
+                Section {
+                    TrainingCalendarView(workouts: workouts, selectedDay: $selectedDay)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                 }
-                .onDelete { offsets in
-                    for index in offsets { context.delete(workouts[index]) }
-                    try? context.save()
+                Section {
+                    ForEach(shownWorkouts) { workout in
+                        NavigationLink {
+                            WorkoutEditorView(workout: workout, isActive: false)
+                        } label: {
+                            WorkoutRow(workout: workout)
+                        }
+                        .themedRow()
+                    }
+                    .onDelete { offsets in
+                        let list = shownWorkouts
+                        for index in offsets { context.delete(list[index]) }
+                        try? context.save()
+                    }
+                } header: {
+                    if let selectedDay {
+                        HStack {
+                            Text(selectedDay, format: .dateTime.month().day().weekday())
+                            Spacer()
+                            Button("すべて表示") { self.selectedDay = nil }
+                        }
+                    }
                 }
             }
         }
