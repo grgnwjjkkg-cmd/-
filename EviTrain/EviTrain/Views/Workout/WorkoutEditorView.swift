@@ -48,6 +48,8 @@ struct WorkoutEditorView: View {
                     papersFor = entry.exercise
                 } onDelete: {
                     delete(entry)
+                } onMove: { direction in
+                    move(entry, by: direction)
                 }
             }
 
@@ -173,6 +175,16 @@ struct WorkoutEditorView: View {
         return Double(match.1) ?? 0
     }
 
+    /// 種目の順番を1つ上（-1）または下（+1）に動かす。
+    private func move(_ entry: WorkoutEntry, by direction: Int) {
+        var entries = workout.sortedEntries
+        guard let index = entries.firstIndex(where: { $0 === entry }) else { return }
+        let target = index + direction
+        guard entries.indices.contains(target) else { return }
+        entries.swapAt(index, target)
+        for (order, item) in entries.enumerated() { item.order = order }
+    }
+
     private func delete(_ entry: WorkoutEntry) {
         context.delete(entry)
         for (index, remaining) in workout.sortedEntries.filter({ $0 !== entry }).enumerated() {
@@ -210,19 +222,20 @@ private struct EntrySection: View {
     let onStartRest: () -> Void
     let onShowPapers: () -> Void
     let onDelete: () -> Void
+    var onMove: ((Int) -> Void)?
 
     var body: some View {
         let previous = entry.exercise.flatMap { Stats.previousEntry(for: $0, before: workoutDate) }
         Section {
             ForEach(Array(entry.sortedSets.enumerated()), id: \.element.id) { index, set in
                 SetRowView(set: set, number: index + 1, tracking: entry.tracking,
-                           previous: previous?.sortedSets[safe: index], onToggle: onToggle)
+                           previous: previous?.sortedSets[safe: index], onToggle: onToggle,
+                           onDuplicate: { duplicate(set) }, onApplyToFollowing: { applyToFollowing(set) })
             }
             .onDelete { offsets in
                 let sets = entry.sortedSets
                 for index in offsets { context.delete(sets[index]) }
             }
-            .themedRow()
 
             Button {
                 addSet()
@@ -247,6 +260,10 @@ private struct EntrySection: View {
                     }
                     Spacer()
                     Menu {
+                        if let onMove {
+                            Button("上へ移動", systemImage: "arrow.up") { onMove(-1) }
+                            Button("下へ移動", systemImage: "arrow.down") { onMove(1) }
+                        }
                         Button("関係する研究", systemImage: "doc.text.magnifyingglass", action: onShowPapers)
                         Button("種目を削除", systemImage: "trash", role: .destructive, action: onDelete)
                     } label: {
@@ -272,6 +289,25 @@ private struct EntrySection: View {
             }
             .textCase(nil)
             .padding(.bottom, 2)
+        }
+    }
+
+    /// そのセットのすぐ後ろに同じ値のセットを入れる。
+    private func duplicate(_ source: SetRecord) {
+        for set in entry.sets where set.order > source.order { set.order += 1 }
+        let copy = SetRecord(order: source.order + 1, weight: source.weight, reps: source.reps,
+                             seconds: source.seconds, meters: source.meters)
+        context.insert(copy)
+        copy.entry = entry
+    }
+
+    /// まだ ✓ していない以降のセットを、同じ重さ・回数などにそろえる。
+    private func applyToFollowing(_ source: SetRecord) {
+        for set in entry.sets where set.order > source.order && !set.isDone {
+            set.weight = source.weight
+            set.reps = source.reps
+            set.seconds = source.seconds
+            set.meters = source.meters
         }
     }
 

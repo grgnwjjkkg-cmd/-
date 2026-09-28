@@ -2,11 +2,14 @@ import SwiftUI
 
 /// 1セット分の入力行。完了チェックを押すと休憩タイマーが始まる。
 struct SetRowView: View {
+    @Environment(\.appTheme) private var theme
     @Bindable var set: SetRecord
     let number: Int
     let tracking: TrackingType
     let previous: SetRecord?
     let onToggle: (SetRecord) -> Void
+    var onDuplicate: () -> Void = {}
+    var onApplyToFollowing: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 10) {
@@ -29,7 +32,32 @@ struct SetRowView: View {
             .buttonStyle(.plain)
             .sensoryFeedback(.success, trigger: set.isDone) { _, isDone in isDone }
         }
-        .listRowBackground(set.isDone ? Color.green.opacity(0.08) : nil)
+        .listRowBackground(set.isDone ? Color.green.opacity(0.12) : theme.card)
+        .contextMenu { quickActions }
+    }
+
+    /// 長押しで出す、入力を速くするための操作。
+    @ViewBuilder
+    private var quickActions: some View {
+        switch tracking {
+        case .weightReps:
+            Button("重さ +2.5kg", systemImage: "plus") { set.weight += 2.5 }
+            Button("重さ −2.5kg", systemImage: "minus") { set.weight = max(0, set.weight - 2.5) }
+            Button("回数 +1", systemImage: "plus") { set.reps += 1 }
+            Button("回数 −1", systemImage: "minus") { set.reps = max(0, set.reps - 1) }
+        case .reps:
+            Button("回数 +1", systemImage: "plus") { set.reps += 1 }
+            Button("回数 −1", systemImage: "minus") { set.reps = max(0, set.reps - 1) }
+        case .time:
+            Button("+5秒", systemImage: "plus") { set.seconds += 5 }
+            Button("−5秒", systemImage: "minus") { set.seconds = max(0, set.seconds - 5) }
+        case .distanceTime:
+            Button("タイム −0.05秒", systemImage: "minus") { set.seconds = max(0, set.seconds - 0.05) }
+            Button("タイム +0.05秒", systemImage: "plus") { set.seconds += 0.05 }
+        }
+        Divider()
+        Button("このセットを複製", systemImage: "plus.square.on.square", action: onDuplicate)
+        Button("この値を以降のセットにそろえる", systemImage: "arrow.down.to.line", action: onApplyToFollowing)
     }
 
     @ViewBuilder
