@@ -137,19 +137,31 @@ private struct ExerciseHistoryList: View {
         if trained.isEmpty {
             ContentUnavailableView("まだ記録がありません", systemImage: "chart.xyaxis.line")
         } else {
-            List(trained) { exercise in
-                NavigationLink {
-                    ExerciseProgressView(exercise: exercise)
-                } label: {
-                    HStack(spacing: 12) {
-                        ExerciseIcon(exercise: exercise, size: 34)
-                        Text(exercise.name)
-                        Spacer()
-                        if let best = Stats.personalBest(for: exercise) {
-                            Text("自己ベスト \(best.short)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+            List {
+                if trained.count >= 2 {
+                    Section {
+                        CompareProgressView(exercises: trained)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                }
+                Section {
+                    ForEach(trained) { exercise in
+                        NavigationLink {
+                            ExerciseProgressView(exercise: exercise)
+                        } label: {
+                            HStack(spacing: 12) {
+                                ExerciseIcon(exercise: exercise, size: 34)
+                                Text(exercise.name)
+                                Spacer()
+                                if let best = Stats.personalBest(for: exercise) {
+                                    Text("自己ベスト \(best.short)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
+                        .themedRow()
                     }
                 }
             }
