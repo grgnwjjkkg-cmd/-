@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"../Game/lib/three.module.js"}}</script></head>
+<body style="margin:0"><script type="module">
+import * as THREE from 'three';
+import { Assets, Actor } from '../Game/js/actor.js';
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(1200, 500); document.body.appendChild(r.domElement);
+r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.NeutralToneMapping;
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#9ab');
+scene.add(new THREE.HemisphereLight('#fff', '#864', 1.2)); const d = new THREE.DirectionalLight('#fff', 2); d.position.set(2, 4, 3); scene.add(d);
+const A = new Assets('../Game/assets/'); await A.init();
+const specs = [['hero','Sword_Idle','Sword',0.25],['hero','Sword_Attack','Sword',0.4],['kash','Walk_Loop','Spear',0.3],['mummy','Walk_Loop',null,0.5],['jackal','Jog_Fwd_Loop','Sword_2',0.3],['nefer','Idle_Talking_Loop',null,0.2]];
+let x = -5;
+for (const [id, anim, w, t] of specs) {
+  const a = new Actor(await A.makeChar(id), A); a.play(anim, { fade: 0 });
+  if (w) { const wm = await A.makeWeapon(w); a.hold(wm, 1.0); }
+  a.mixer.update(t * a.current.getClip().duration);
+  a.root.position.x = x; a.root.rotation.y = -0.5; x += 2; scene.add(a.root);
+}
+const cam = new THREE.PerspectiveCamera(30, 1200 / 500, 0.1, 100); cam.position.set(0, 1.2, 11); cam.lookAt(0, 0.9, 0);
+r.render(scene, cam); window.DONE = true;
+</script></body></html>

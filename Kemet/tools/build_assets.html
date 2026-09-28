@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"../Game/lib/three.module.js"}}</script>
+</head>
+<body>
+<script type="module">
+// 無料素材（Quaternius）を、ゲームで使う軽い .glb にまとめ直す。
+//  - キャラ：素体の頭＋服＋髪を1つの骨格にまとめる（アニメーション1つで全身が動く）
+//  - アニメーション：必要な動きだけ
+//  - 武器：FBX → glb（大きさと向きをそろえる）
+// build_assets.js（Playwright）から window.buildAll() を呼ぶ。
+import * as THREE from 'three';
+import { GLTFLoader } from '../Game/lib/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from '../Game/lib/jsm/loaders/FBXLoader.js';
+import { GLTFExporter } from '../Game/lib/jsm/exporters/GLTFExporter.js';
+
+const B = './src/base/Universal Base Characters[Standard]';
+const O = './src/outfits/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits';
+const HAIR = n => `${B}/Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/${n}.gltf`;
+
+// 見た目の組み合わせ（色は服にかける色）
+const CHARS = {
+  hero:  { sex: 'Male',   outfit: 'Ranger',  hair: ['Hair_SimpleParted', 'Eyebrows_Regular'], hairCol: '#2a1c14', tint: '#d9b98a' },
+  nefer: { sex: 'Female', outfit: 'Peasant', hair: ['Hair_Long', 'Eyebrows_Female'], hairCol: '#16110d', tint: '#fbf8f2' },
+  amen:  { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_Buzzed', 'Eyebrows_Regular'], hairCol: '#1a1410', tint: '#e9dcc0' },
+  tawi:  { sex: 'Female', outfit: 'Peasant', hair: ['Hair_Buns', 'Eyebrows_Female'], hairCol: '#1f1611', tint: '#e0876a' },
+  hatra: { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_Buzzed', 'Hair_Beard', 'Eyebrows_Regular'], hairCol: '#2a1c14', tint: '#9a6a44' },
+  seti:  { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_SimpleParted', 'Hair_Beard', 'Eyebrows_Regular'], hairCol: '#6b6b6b', tint: '#6fa6c8' },
+  kash:  { sex: 'Male',   outfit: 'Ranger',  hair: ['Hair_Buzzed', 'Eyebrows_Regular'], hairCol: '#1a1410', tint: '#4f7fc4' },
+  kem:   { sex: 'Male',   outfit: 'Peasant', hair: ['Hair_Buzzed', 'Hair_Beard', 'Eyebrows_Regular'], hairCol: '#e6e2da', tint: '#eee6d6' },
+  bandit:{ sex: 'Male',   outfit: 'Ranger',  hood: true, hair: ['Eyebrows_Regular'], hairCol: '#1a1410', tint: '#6a5a4a' },
+  jackal:{ sex: 'Male',   outfit: 'Ranger',  hood: true, hair: ['Hair_Beard', 'Eyebrows_Regular'], hairCol: '#0e0c0a', tint: '#3a3430' },
+  mummy: { sex: 'Male',   outfit: 'Peasant', hair: [], hairCol: '#000', tint: '#ffffff' },
+};
+
+const CLIPS = ['Idle_Loop', 'Walk_Loop', 'Jog_Fwd_Loop', 'Sprint_Loop', 'Sword_Attack', 'Sword_Idle', 'Roll', 'Hit_Chest', 'Death01',
+  'Idle_Talking_Loop', 'Interact', 'Punch_Jab', 'Punch_Cross', 'Sitting_Idle_Loop', 'Spell_Simple_Shoot', 'Dance_Loop', 'Crouch_Idle_Loop', 'PickUp_Table'];
+
+const WEAPONS = ['Dagger', 'Sword', 'Sword_2', 'Spear', 'Axe_Small', 'Axe', 'Hammer_Small', 'Sword_Golden', 'Scythe'];
+
+const gltf = new GLTFLoader(), fbx = new FBXLoader();
+const load = (l, u) => new Promise((res, rej) => l.load(u, res, undefined, rej));
+
+function headOnly(o) {
+  const g = o.geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, bones = o.skeleton.bones;
+  const keep = new Set(bones.map((b, i) => /^(Head|neck_01)$/.test(b.name) ? i : -1).filter(i => i >= 0));
+  const ok = v => { let w = 0; for (let k = 0; k < 4; k++) if (keep.has(si.getComponent(v, k))) w += sw.getComponent(v, k); return w > 0.5; };
+  const idx = g.index.array, out = [];
+  for (let t = 0; t < idx.length; t += 3) if (ok(idx[t]) && ok(idx[t + 1]) && ok(idx[t + 2])) out.push(idx[t], idx[t + 1], idx[t + 2]);
+  g.setIndex(out);
+}
+
+// 画像を小さく（スマホ向け）
+function shrink(tex, max = 1024) {
+  if (!tex || !tex.image) return tex;
+  const img = tex.image, s = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  const t = tex.clone(); t.image = c; t.userData.mimeType = 'image/jpeg'; t.needsUpdate = true;
+  return t;
+}
+
+// 服の模様を白黒にして明るくする（あとから好きな色をかけられるように）
+function grayscale(tex, lift = 0.18, gain = 1.35) {
+  const t = shrink(tex, 1024), c = t.image, x = c.getContext('2d');
+  const img = x.getImageData(0, 0, c.width, c.height), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const l = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;
+    const v = Math.min(255, (lift + l * gain) * 255);
+    d[i] = d[i + 1] = d[i + 2] = v;
+  }
+  x.putImageData(img, 0, 0);
+  t.needsUpdate = true;
+  return t;
+}
+
+// ミイラの包帯
+function bandage() {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const x = c.getContext('2d');
+  x.fillStyle = '#cfc3a4'; x.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 70; i++) {
+    const y = i * 8 + Math.random() * 4, l = 170 + Math.random() * 50;
+    x.fillStyle = `rgb(${l + 20},${l + 10},${l - 20})`;
+    x.save(); x.translate(256, y); x.rotate((Math.random() - 0.5) * 0.25);
+    x.fillRect(-300, 0, 600, 6 + Math.random() * 4); x.restore();
+    x.strokeStyle = 'rgba(90,70,40,0.35)'; x.beginPath(); x.moveTo(0, y); x.lineTo(512, y + (Math.random() - 0.5) * 20); x.stroke();
+  }
+  for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(90,70,40,${Math.random() * 0.2})`; x.beginPath(); x.arc(Math.random() * 512, Math.random() * 512, 6 + Math.random() * 20, 0, 7); x.fill(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.userData.mimeType = 'image/jpeg';
+  return t;
+}
+
+async function buildChar(id) {
+  const d = CHARS[id];
+  const parts = [`${B}/Base Characters/Godot - UE/Superhero_${d.sex}_FullBody.gltf`, `${O}/${d.sex}_${d.outfit}.gltf`, ...d.hair.map(HAIR)];
+  const scenes = [];
+  const bandageTex = id === 'mummy' ? bandage() : null;
+  for (const u of parts) scenes.push((await load(gltf, u)).scene);
+  const base = scenes[0];
+  const bonesByName = {};
+  base.traverse(o => { if (o.isBone) bonesByName[o.name] = o; });
+  const root = new THREE.Group(); root.name = id;
+  root.add(base);
+  scenes.forEach((s, i) => s.traverse(o => {
+    if (!o.isMesh) return;
+    const m = o.material;
+    m.normalMap = null; m.roughnessMap = null; m.metalnessMap = null; m.aoMap = null;
+    m.map = shrink(m.map, 1024);
+    if (i === 0 && o.isSkinnedMesh && /Superhero/.test(m.name)) headOnly(o);
+    if (/Hood/.test(o.name) && !d.hood) o.visible = false;
+    if (/Hair/.test(m.name)) { m.color = new THREE.Color(d.hairCol); m.map = null; m.roughness = 0.5; }
+    if (/Ranger|Peasant/.test(m.name)) { m.map = grayscale(m.map); m.color = new THREE.Color(d.tint); }
+    if (id === 'mummy') {
+      if (/Eye/.test(o.name) || /Eye/.test(m.name)) { m.map = null; m.color = new THREE.Color('#0a0a0a'); m.emissive = new THREE.Color('#39ffd0'); m.emissiveIntensity = 2; }
+      else { m.map = bandageTex; m.color = new THREE.Color('#ffffff'); }
+    }
+  }));
+  // 服と髪を素体の骨格につなぎ直す
+  for (const s of scenes.slice(1)) {
+    const meshes = [];
+    s.traverse(o => { if (o.isSkinnedMesh && o.visible) meshes.push(o); });
+    for (const m of meshes) {
+      const bones = m.skeleton.bones.map(b => bonesByName[b.name]);
+      if (bones.some(b => !b)) { console.log('missing bone in', m.name); continue; }
+      const skel = new THREE.Skeleton(bones, m.skeleton.boneInverses);
+      m.removeFromParent();
+      base.add(m);
+      m.bind(skel, m.bindMatrix);
+    }
+  }
+  // 見えない部品は消す
+  const hidden = []; root.traverse(o => { if (o.isMesh && !o.visible) hidden.push(o); });
+  hidden.forEach(o => o.removeFromParent());
+  return root;
+}
+
+async function exportGLB(obj, animations = []) {
+  return new Promise((res, rej) => new GLTFExporter().parse(obj, r => {
+    const bytes = new Uint8Array(r); let s = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    res(btoa(s));
+  }, rej, { binary: true, animations, maxTextureSize: 1024 }));
+}
+
+async function buildAnims() {
+  const g = await load(gltf, './src/anim/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb');
+  const clips = CLIPS.map(n => g.animations.find(a => a.name === n)).filter(Boolean);
+  // 骨格だけ残す（マネキンの見た目はいらない）
+  const drop = []; g.scene.traverse(o => { if (o.isMesh) drop.push(o); });
+  drop.forEach(o => o.removeFromParent());
+  return exportGLB(g.scene, clips);
+}
+
+async function buildWeapon(name) {
+  const obj = await load(fbx, `./src/weapons/FBX/${name}.fbx`);
+  // 大きさをそろえ、握りを原点・刃先を +Y に
+  const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3());
+  const long = size.y >= size.x && size.y >= size.z ? 'y' : size.x >= size.z ? 'x' : 'z';
+  const wrap = new THREE.Group(); wrap.name = name;
+  if (long === 'x') obj.rotation.z = Math.PI / 2;
+  if (long === 'z') obj.rotation.x = -Math.PI / 2;
+  wrap.add(obj); wrap.updateMatrixWorld(true);
+  const b2 = new THREE.Box3().setFromObject(wrap), s2 = b2.getSize(new THREE.Vector3());
+  obj.traverse(o => { if (o.isMesh) { o.material = [].concat(o.material).map(m => new THREE.MeshStandardMaterial({ color: m.color, roughness: 0.55, metalness: 0.2 })); if (o.material.length === 1) o.material = o.material[0]; } });
+  // 握り：下から15%の位置
+  const scale = 1 / s2.y;
+  const inner = new THREE.Group(); inner.add(wrap); wrap.position.set(-(b2.min.x + b2.max.x) / 2, -(b2.min.y + s2.y * 0.15), -(b2.min.z + b2.max.z) / 2);
+  const outer = new THREE.Group(); outer.name = name; outer.add(inner); outer.scale.setScalar(scale);
+  outer.userData.length = s2.y;
+  return exportGLB(outer);
+}
+
+window.buildAll = async (what) => {
+  const out = {};
+  if (!what || what === 'chars') for (const id of Object.keys(CHARS)) out[`chars/${id}.glb`] = await exportGLB(await buildChar(id));
+  if (!what || what === 'anims') out['anims.glb'] = await buildAnims();
+  if (!what || what === 'weapons') for (const w of WEAPONS) out[`weapons/${w}.glb`] = await buildWeapon(w);
+  return out;
+};
+window.READY = true;
+</script>
+</body>
+</html>

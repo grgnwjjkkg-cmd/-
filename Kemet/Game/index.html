@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ケメトの秘宝</title>
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="topbar">
+    <div id="status">
+      <div class="row"><span id="lv">Lv.1</span><span id="hpText">100/100</span></div>
+      <div class="bar"><b id="hpBar"></b></div>
+      <div class="bar exp"><b id="expBar"></b></div>
+    </div>
+    <div id="objective"><small>いまやること</small><span id="objText"></span></div>
+    <div id="money"><span class="ankh">☥</span><span id="ankhText">0</span></div>
+    <button id="menuBtn" aria-label="メニュー">☰</button>
+  </div>
+  <div id="bossbar" class="hidden"><div id="bossName"></div><div class="bar"><b id="bossHp"></b></div></div>
+  <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
+  <div id="buttons">
+    <button id="actBtn" class="hidden">話す</button>
+    <button id="rollBtn">回避</button>
+    <button id="atkBtn">攻撃</button>
+  </div>
+  <div id="labels"></div>
+  <div id="toasts"></div>
+</div>
+
+<div id="dialog" class="hidden">
+  <div id="dlgName"></div>
+  <div id="dlgText"></div>
+  <div id="dlgChoices"></div>
+  <div id="dlgNext">▼</div>
+</div>
+
+<div id="panel" class="hidden"><div id="panelBody"></div></div>
+
+<div id="title">
+  <div class="titleBox">
+    <div class="sub">KEMET — THE STOLEN SUN</div>
+    <h1>ケメトの秘宝</h1>
+    <p id="loadText">読み込み中…</p>
+    <div class="bar load"><b id="loadBar"></b></div>
+    <button id="startBtn" class="hidden">はじめから</button>
+    <button id="continueBtn" class="hidden">つづきから</button>
+  </div>
+</div>
+<div id="fade"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
