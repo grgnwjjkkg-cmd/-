@@ -7,6 +7,15 @@ struct SettingsView: View {
     @State private var backupURL: URL?
     @State private var importing = false
     @State private var restoreMessage: String?
+    @AppStorage(TrainingReminder.enabledKey) private var reminderEnabled = false
+    @AppStorage(TrainingReminder.weekdaysKey) private var reminderWeekdays = "2,4,6"
+    @AppStorage(TrainingReminder.hourKey) private var reminderHour = 19
+    @AppStorage(TrainingReminder.minuteKey) private var reminderMinute = 0
+
+    /// リマインダーの設定のどれかが変わったら通知を入れ直すための目印
+    private var reminderSignature: String {
+        "\(reminderEnabled)-\(reminderWeekdays)-\(reminderHour)-\(reminderMinute)"
+    }
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
     @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
@@ -54,6 +63,15 @@ struct SettingsView: View {
                     Text("メインの色と背景の色が変わります。明るさは「端末に合わせる」だと、iPhone のダークモードに合わせて切り替わります。")
                 }
 
+
+                Section {
+                    ReminderSettingsView()
+                } header: {
+                    Text("リマインダー")
+                } footer: {
+                    Text("選んだ曜日の時刻に通知します。")
+                }
+                .onChange(of: reminderSignature) { ReminderSettingsView.apply() }
 
                 Section {
                     Button {

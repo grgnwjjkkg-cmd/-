@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0A1D125A0CF36DB5D397C66C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E343771B470E096E4A7AEB /* Theme.swift */; };
+		0AF01140BC7E1A708109E402 /* ReminderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF38CB93619A87BD7903095 /* ReminderSettingsView.swift */; };
 		1B481FB0C43697C522A169C6 /* RestTimerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8481438880E7C9385245BD37 /* RestTimerBar.swift */; };
 		276160F0B01008E5DDA6F874 /* themes.json in Resources */ = {isa = PBXBuildFile; fileRef = A73BE923AFF047CBDD1FCC2B /* themes.json */; };
 		29469512E5A57FAA420B2429 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9963D1F22B180BD70B4B5182 /* Models.swift */; };
@@ -31,6 +32,7 @@
 		9524BD9C9445A4E7821B3408 /* approvals.json in Resources */ = {isa = PBXBuildFile; fileRef = AF89EF19952F54F61787D3C7 /* approvals.json */; };
 		9A871432E8803D584A80EE3C /* StudiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21070C6F2FB4C3334314BA99 /* StudiesView.swift */; };
 		A3C4F4AB3F0546CFCAE3F5EA /* InsightViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */; };
+		A4EA726E84194587E297820E /* Reminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E11FB96F5FB40812B94E406 /* Reminders.swift */; };
 		AC8AD329AB94C2C9336E6110 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63B3E846C2C119D9544F226 /* ReviewView.swift */; };
 		ADEEDFAC203CC615313CD5C0 /* EviTrainApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A85C8F2EED4B8A85172D57C /* EviTrainApp.swift */; };
 		B7CE8EE25B33070DED9F063E /* menus.json in Resources */ = {isa = PBXBuildFile; fileRef = 62856503FFF905089F06D1D0 /* menus.json */; };
@@ -63,6 +65,7 @@
 		0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightViews.swift; sourceTree = "<group>"; };
 		1201D449E3D79B1CF0BA47C9 /* ExerciseVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseVisuals.swift; sourceTree = "<group>"; };
 		171C70934EA6875BD4527E54 /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
+		1AF38CB93619A87BD7903095 /* ReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSettingsView.swift; sourceTree = "<group>"; };
 		21070C6F2FB4C3334314BA99 /* StudiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudiesView.swift; sourceTree = "<group>"; };
 		214894C193B7F4756FCCC62B /* EviTrain.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EviTrain.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C1A0184EA61FB492B4FE6F /* StudyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyStore.swift; sourceTree = "<group>"; };
@@ -70,6 +73,7 @@
 		28ADF6D3AF1D314D5EA0D4A0 /* StudyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyDetailView.swift; sourceTree = "<group>"; };
 		2CE791ED4DF3BAAFAF03DE02 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2F30B8A12975E1253A5D0AB1 /* FinishCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinishCelebrationView.swift; sourceTree = "<group>"; };
+		3E11FB96F5FB40812B94E406 /* Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminders.swift; sourceTree = "<group>"; };
 		5A9A4B1EB8CB98BB646AE7FD /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		62856503FFF905089F06D1D0 /* menus.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = menus.json; sourceTree = "<group>"; };
 		7E837F1C1D1455DEE5364B40 /* BodyWeightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightView.swift; sourceTree = "<group>"; };
@@ -201,6 +205,7 @@
 		7D4310451A714224B175D57B /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				1AF38CB93619A87BD7903095 /* ReminderSettingsView.swift */,
 				2CE791ED4DF3BAAFAF03DE02 /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -233,6 +238,7 @@
 			children = (
 				A05D528E34ADB2392BEBA244 /* Backup.swift */,
 				C39026E0FC758A1FC7EF7BD5 /* MenuBuilder.swift */,
+				3E11FB96F5FB40812B94E406 /* Reminders.swift */,
 				C929DABEDA4315CEBFDA11C4 /* RestTimer.swift */,
 				8D9924E054D895E58AC99EB7 /* Stats.swift */,
 				22C1A0184EA61FB492B4FE6F /* StudyStore.swift */,
@@ -368,6 +374,8 @@
 				6B1CFFDF9DAC6E87D8D301F6 /* MenuBuilder.swift in Sources */,
 				73F7305688116ACB01205416 /* MenuViews.swift in Sources */,
 				29469512E5A57FAA420B2429 /* Models.swift in Sources */,
+				0AF01140BC7E1A708109E402 /* ReminderSettingsView.swift in Sources */,
+				A4EA726E84194587E297820E /* Reminders.swift in Sources */,
 				F0D2453059771C56437EC8E9 /* RestTimer.swift in Sources */,
 				1B481FB0C43697C522A169C6 /* RestTimerBar.swift in Sources */,
 				AC8AD329AB94C2C9336E6110 /* ReviewView.swift in Sources */,
