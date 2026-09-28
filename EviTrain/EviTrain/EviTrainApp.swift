@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct EviTrainApp: App {
@@ -15,6 +16,8 @@ struct EviTrainApp: App {
             fatalError("データベースを開けませんでした: \(error)")
         }
         ExerciseCatalog.seedIfNeeded(container.mainContext)
+        // アプリを開いているときも休憩終了の通知を出す
+        UNUserNotificationCenter.current().delegate = ForegroundNotificationPresenter.shared
     }
 
     var body: some Scene {
