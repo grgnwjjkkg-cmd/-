@@ -74,12 +74,28 @@ export class Assets {
   }
 }
 
+// 足もとのやわらかい影（計算済みの光の場所でも、キャラが地面に立って見えるように）
+let blobTex = null;
+function blobShadow() {
+  if (!blobTex) {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 2, 32, 32, 30);
+    g.addColorStop(0, 'rgba(0,0,0,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    blobTex = new THREE.CanvasTexture(c);
+  }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false }));
+  m.position.y = 0.03; m.renderOrder = 1;
+  return m;
+}
+
 /** アニメーションつきのキャラ1体 */
 export class Actor {
   constructor(model, assets) {
     this.root = new THREE.Group();
     this.model = model;
     this.root.add(model);
+    this.root.add(blobShadow());
     this.assets = assets;
     this.mixer = new THREE.AnimationMixer(model);
     this.actions = new Map();

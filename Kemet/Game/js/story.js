@@ -26,6 +26,15 @@ export const TOWN_NPCS = [
   { id: 'kem', model: 'kem', pos: [-22, -22], face: 0.6, anim: 'Idle_Loop' },
 ];
 
+/** 探索で見つかる物（場所ごと） */
+export const FINDS = {
+  necropolis: [
+    { id: 'tablet1', x: -24, z: 47, title: '石板のかけら（1/3）', text: '「……太陽は東の神殿に、月は西の墓に眠る……」' },
+    { id: 'tablet2', x: 3.2, z: -68, title: '石板のかけら（2/3）', text: '「……ふたつのスカラベを合わせし者に、冥府の門は開かれる……」' },
+    { id: 'tablet3', x: 30.5, z: -89, title: '石板のかけら（3/3）', text: '「……黒き山犬の群れは、月を求めて西の果てへ……」' },
+  ],
+};
+
 /** 今やること（画面上部に出す） */
 export function objective(s) {
   const f = s.flags;
@@ -43,6 +52,7 @@ export const CLUES = {
   redSand: { title: '赤い砂', text: '犯人は神殿に赤い砂を落としていった。赤い砂は西岸の砂漠にしかない。' },
   docks: { title: 'フードの男', text: '祭りの夜、フードをかぶった男が包みを抱えて船着き場へ走っていった。（アメン）' },
   cloth: { title: 'ジャッカルの布', text: 'フードの男は西岸へ渡った。落とした布には黒いジャッカルの紋章。盗賊団「黒ジャッカル」の印だ。（セティ）' },
+  tablet: { title: '石板の言葉', text: '「ふたつのスカラベを合わせし者に、冥府の門は開かれる」。黒ジャッカルは月のスカラベも狙っている？' },
   twoScarabs: { title: '対のスカラベ', text: '太陽のスカラベは、本来「月のスカラベ」と対になっていたという言い伝えがある。（ケム）' },
 };
 

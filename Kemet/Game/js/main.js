@@ -2,10 +2,11 @@
 import * as THREE from 'three';
 import { Assets, Actor } from './actor.js';
 import { Player, NPC, Enemy, ENEMY_TYPES } from './entities.js';
-import { buildTown, buildNecropolis } from './world/zones.js';
+import { buildTown } from './world/zones.js';
+import { loadBakedZone } from './world/baked.js';
 import { skyTexture } from './world/textures.js';
 import * as B from './world/builders.js';
-import { PEOPLE, TOWN_NPCS, CLUES, objective, script } from './story.js';
+import { PEOPLE, TOWN_NPCS, CLUES, FINDS, objective, script } from './story.js';
 import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, playerStats, expToNext } from './items.js';
 import { audio } from './audio.js';
 import { EffectComposer } from '../lib/jsm/postprocessing/EffectComposer.js';
@@ -19,7 +20,7 @@ const WEAPON_LENGTH = { Dagger: 0.5, Sword: 1.0, Sword_2: 0.95, Spear: 2.0, Axe_
 
 const newSave = () => ({
   zone: 'town', x: 0, z: 30, face: Math.PI, flags: {}, clues: [], ankh: 0, level: 1, exp: 0,
-  weapon: null, amulets: [null, null], inventory: {}, items: {}, pityCount: 0, chests: [], bgm: true,
+  weapon: null, amulets: [null, null], inventory: {}, items: {}, pityCount: 0, chests: [], finds: [], bgm: true,
 });
 
 class Game {
@@ -182,7 +183,7 @@ class Game {
     this.npcs = []; this.enemies = []; this.chests = []; this.pickups = [];
     this.boss = null; $('bossbar').classList.add('hidden');
 
-    this.zone = name === 'town' ? buildTown() : buildNecropolis();
+    this.zone = name === 'town' ? buildTown() : await loadBakedZone('necropolis', this);
     this.scene.add(this.zone.root);
     this.save.zone = name;
 
@@ -213,8 +214,10 @@ class Game {
         await this.spawnEnemy(s.type, s);
       }
       this.zone.chests.forEach((c, i) => this.makeChest(c, i));
-      if (this.save.flags.bossDown && !this.save.flags.gotScarab) this.dropScarab(new THREE.Vector3(25, 0, -118));
+      const sc = this.zone.scarab || { x: 25, z: -118 };
+      if (this.save.flags.bossDown && !this.save.flags.gotScarab) this.dropScarab(new THREE.Vector3(sc.x, 0, sc.z));
     }
+    this.makeFinds(name);
     for (const el of [...$('labels').children]) if (!this.npcs.some(n => n.label === el)) el.remove();
     this.inside = 0;
     if (!initial) { audio.play(this.zone.music); await wait(100); $('fade').classList.remove('on'); }
@@ -227,6 +230,22 @@ class Game {
     if (def.weapon) actor.hold(await this.assets.makeWeapon(def.weapon, def.weaponTint), WEAPON_LENGTH[def.weapon]);
     const e = new Enemy(actor, type, pos);
     this.enemies.push(e); this.scene.add(e.root);
+  }
+
+  /** 探索で見つける物：かすかにきらめく */
+  makeFinds(zoneName) {
+    for (const f of this.finds || []) this.scene.remove(f.fx);
+    this.finds = [];
+    for (const def of FINDS[zoneName] || []) {
+      if ((this.save.finds || []).includes(def.id)) continue;
+      const pts = [];
+      for (let i = 0; i < 18; i++) pts.push((Math.random() - 0.5) * 0.6, Math.random() * 0.8 + 0.1, (Math.random() - 0.5) * 0.6);
+      const fx = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)),
+        new THREE.PointsMaterial({ color: '#ffe8a0', size: 0.07, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+      fx.position.set(def.x, 0, def.z);
+      this.scene.add(fx);
+      this.finds.push({ def, fx });
+    }
   }
 
   makeChest(c, index) {
@@ -337,6 +356,7 @@ class Game {
     for (const n of this.npcs) { const d = n.root.position.distanceTo(p); if (d < 3.2 && d < bd) { bd = d; best = { kind: 'npc', npc: n, label: '話す' }; } }
     if (this.zone.pot) { const d = Math.hypot(p.x - this.zone.pot.x, p.z - this.zone.pot.z); if (d < 4 && d < bd) { bd = d; best = { kind: 'pot', label: '祈る' }; } }
     for (const c of this.chests) if (!c.opened) { const d = Math.hypot(p.x - c.x, p.z - c.z); if (d < 2 && d < bd) { bd = d; best = { kind: 'chest', chest: c, label: '開ける' }; } }
+    for (const f of this.finds || []) { const d = Math.hypot(p.x - f.def.x, p.z - f.def.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'find', find: f, label: '調べる' }; } }
     for (const k of this.pickups) { const d = Math.hypot(p.x - k.mesh.position.x, p.z - k.mesh.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'pickup', pickup: k, label: '拾う' }; } }
     return best;
   }
@@ -362,6 +382,18 @@ class Game {
       anim();
       this.gainAnkh(c.ankh);
       this.persist();
+    } else if (t.kind === 'find') {
+      const f = t.find;
+      this.scene.remove(f.fx);
+      this.finds.splice(this.finds.indexOf(f), 1);
+      (this.save.finds ||= []).push(f.def.id);
+      audio.sfx('clue');
+      const all = (FINDS[this.zone.name] || []).every(d => this.save.finds.includes(d.id));
+      const steps = [{ who: 'narr', text: `${f.def.title}を見つけた。` }, { who: 'narr', text: f.def.text }];
+      if (all) steps.push({ who: 'narr', text: '3つのかけらがそろった。石板の言葉が読める……' },
+        { run: g => { g.addClue('tablet'); g.giveItem('eye_charm'); } },
+        { who: 'narr', text: 'かけらの裏に「ウアジェトの目」のお守りが埋め込まれていた！' });
+      await this.runSteps(steps);
     } else if (t.kind === 'pickup') {
       this.scene.remove(t.pickup.mesh);
       this.pickups.splice(this.pickups.indexOf(t.pickup), 1);
@@ -451,6 +483,7 @@ class Game {
       giveAnkh(n) { g.gainAnkh(n); },
       giveExp(n) { g.gainExp(n); },
       takeItem(id) { delete g.save.items[id]; },
+      giveItem(id) { g.addItem(id); g.toast(`${itemDef(id).name}を手に入れた`); },
       buyCandy() {
         if (g.save.ankh < 10) { g.toast('アンクが足りない'); return; }
         g.save.ankh -= 10; g.save.items.candy = 1; g.save.flags.hasCandy = true;
@@ -765,7 +798,7 @@ class Game {
     if (!this.zone || !this.player) return;
     if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.08; }
 
-    this.zone.update(dt, this.time);
+    this.zone.update(dt, this.time, this.player);
     if (this.titleMode) {
       // タイトル：町をゆっくり見わたす
       const a = this.time * 0.06;
@@ -798,6 +831,8 @@ class Game {
       this.player.actor.update(dt);
     }
     for (const n of this.npcs) n.update(dt, this.player);
+    for (const f of this.finds || []) { const d = Math.hypot(p.x - f.def.x, p.z - f.def.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'find', find: f, label: '調べる' }; } }
+    for (const f of this.finds || []) { f.fx.rotation.y += dt * 0.8; f.fx.material.opacity = 0.55 + Math.sin(this.time * 3 + f.def.x) * 0.35; }
     for (const k of this.pickups) { k.mesh.rotation.y += dt * 1.5; k.mesh.position.y = 1 + Math.sin(this.time * 2) * 0.15; }
     this.telegraphs = this.telegraphs.filter(t => {
       t.left -= dt;
@@ -849,6 +884,8 @@ class Game {
 
   updateLight() {
     const p = this.player?.pos ?? new THREE.Vector3();
+    if (this.zone?.baked) return this.updateBakedLight(p);
+    this.sun.castShadow = true;
     const inside = this.zone?.isInside?.(p) ? 1 : 0;
     this.inside += (inside - this.inside) * 0.05;
     const k = this.inside;
@@ -858,6 +895,8 @@ class Game {
     this.hemi.intensity = 1.0 * (1 - k) + 0.35 * k;
     this.lantern.intensity = 18 * k;
     this.lantern.position.set(p.x, 2.4, p.z);
+    this.renderer.toneMappingExposure = 1.05;
+    this.scene.environment = null;
     if (k > 0.5) {
       if (this.scene.fog !== this.fogIn) { this.fogIn = this.fogIn || new THREE.Fog('#140c06', 4, 34); this.scene.fog = this.fogIn; this.scene.background = new THREE.Color('#0c0704'); }
       if (this.zone.name === 'necropolis' && !this.boss) audio.play('tomb');
@@ -865,6 +904,37 @@ class Game {
       this.scene.fog = this.fogOut; this.scene.background = this.sky;
       if (!this.titleMode && !this.boss) audio.play(this.zone.music);
     }
+  }
+
+  /** 光を計算済みの場所：屋外は明るく、墓や洞窟は暗く（場所に合わせてなめらかに切り替え） */
+  updateBakedLight(p) {
+    const z = this.zone, look = z.look(p), a = 0.06;
+    const lerp = (x, y) => x + (y - x) * a;
+    this.inside = lerp(this.inside, look.sky ? 0 : 1);
+    if (!this.bakedFog) { this.bakedFog = new THREE.Fog(look.fog[0], look.fog[1], look.fog[2]); }
+    if (this.scene.fog !== this.bakedFog) this.scene.fog = this.bakedFog;
+    this.bakedFog.color.lerp(new THREE.Color(look.fog[0]), a);
+    this.bakedFog.near = lerp(this.bakedFog.near, look.fog[1]);
+    this.bakedFog.far = lerp(this.bakedFog.far, look.fog[2]);
+    this.sun.castShadow = false;
+    this.sun.position.set(p.x, 0, p.z).addScaledVector(z.sunDir, -40);
+    this.sun.target.position.set(p.x, 0, p.z);
+    this.sun.intensity = lerp(this.sun.intensity, look.sun);
+    this.hemi.intensity = lerp(this.hemi.intensity, look.hemi);
+    this.lantern.intensity = lerp(this.lantern.intensity, look.lantern);
+    this.lantern.position.set(p.x, 2.6, p.z);
+    this.renderer.toneMappingExposure = lerp(this.renderer.toneMappingExposure, look.exposure);
+    if (z.sky) {
+      this.scene.environment = z.sky;
+      this.scene.environmentIntensity = lerp(this.scene.environmentIntensity ?? 1, look.env);
+      this.scene.environmentRotation.y = z.skyRot;
+      this.scene.backgroundRotation.y = z.skyRot;
+    }
+    const wantBg = look.sky && z.sky ? z.sky : this.darkBg || (this.darkBg = new THREE.Color('#050302'));
+    if (this.scene.background !== wantBg) this.scene.background = wantBg;
+    // 場所ごとの曲
+    const region = z.region(p);
+    if (!this.titleMode && !this.boss && region.name !== this.lastRegion) { this.lastRegion = region.name; audio.play(region.music); }
   }
 
   updateHUD() {

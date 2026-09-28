@@ -21,9 +21,20 @@ npx http-server -p 8811 -s .
 - `App/` … iPhone アプリ（WebView でゲームを動かすだけ）
 - `tools/` … 無料素材をゲーム用に変換するスクリプトと、自動プレイのテスト
 
+## 光のベイク（リアルな見た目）
+墓地は Blender で光の跳ね返りを計算して、画像（ライトマップ）に焼き付けています（POOLS と同じ考え方）。
+```
+tools/fetch_libs.sh                 # three.js
+python3 tools/fetch_polyhaven.py textures hdris   # 実写の石・砂・空（Poly Haven, CC0）
+blender -b --python tools/bake/necropolis.py -- 160   # 形を作って光を計算（数十分）
+python3 tools/bake/compress.py Game/assets/levels/necropolis
+```
+地図の形・たいまつ・敵や宝箱の位置は `tools/bake/necropolis.py` に書いてあります。
+
 ## 差し替えるとき
 - キャラ・武器：`Game/assets/chars/*.glb`・`Game/assets/weapons/*.glb` を入れ替える
 - BGM：`js/audio.js`（今はコードで演奏。音楽ファイルに差し替え可能）
 
 ## 素材
 3Dモデル・アニメーション：[Quaternius](https://quaternius.com)（CC0 1.0）
+実写テクスチャ・空の写真：[Poly Haven](https://polyhaven.com)（CC0 1.0）
