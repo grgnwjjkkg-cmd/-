@@ -34,6 +34,7 @@ struct EviTrainApp: App {
 
 struct RootView: View {
     @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
+    @AppStorage(OnboardingView.seenKey) private var onboardingSeen = false
 
     var body: some View {
         TabView {
@@ -47,5 +48,8 @@ struct RootView: View {
                 .tabItem { Label("設定", systemImage: "gearshape") }
         }
         .preferredColorScheme(appearance.colorScheme)
+        .fullScreenCover(isPresented: Binding(get: { !onboardingSeen }, set: { if !$0 { onboardingSeen = true } })) {
+            OnboardingView()
+        }
     }
 }

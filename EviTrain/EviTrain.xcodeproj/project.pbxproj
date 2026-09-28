@@ -37,6 +37,7 @@
 		AC8AD329AB94C2C9336E6110 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63B3E846C2C119D9544F226 /* ReviewView.swift */; };
 		ADEEDFAC203CC615313CD5C0 /* EviTrainApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A85C8F2EED4B8A85172D57C /* EviTrainApp.swift */; };
 		B7CE8EE25B33070DED9F063E /* menus.json in Resources */ = {isa = PBXBuildFile; fileRef = 62856503FFF905089F06D1D0 /* menus.json */; };
+		BBEE489E20BF8B5CAEE66C91 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14D0588AA5944CFAADA20E5 /* OnboardingView.swift */; };
 		BFC80C92CB63FD498F585E15 /* StudyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28ADF6D3AF1D314D5EA0D4A0 /* StudyDetailView.swift */; };
 		C0AAAA98BBF13A3A44B9973C /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9924E054D895E58AC99EB7 /* Stats.swift */; };
 		C0CBC03F607B91410B063D52 /* charts.json in Resources */ = {isa = PBXBuildFile; fileRef = DA4D050A2880CE2E64554013 /* charts.json */; };
@@ -90,6 +91,7 @@
 		A0F2110D37F21B4F54E84146 /* WorkoutEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEditorView.swift; sourceTree = "<group>"; };
 		A73BE923AFF047CBDD1FCC2B /* themes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = themes.json; sourceTree = "<group>"; };
 		AF89EF19952F54F61787D3C7 /* approvals.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = approvals.json; sourceTree = "<group>"; };
+		B14D0588AA5944CFAADA20E5 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B63B3E846C2C119D9544F226 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		B9766D091F94F5793D667338 /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		C39026E0FC758A1FC7EF7BD5 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
@@ -217,6 +219,7 @@
 		B2DDAE6412BA70E19C35F02E /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				B14D0588AA5944CFAADA20E5 /* OnboardingView.swift */,
 				E2E343771B470E096E4A7AEB /* Theme.swift */,
 				4452B5CF47425063FA68BD59 /* History */,
 				2C1D3D911D0AB676A7A510CD /* Menus */,
@@ -377,6 +380,7 @@
 				6B1CFFDF9DAC6E87D8D301F6 /* MenuBuilder.swift in Sources */,
 				73F7305688116ACB01205416 /* MenuViews.swift in Sources */,
 				29469512E5A57FAA420B2429 /* Models.swift in Sources */,
+				BBEE489E20BF8B5CAEE66C91 /* OnboardingView.swift in Sources */,
 				AA1577DEB4070266A31B62EF /* PlateCalculatorView.swift in Sources */,
 				0AF01140BC7E1A708109E402 /* ReminderSettingsView.swift in Sources */,
 				A4EA726E84194587E297820E /* Reminders.swift in Sources */,
