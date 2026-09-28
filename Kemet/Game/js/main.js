@@ -506,7 +506,7 @@ class Game {
       $('bossbar').classList.add('hidden');
       this.boss = null;
       audio.play('tomb');
-      setTimeout(() => this.dropScarab(e.pos.clone()), 1200);
+      this.dropScarab(e.pos.clone());
       this.toast('黒ジャッカルを倒した！');
     }
     this.persist();
@@ -741,7 +741,15 @@ class Game {
 
   loop() {
     requestAnimationFrame(() => this.loop());
-    let dt = Math.min(0.05, this.clock.getDelta());
+    this.tick(Math.min(0.05, this.clock.getDelta()), true);
+  }
+
+  /** テスト用：描画せずに時間だけ進める */
+  simulate(seconds, step = 1 / 30) {
+    for (let t = 0; t < seconds; t += step) this.tick(step, false);
+  }
+
+  tick(dt, render) {
     this.time += dt;
     if (!this.zone || !this.player) return;
     if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.08; }
@@ -755,7 +763,7 @@ class Game {
       for (const n of this.npcs) n.update(dt, this.player);
       this.player.actor.update(dt);
       this.updateLight();
-      this.renderer.render(this.scene, this.camera);
+      if (render) this.renderer.render(this.scene, this.camera);
       return;
     }
 
@@ -792,8 +800,7 @@ class Game {
 
     this.updateCamera(dt);
     this.updateLight();
-    this.updateHUD();
-    this.renderer.render(this.scene, this.camera);
+    if (render) { this.updateHUD(); this.renderer.render(this.scene, this.camera); }
   }
 
   updateCamera(dt) {

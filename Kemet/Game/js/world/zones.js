@@ -219,7 +219,7 @@ export function buildNecropolis() {
   const root = new THREE.Group();
   const batch = new B.Batcher(), C = new B.Colliders();
 
-  root.add(dunes(420, 30, 7));
+  root.add(dunes(420, 58, 7));
   B.pyramid(batch, -60, -170, 110);
   B.pyramid(batch, 90, -210, 150, 0.3);
   B.pyramid(batch, -170, -60, 80, 0.5);

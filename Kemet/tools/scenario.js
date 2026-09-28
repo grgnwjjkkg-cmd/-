@@ -30,11 +30,11 @@ module.exports = async (p, shot, hold) => {
   await p.evaluate(() => window.game.closePanel());
   // 衛兵
   await tp(-42.5, 3.5, -Math.PI / 2); await talkAll('13_kash');
-  await tp(-47, 0, -Math.PI / 2); await hold('w', 1500); await p.waitForTimeout(1500); await shot('14_necropolis');
+  await p.evaluate(() => window.game.enterZone('necropolis', false, 'town')); await p.waitForTimeout(2500); await shot('14_necropolis');
   // 盗賊と戦う
   await p.evaluate(() => { const g = window.game; g.player.pos.set(-2, 0, 17); g.player.face = Math.PI; g.camYaw = 0; });
   await p.waitForTimeout(1200); await shot('15_bandits');
-  for (let i = 0; i < 8; i++) { await p.keyboard.press('j'); await p.waitForTimeout(260); }
+  for (let i = 0; i < 8; i++) { await p.keyboard.press('j'); await p.waitForTimeout(700); }
   await shot('16_fight');
   // 墓の中
   await p.evaluate(() => { const g = window.game; g.player.pos.set(0, 0, -45); g.player.face = Math.PI; g.camYaw = 0; g.player.hp = 999; });
