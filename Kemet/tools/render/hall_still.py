@@ -193,7 +193,7 @@ for i, (x, y) in enumerate([(-8.3, -2), (8.3, -12), (-8.3, -22), (8.3, -32)]):
 cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam')); sc.collection.objects.link(cam); sc.camera = cam
 cam.data.lens = 18; cam.data.sensor_width = 36
 cam.location = (-0.6, 3.0, 1.9)
-cam.rotation_euler = (math.radians(86), 0, math.radians(3))
+cam.rotation_euler = (math.radians(86), 0, math.radians(183))
 cam.data.dof.use_dof = True; cam.data.dof.focus_distance = 9; cam.data.dof.aperture_fstop = 5.6
 
 sc.render.filepath = OUT
