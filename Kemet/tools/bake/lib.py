@@ -8,6 +8,7 @@ Blender へは (x, -z, y) に変換して置く。
   lm_<グループ>.png  … 光の計算結果（sRGB で保存。値は 1/K 倍してある）
   meta.json          … 当たり判定・たいまつ・水面・光の筋・場所の区分・敵や宝箱の位置など
 """
+import sys
 import bpy, bmesh, math, os, json, random
 from mathutils import Vector, noise
 
@@ -267,6 +268,16 @@ class Level:
         s.cycles.samples = samples
         s.use_nodes = False
 
+    def _resume_k(self, group, png, kfile):
+        """BAKE_RESUME=1 のとき、途中で止まった前回の計算結果（この台本より新しい画像）を使う"""
+        if not os.environ.get('BAKE_RESUME') or not os.path.exists(png): return None
+        if os.path.getmtime(png) < os.path.getmtime(sys.argv[sys.argv.index('--python') + 1]): return None
+        if os.path.exists(kfile): return float(open(kfile).read())
+        try:  # 明るさの倍率が残っていなければ、前の meta.json の値（屋外の日なたの明るさは形によらずほぼ同じ）
+            return float(json.load(open(os.path.join(self.out, 'meta.json')))['groups'][group]['k'])
+        except Exception:
+            return None
+
     def bake_and_export(self):
         import numpy as np
         s = self.scene
@@ -282,12 +293,18 @@ class Level:
                 nt = self.mats[mk]['mat'].node_tree
                 if 'LIGHTMAP' in nt.nodes: nt.nodes['LIGHTMAP'].image = img; nt.nodes.active = nt.nodes['LIGHTMAP']
             bpy.ops.object.select_all(action='DESELECT'); bpy.context.view_layer.objects.active = obj; obj.select_set(True)
-            print(f'bake {group} {size}px', flush=True)
-            bpy.ops.object.bake(type='DIFFUSE', uv_layer='Lightmap')
-            px = np.empty(size * size * 4, dtype=np.float32); img.pixels.foreach_get(px)
-            lum = px.reshape(-1, 4)[:, :3].max(axis=1)
-            k = float(max(1.0, np.percentile(lum[lum > 0], 99.7))) if (lum > 0).any() else 1.0
-            self._denoise_save(img, os.path.join(self.out, f'lm_{group}.png'), k)
+            png = os.path.join(self.out, f'lm_{group}.png'); kfile = png[:-4] + '.k'
+            k = self._resume_k(group, png, kfile)
+            if k is not None:
+                print(f'skip {group} (already baked, k={k})', flush=True)
+            else:
+                print(f'bake {group} {size}px', flush=True)
+                bpy.ops.object.bake(type='DIFFUSE', uv_layer='Lightmap')
+                px = np.empty(size * size * 4, dtype=np.float32); img.pixels.foreach_get(px)
+                lum = px.reshape(-1, 4)[:, :3].max(axis=1)
+                k = float(max(1.0, np.percentile(lum[lum > 0], 99.7))) if (lum > 0).any() else 1.0
+                self._denoise_save(img, png, k)
+                with open(kfile, 'w') as f: f.write(str(k))
             self.meta['groups'][group] = {'lightmap': f'lm_{group}.png', 'k': round(k, 4),
                                           'materials': {mk: {'tex': self.mats[mk]['tex'], 'tint': list(self.mats[mk].get('tint', (1, 1, 1))),
                                                              'emit': self.mats[mk].get('emit')} for _, mk in keys}}

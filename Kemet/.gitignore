@@ -3,3 +3,4 @@ Game/assets/ph/
 Game/assets/levels/**/lm_*.png
 build/
 __pycache__/
+Game/assets/levels/**/lm_*.k
