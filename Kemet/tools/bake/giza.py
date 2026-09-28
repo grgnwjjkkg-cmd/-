@@ -12,7 +12,7 @@ SAMPLES = int(argv[0]) if argv else 160
 random.seed(11)
 L = Level('giza', SAMPLES)
 
-L.material('sand', 'coast_sand_01', (1.0, 0.92, 0.78), scale=4)
+L.material('sand', 'coast_sand_01', (0.86, 0.77, 0.62), scale=4)
 L.material('bed', 'aerial_sand', (0.95, 0.84, 0.68), scale=18)
 L.material('courses', 'large_sandstone_blocks_01', (0.95, 0.84, 0.66), scale=4)   # ピラミッドの石の段
 L.material('casing', 'sandstone_blocks_08', (1.0, 0.94, 0.82), scale=6)            # 上に残る化粧石
@@ -28,7 +28,7 @@ L.group('far', 1024)
 
 # ---------- 地面：台地は平ら、外は砂丘と岩盤
 def dune(x, z):
-    k = max(0.0, min(1.0, (max(abs(x) - 75, z - 100, -40 - z) + 5) / 30))
+    k = max(0.0, min(1.0, (max(abs(x) - 75, z - 100, -70 - z) + 5) / 30))   # ピラミッドの前は平ら（下はピラミッドに隠れる）
     h = 2.4 * math.sin(x * 0.05 + 1) + 1.7 * math.sin(z * 0.07 + x * 0.02) + 0.6 * math.sin(x * 0.19 - z * 0.11) + 2.8
     return h * k - 0.03
 
