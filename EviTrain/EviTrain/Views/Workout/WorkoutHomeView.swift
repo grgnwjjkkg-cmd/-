@@ -180,6 +180,7 @@ private struct LastWorkoutCard: View {
 /// マイメニューの小さなカード（横スクロール）。
 private struct MenuCard: View {
     @Environment(\.appTheme) private var theme
+    @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }) private var finished: [Workout]
     let menu: MenuTemplate
     let onStart: () -> Void
 
@@ -204,6 +205,9 @@ private struct MenuCard: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, minHeight: 32, alignment: .topLeading)
+            if menu.weeks != nil || menu.perWeek != nil {
+                MenuProgressView(menu: menu, sessions: finished.filter { $0.menuName == menu.name }, compact: true)
+            }
             Button(action: onStart) {
                 Label("開始", systemImage: "play.fill")
                     .font(.subheadline.bold())

@@ -14,6 +14,8 @@ final class MenuTemplate {
     /// 研究での期間と週の回数（論文から作ったとき）
     var weeks: Int?
     var perWeek: Int?
+    /// はじめてこのメニューで練習した日（研究の期間の何週目かを数える起点）
+    var firstUsedAt: Date?
 
     @Relationship(deleteRule: .cascade, inverse: \MenuItem.template)
     var items: [MenuItem] = []
@@ -30,10 +32,11 @@ final class MenuTemplate {
 
     var sortedItems: [MenuItem] { items.sorted { $0.order < $1.order } }
 
-    /// 論文のメニューを使い始めてから何週目か（1始まり）。
-    func currentWeek(since start: Date?, now: Date = .now) -> Int? {
-        guard let start else { return nil }
-        let days = Calendar.current.dateComponents([.day], from: start, to: now).day ?? 0
+    /// 使い始めてから何週目か（1始まり）。まだ使っていなければ nil。
+    func currentWeek(now: Date = .now) -> Int? {
+        guard let start = firstUsedAt else { return nil }
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: start),
+                                                   to: now).day ?? 0
         return days / 7 + 1
     }
 }

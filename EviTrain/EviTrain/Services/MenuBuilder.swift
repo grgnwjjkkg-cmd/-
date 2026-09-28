@@ -29,6 +29,7 @@ enum MenuBuilder {
             }
         }
         template.lastUsedAt = .now
+        if template.firstUsedAt == nil { template.firstUsedAt = .now }
         try? context.save()
         return workout
     }

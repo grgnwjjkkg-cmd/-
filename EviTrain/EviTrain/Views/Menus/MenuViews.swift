@@ -117,6 +117,7 @@ struct MenuEditorView: View {
     @Environment(StudyStore.self) private var studyStore
     @Environment(\.appTheme) private var theme
     @Bindable var menu: MenuTemplate
+    @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }) private var finished: [Workout]
     @State private var showingPicker = false
     @State private var confirmingDelete = false
 
@@ -141,6 +142,7 @@ struct MenuEditorView: View {
                 }
                 if let schedule = scheduleText {
                     Label(schedule, systemImage: "calendar").font(.subheadline)
+                    MenuProgressView(menu: menu, sessions: sessions)
                 }
                 if !menu.note.isEmpty {
                     Text(menu.note).font(.footnote).foregroundStyle(.secondary)
@@ -212,6 +214,8 @@ struct MenuEditorView: View {
             }
         }
     }
+
+    private var sessions: [Workout] { finished.filter { $0.menuName == menu.name } }
 
     private var scheduleText: String? {
         let parts = [menu.weeks.map { "研究では\($0)週間" }, menu.perWeek.map { "週\($0)回" }].compactMap { $0 }
@@ -384,5 +388,40 @@ struct StudyMenuSheet: View {
                 .background(theme.accent, in: RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// 研究の期間に対する進み具合（例: 3週目 / 8週間・今週 1 / 2回）。
+struct MenuProgressView: View {
+    let menu: MenuTemplate
+    /// このメニューで行った、完了済みのトレーニング
+    let sessions: [Workout]
+    var compact = false
+
+    private var thisWeekCount: Int {
+        guard let week = Calendar.current.dateInterval(of: .weekOfYear, for: .now) else { return 0 }
+        return sessions.filter { week.contains($0.startedAt) }.count
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let weeks = menu.weeks, let current = menu.currentWeek() {
+                let finished = current > weeks
+                HStack(spacing: 6) {
+                    Text(finished ? "研究の\(weeks)週間を達成 🎉" : "\(current)週目 / \(weeks)週間")
+                        .font(.caption.bold())
+                    Spacer(minLength: 0)
+                }
+                ProgressView(value: Double(min(current, weeks)), total: Double(max(weeks, 1)))
+            }
+            if let perWeek = menu.perWeek {
+                Text("今週 \(thisWeekCount) / \(perWeek)回" + (thisWeekCount >= perWeek ? " ✓" : ""))
+                    .font(.caption2)
+                    .foregroundStyle(thisWeekCount >= perWeek ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+            }
+            if !compact, menu.firstUsedAt == nil, menu.weeks != nil {
+                Text("はじめて練習した日から週を数えます").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
     }
 }
