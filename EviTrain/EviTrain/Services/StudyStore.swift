@@ -125,9 +125,11 @@ final class StudyStore {
                                 question: questions[first.field + "/" + first.theme] ?? first.theme,
                                 studies: group.sorted { $0.stars > $1.stars })
         }
-        .sorted {
-            let a = fieldOrder.firstIndex(of: $0.field) ?? .max, b = fieldOrder.firstIndex(of: $1.field) ?? .max
-            return a != b ? a < b : $0.studies.count > $1.studies.count
+        .sorted { first, second in
+            let a: Int = fieldOrder.firstIndex(of: first.field) ?? Int.max
+            let b: Int = fieldOrder.firstIndex(of: second.field) ?? Int.max
+            if a != b { return a < b }
+            return first.studies.count > second.studies.count
         }
     }
 
@@ -148,13 +150,20 @@ final class StudyStore {
 
     /// 種目に関係する論文（一致する言葉が多い順 → ★の多い順）。
     func related(to exercise: Exercise, limit: Int = 5) -> [Study] {
+        struct Scored {
+            let study: Study
+            let score: Int
+        }
         let keywords = StudyMatcher.keywords(for: exercise)
-        return visibleStudies
-            .map { ($0, $0.matchTerms.intersection(keywords).count) }
-            .filter { $0.1 > 0 }
-            .sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0.stars > $1.0.stars }
-            .prefix(limit)
-            .map(\.0)
+        let scored: [Scored] = visibleStudies.compactMap { study in
+            let score = study.matchTerms.intersection(keywords).count
+            return score > 0 ? Scored(study: study, score: score) : nil
+        }
+        let sorted = scored.sorted { a, b in
+            if a.score != b.score { return a.score > b.score }
+            return a.study.stars > b.study.stars
+        }
+        return sorted.prefix(limit).map(\.study)
     }
 
     // MARK: - 保存

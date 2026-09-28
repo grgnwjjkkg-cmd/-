@@ -102,13 +102,7 @@ struct StudiesView: View {
     }
 
     private var studyList: some View {
-        let studies = store.visibleStudies.filter { study in
-            study.stars >= starFilter.rawValue
-                && (field == nil || study.field == field)
-                && (!bookmarksOnly || store.isBookmarked(study))
-                && (searchText.isEmpty || study.contains(searchText))
-        }
-        .sorted { $0.stars > $1.stars }
+        let studies = filteredStudies()
         return List {
             filters
             ForEach(studies) { study in
@@ -124,6 +118,19 @@ struct StudiesView: View {
                 ContentUnavailableView.search(text: searchText)
             }
         }
+    }
+
+    private func filteredStudies() -> [Study] {
+        let minStars = starFilter.rawValue
+        var result: [Study] = []
+        for study in store.visibleStudies {
+            if study.stars < minStars { continue }
+            if let field, study.field != field { continue }
+            if bookmarksOnly && !store.isBookmarked(study) { continue }
+            if !searchText.isEmpty && !study.contains(searchText) { continue }
+            result.append(study)
+        }
+        return result.sorted { $0.stars > $1.stars }
     }
 
     private var emptyState: some View {

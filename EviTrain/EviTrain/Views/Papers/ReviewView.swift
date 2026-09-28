@@ -16,16 +16,23 @@ struct ReviewView: View {
     @State private var field: String?
 
     private var studies: [Study] {
-        store.allStudies.filter { study in
-            let status = store.approval(for: study)?.status
-            let matches = switch filter {
-            case .pending: status == nil
-            case .published: status == Approval.published
-            case .onHold: status == Approval.onHold
-            }
-            return matches && (field == nil || study.field == field)
+        let wanted: String? = switch filter {
+        case .pending: nil
+        case .published: Approval.published
+        case .onHold: Approval.onHold
         }
-        .sorted { ($0.fieldRank(store.fieldOrder), -$0.stars) < ($1.fieldRank(store.fieldOrder), -$1.stars) }
+        let order = store.fieldOrder
+        let matching = store.allStudies.filter { study in
+            let status: String? = store.approval(for: study)?.status
+            if status != wanted { return false }
+            if let field, study.field != field { return false }
+            return true
+        }
+        return matching.sorted { a, b in
+            let rankA = a.fieldRank(order), rankB = b.fieldRank(order)
+            if rankA != rankB { return rankA < rankB }
+            return a.stars > b.stars
+        }
     }
 
     var body: some View {
