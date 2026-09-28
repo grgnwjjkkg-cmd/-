@@ -23,7 +23,7 @@ Claude Code はまずこのファイルを全部読み、次に `data/` と `rul
 | summaries_kintore.json | 上のうち筋トレ・筋力に関係する 88本（最初はここから使う） |
 | charts.json | グラフにできる数字 10本分（要旨の原文と照合済み） |
 | topics.json | 分野・テーマの一覧と、PubMed の検索語 |
-| 未要約の論文_147本.json | 集めたがまだ要約していない論文（要旨つき） |
+| unsummarized_147.json | 集めたがまだ要約していない論文（要旨つき） |
 
 ### summaries.json の1件の形
 ```
