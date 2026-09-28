@@ -26,6 +26,7 @@ struct StudiesView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "キーワード（例: ダッシュ、ジャンプ）")
+            .themedBackground()
             .navigationTitle("論文")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -147,6 +148,7 @@ struct StudiesView: View {
 }
 
 private struct FilterChip: View {
+    @Environment(\.appTheme) private var theme
     let title: String
     let isSelected: Bool
 
@@ -155,8 +157,8 @@ private struct FilterChip: View {
             .font(.subheadline)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .foregroundStyle(isSelected ? Color.white : Color.primary)
-            .background(isSelected ? AnyShapeStyle(Palette.main) : AnyShapeStyle(.fill.tertiary), in: Capsule())
+            .foregroundStyle(isSelected ? theme.onAccent : Color.primary)
+            .background(isSelected ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.fill.tertiary), in: Capsule())
     }
 }
 
@@ -237,6 +239,7 @@ struct ThemeView: View {
                 Text("公開中の論文 \(summary.studies.count)本")
             }
         }
+        .themedBackground()
         .navigationTitle(summary.theme)
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -5,8 +5,6 @@ import UniformTypeIdentifiers
 
 /// 仕様書（画面とグラフの仕様.md）の色。ライト／ダークで切り替わる。
 enum Palette {
-    static let main = Color(light: 0x1F4F93, dark: 0x79A6E6)
-    static let mainBackground = Color(light: 0xE6EEF8, dark: 0x1C3149)
     static let subText = Color(light: 0x5A6B7A, dark: 0xA3B1BE)
     static let line = Color(light: 0xDCE4EB, dark: 0x2B3B48)
     static let star = Color(light: 0xC07F10, dark: 0xE8B75C)
@@ -77,6 +75,7 @@ struct StarsView: View {
 
 /// 仕様どおりの横向き棒グラフ。棒の上にラベル、棒の右に数字。目盛りは 0 から。
 struct StudyChartView: View {
+    @Environment(\.appTheme) private var theme
     let chart: StudyChart
 
     private var domain: ClosedRange<Double> {
@@ -96,7 +95,7 @@ struct StudyChartView: View {
             }
             Chart(chart.bars) { bar in
                 BarMark(x: .value(chart.unit, bar.value), y: .value("グループ", bar.label), height: .fixed(26))
-                    .foregroundStyle(bar.isMain ? Palette.main : Palette.chartGray)
+                    .foregroundStyle(bar.isMain ? theme.accent : Palette.chartGray)
                     .annotation(position: .top, alignment: .leading, spacing: 4) {
                         Text(bar.label).font(.caption).foregroundStyle(.primary)
                     }
@@ -140,7 +139,7 @@ struct CalloutBox: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(title, systemImage: style == .info ? "figure.run" : "exclamationmark.triangle.fill")
                 .font(.headline)
-                .foregroundStyle(style == .info ? Palette.main : Palette.warningText)
+                .foregroundStyle(style == .info ? AnyShapeStyle(.tint) : AnyShapeStyle(Palette.warningText))
             ForEach(items, id: \.self) { item in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("・")
@@ -156,7 +155,7 @@ struct CalloutBox: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(style == .info ? Palette.mainBackground : Palette.warningBackground,
+        .background(style == .info ? AnyShapeStyle(.tint.opacity(0.12)) : AnyShapeStyle(Palette.warningBackground),
                     in: RoundedRectangle(cornerRadius: 14))
     }
 }
@@ -173,7 +172,7 @@ struct StudyRow: View {
                 StarsView(stars: study.stars, font: .caption2)
                 Spacer()
                 if store.isBookmarked(study) {
-                    Image(systemName: "bookmark.fill").font(.caption).foregroundStyle(Palette.main)
+                    Image(systemName: "bookmark.fill").font(.caption).foregroundStyle(.tint)
                 }
                 if store.showPending && !store.isPublished(study) {
                     Text("確認待ち").font(.caption2.bold()).foregroundStyle(.orange)
@@ -224,6 +223,7 @@ struct StarGuideView: View {
                     .foregroundStyle(Palette.subText)
             }
         }
+        .themedBackground()
         .navigationTitle("★と答えの見かた")
         .navigationBarTitleDisplayMode(.inline)
     }

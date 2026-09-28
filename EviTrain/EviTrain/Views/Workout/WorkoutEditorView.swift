@@ -17,6 +17,9 @@ struct WorkoutEditorView: View {
     @State private var showingPicker = false
     @State private var papersFor: Exercise?
     @State private var confirmingDiscard = false
+    @State private var savingMenu = false
+    @State private var menuName = ""
+    @State private var savedMenuName: String?
 
     var body: some View {
         List {
@@ -32,7 +35,7 @@ struct WorkoutEditorView: View {
 
             ForEach(workout.sortedEntries) { entry in
                 EntrySection(entry: entry, workoutDate: workout.startedAt) { set in
-                    if isActive, set.isDone { restTimer.start(seconds: defaultRestSeconds) }
+                    if isActive, set.isDone { restTimer.start(seconds: entry.restSeconds ?? defaultRestSeconds) }
                 } onShowPapers: {
                     papersFor = entry.exercise
                 } onDelete: {
@@ -56,13 +59,23 @@ struct WorkoutEditorView: View {
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle(isActive ? "トレーニング中" : "記録の編集")
+        .themedBackground()
+        .navigationTitle(isActive ? (workout.menuName ?? "トレーニング中") : "記録の編集")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if isActive {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完了", action: finish).bold()
                 }
+            }
+            ToolbarItem(placement: isActive ? .topBarLeading : .primaryAction) {
+                Button {
+                    menuName = workout.menuName ?? workout.startedAt.formatted(.dateTime.month().day()) + "のメニュー"
+                    savingMenu = true
+                } label: {
+                    Label("マイメニューに保存", systemImage: "star.square.on.square")
+                }
+                .disabled(workout.entries.isEmpty)
             }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -73,10 +86,26 @@ struct WorkoutEditorView: View {
             if isActive { RestTimerBar() }
         }
         .sheet(isPresented: $showingPicker) {
-            ExercisePickerView { add($0) }
+            ExercisePickerView { exercises in exercises.forEach(add) }
         }
         .sheet(item: $papersFor) { exercise in
             NavigationStack { RelatedStudiesView(exercise: exercise) }
+        }
+        .alert("マイメニューに保存", isPresented: $savingMenu) {
+            TextField("メニュー名", text: $menuName)
+            Button("保存") {
+                let name = menuName.trimmingCharacters(in: .whitespaces)
+                MenuBuilder.saveAsMenu(workout, name: name.isEmpty ? "マイメニュー" : name, in: context)
+                savedMenuName = name
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("種目・セット数・重さと回数を、次から1タップで使えるメニューとして保存します。")
+        }
+        .alert("保存しました", isPresented: Binding(get: { savedMenuName != nil }, set: { if !$0 { savedMenuName = nil } })) {
+            Button("OK") { savedMenuName = nil }
+        } message: {
+            Text("記録タブの「マイメニュー」から始められます。")
         }
         .confirmationDialog("記録を破棄しますか？", isPresented: $confirmingDiscard, titleVisibility: .visible) {
             Button("破棄する", role: .destructive) {
@@ -159,7 +188,8 @@ private struct EntrySection: View {
                     .font(.subheadline)
             }
         } header: {
-            HStack {
+            HStack(spacing: 10) {
+                ExerciseIcon(exercise: entry.exercise, size: 38)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.exercise?.name ?? "削除された種目")
                         .font(.headline)

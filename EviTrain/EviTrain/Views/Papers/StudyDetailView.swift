@@ -4,8 +4,10 @@ import SwiftUI
 /// 研究の中身・結果の全文・★の理由は「くわしく」にまとめる。
 struct StudyDetailView: View {
     @Environment(StudyStore.self) private var store
+    @Environment(\.appTheme) private var theme
     let study: Study
     @State private var showDetails = false
+    @State private var menuToShow: StudyMenu?
 
     var body: some View {
         ScrollView {
@@ -20,6 +22,29 @@ struct StudyDetailView: View {
 
                 CalloutBox(title: "練習にどう使う？", items: study.howToUse, style: .info)
 
+                if let menu = store.menu(for: study) {
+                    Button {
+                        menuToShow = menu
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "figure.strengthtraining.traditional")
+                                .font(.title2)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("このメニューで練習する").font(.headline)
+                                Text(menu.name + (menu.scheduleText.map { "（\($0)）" } ?? ""))
+                                    .font(.caption)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                        }
+                        .foregroundStyle(theme.onAccent)
+                        .padding()
+                        .background(theme.accent, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 CalloutBox(title: "気をつけたい点", items: study.limitations, style: .warning,
                            footer: "痛いときはやめて、医師・専門家に相談してください。")
 
@@ -30,14 +55,17 @@ struct StudyDetailView: View {
                     Text("くわしく（研究の中身・結果・★の理由）")
                         .font(.headline)
                 }
-                .tint(Palette.main)
 
                 source
             }
             .padding()
         }
+        .themedBackground()
         .navigationTitle(study.theme)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $menuToShow) { menu in
+            StudyMenuSheet(menu: menu, study: study)
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -161,6 +189,7 @@ struct RelatedStudiesView: View {
                                        description: Text("公開OKになった研究から順に表示されます"))
             }
         }
+        .themedBackground()
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

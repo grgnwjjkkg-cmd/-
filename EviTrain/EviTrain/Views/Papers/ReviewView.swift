@@ -71,6 +71,7 @@ struct ReviewView: View {
                 }
             }
         }
+        .themedBackground()
         .navigationTitle("要約の確認（開発用）")
         .navigationBarTitleDisplayMode(.inline)
     }

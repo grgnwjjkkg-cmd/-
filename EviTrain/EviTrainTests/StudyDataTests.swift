@@ -53,10 +53,8 @@ final class StudyDataTests: XCTestCase {
     func testOnlyPublishedStudiesAreVisible() throws {
         let store = StudyStore()
         store.showPending = false
-        let study = try XCTUnwrap(store.allStudies.first { store.approval(for: $0) == nil })
-        XCTAssertFalse(store.visibleStudies.contains(study), "確認待ちの論文が表示されている")
-
-        store.setApproval(Approval.published, for: study)
+        let study = try XCTUnwrap(store.allStudies.first)
+        XCTAssertTrue(store.isPublished(study), "同梱の approvals.json で公開OKになっているはず")
         XCTAssertTrue(store.visibleStudies.contains(study))
         XCTAssertNotNil(store.studyOfTheDay())
 
@@ -64,12 +62,58 @@ final class StudyDataTests: XCTestCase {
         XCTAssertFalse(store.visibleStudies.contains(study), "保留の論文が表示されている")
 
         store.setApproval(nil, for: study)
-        XCTAssertFalse(store.visibleStudies.contains(study))
+        XCTAssertTrue(store.visibleStudies.contains(study), "印を外すと同梱の状態（公開OK）に戻る")
+    }
+
+    func testMenusMatchQuotesAndStudies() throws {
+        let studies = try StudyJSON.decoder().decode([Study].self, from: data("summaries"))
+        let menus = try StudyJSON.decoder().decode([StudyMenu].self, from: data("menus"))
+        let ids = Set(studies.map(\.pmid))
+        XCTAssertFalse(menus.isEmpty)
+        XCTAssertEqual(Set(menus.map(\.pmid)).count, menus.count, "メニューの pmid が重複している")
+        for menu in menus {
+            XCTAssertTrue(ids.contains(menu.pmid), "メニュー \(menu.pmid) の論文が要約にない")
+            XCTAssertFalse(menu.items.isEmpty, "メニュー \(menu.pmid) に種目がない")
+            XCTAssertFalse(menu.quote.isEmpty)
+            for item in menu.items {
+                XCTAssertTrue(["weightReps", "reps", "time", "distanceTime"].contains(item.tracking), "\(menu.pmid) の tracking が不正")
+                XCTAssertNotNil(MuscleGroup(rawValue: item.group), "\(menu.pmid) の部位 \(item.group) が不正")
+            }
+        }
     }
 }
 
 /// 記録まわりの計算。
 final class StatsTests: XCTestCase {
+    @MainActor
+    func testMenuFromStudyAndStartWorkout() throws {
+        let container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
+                                           MenuTemplate.self, MenuItem.self,
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = container.mainContext
+        context.insert(Exercise(name: "スクワット", group: .legs, tracking: .weightReps))
+        let studyMenu = StudyMenu(
+            pmid: "1", status: "確認待ち", checked: "AI点検済み", name: "テスト", groupLabel: nil, weeks: 8, perWeek: 2,
+            items: [
+                .init(exercise: "スクワット", tracking: "weightReps", group: "脚", sets: 3, reps: 8, meters: nil,
+                      seconds: nil, restSeconds: 120, load: "最大の80%", note: ""),
+                .init(exercise: "20mダッシュ", tracking: "distanceTime", group: "スプリント", sets: 4, reps: nil, meters: 20,
+                      seconds: nil, restSeconds: nil, load: "全力", note: ""),
+            ],
+            quote: "q", caution: "c")
+        let template = MenuBuilder.addMenu(studyMenu, in: context)
+        XCTAssertEqual(template.sortedItems.map { $0.exercise?.name }, ["スクワット", "20mダッシュ"])
+        XCTAssertEqual(template.sortedItems.first?.exercise?.isCustom, false, "標準種目を使う")
+        XCTAssertEqual(template.sortedItems.last?.exercise?.isCustom, true, "無い種目は自作種目として作る")
+
+        let workout = MenuBuilder.startWorkout(from: template, in: context)
+        XCTAssertEqual(workout.sortedEntries.count, 2)
+        XCTAssertEqual(workout.sortedEntries.first?.sets.count, 3)
+        XCTAssertEqual(workout.sortedEntries.first?.restSeconds, 120)
+        XCTAssertEqual(workout.sortedEntries.last?.sortedSets.first?.meters, 20)
+        XCTAssertEqual(workout.menuName, "テスト")
+    }
+
     func testEstimated1RMAndSpeed() {
         let heavy = SetRecord(order: 0, weight: 100, reps: 1)
         XCTAssertEqual(heavy.estimated1RM, 100)

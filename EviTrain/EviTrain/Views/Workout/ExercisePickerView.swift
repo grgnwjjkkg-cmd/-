@@ -1,14 +1,17 @@
 import SwiftData
 import SwiftUI
 
-/// 種目の選択画面。部位ごとに並べ、検索と自作種目の追加ができる。
+/// 種目の選択画面。チェックを付けて何種目でもまとめて追加できる（選んだ順に追加）。
 struct ExercisePickerView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appTheme) private var theme
     @Query(sort: \Exercise.name) private var exercises: [Exercise]
     @State private var searchText = ""
     @State private var showingNew = false
+    /// 選んだ順番を保つため配列で持つ
+    @State private var selected: [Exercise] = []
 
-    let onSelect: (Exercise) -> Void
+    let onSelect: ([Exercise]) -> Void
 
     private var filtered: [Exercise] {
         searchText.isEmpty ? exercises : exercises.filter { $0.name.localizedStandardContains(searchText) }
@@ -20,27 +23,22 @@ struct ExercisePickerView: View {
                 ForEach(MuscleGroup.allCases) { group in
                     let items = filtered.filter { $0.group == group }
                     if !items.isEmpty {
-                        Section(group.rawValue) {
+                        Section {
                             ForEach(items) { exercise in
-                                Button {
-                                    onSelect(exercise)
-                                    dismiss()
-                                } label: {
-                                    HStack {
-                                        Text(exercise.name)
-                                        Spacer()
-                                        if exercise.isCustom {
-                                            Text("自作").font(.caption).foregroundStyle(.secondary)
-                                        }
-                                    }
-                                }
-                                .tint(.primary)
+                                row(exercise)
                             }
+                        } header: {
+                            HStack(spacing: 8) {
+                                MuscleMapView(group: group, height: 30)
+                                Text(group.rawValue).font(.subheadline.bold()).foregroundStyle(group.color)
+                            }
+                            .textCase(nil)
                         }
                     }
                 }
             }
             .searchable(text: $searchText, prompt: "種目を検索")
+            .themedBackground()
             .navigationTitle("種目を選ぶ")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -51,13 +49,59 @@ struct ExercisePickerView: View {
                     Button("自作種目", systemImage: "plus") { showingNew = true }
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                if !selected.isEmpty {
+                    Button {
+                        onSelect(selected)
+                        dismiss()
+                    } label: {
+                        Text("\(selected.count)種目を追加")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 14)
+                            .foregroundStyle(theme.onAccent)
+                            .background(theme.accent, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                }
+            }
             .sheet(isPresented: $showingNew) {
                 NewExerciseView(initialName: searchText) { exercise in
-                    onSelect(exercise)
-                    dismiss()
+                    selected.append(exercise)
                 }
             }
         }
+    }
+
+    private func row(_ exercise: Exercise) -> some View {
+        let index = selected.firstIndex { $0 === exercise }
+        return Button {
+            if let index { selected.remove(at: index) } else { selected.append(exercise) }
+        } label: {
+            HStack(spacing: 12) {
+                ExerciseIcon(exercise: exercise, size: 36)
+                Text(exercise.name)
+                if exercise.isCustom {
+                    Text("自作").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if let index {
+                    // 何番目に選んだかを表示（この順番で追加される）
+                    Text("\(index + 1)")
+                        .font(.caption.bold())
+                        .foregroundStyle(theme.onAccent)
+                        .frame(width: 24, height: 24)
+                        .background(theme.accent, in: Circle())
+                } else {
+                    Image(systemName: "circle").foregroundStyle(.tertiary).font(.title3)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .tint(.primary)
+        .sensoryFeedback(.selection, trigger: index)
     }
 }
 
@@ -94,6 +138,7 @@ struct NewExerciseView: View {
                     ForEach(TrackingType.allCases) { Text($0.rawValue).tag($0) }
                 }
             }
+            .themedBackground()
             .navigationTitle("自作種目")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

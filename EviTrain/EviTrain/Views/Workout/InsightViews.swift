@@ -24,6 +24,7 @@ enum Appearance: String, CaseIterable, Identifiable {
 
 /// ホームに出す「今日の研究」カード。答え・★・ひとことだけで分かるようにする。
 struct DailyStudyCard: View {
+    @Environment(\.appTheme) private var theme
     let study: Study
 
     var body: some View {
@@ -33,7 +34,7 @@ struct DailyStudyCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("今日の研究", systemImage: "lightbulb.max.fill")
                     .font(.caption.bold())
-                    .foregroundStyle(Palette.main)
+                    .foregroundStyle(.tint)
                 Text(study.headline)
                     .font(.headline)
                     .multilineTextAlignment(.leading)
@@ -52,8 +53,8 @@ struct DailyStudyCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
-            .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.main.opacity(0.35)))
+            .background(theme.card, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.tint.opacity(0.35)))
         }
         .buttonStyle(.plain)
     }
@@ -61,6 +62,7 @@ struct DailyStudyCard: View {
 
 /// 部位ごとの今週のセット数と目標（論文から設定した値）。
 struct WeeklySetsCard: View {
+    @Environment(\.appTheme) private var theme
     let counts: [Stats.GroupSets]
     let target: Int
 
@@ -69,7 +71,7 @@ struct WeeklySetsCard: View {
             HStack {
                 Label("今週のセット数", systemImage: "chart.bar.fill")
                     .font(.caption.bold())
-                    .foregroundStyle(Palette.main)
+                    .foregroundStyle(.tint)
                 Spacer()
                 Text("目標 各\(target)セット")
                     .font(.caption)
@@ -81,14 +83,15 @@ struct WeeklySetsCard: View {
                         .font(.subheadline)
                         .frame(width: 40, alignment: .leading)
                     ProgressView(value: Double(min(item.sets, target)), total: Double(max(target, 1)))
+                        .tint(item.group.color)
                     Text("\(item.sets)/\(target)")
                         .font(.caption.monospacedDigit())
-                        .foregroundStyle(item.sets >= target ? AnyShapeStyle(Palette.main) : AnyShapeStyle(.secondary))
+                        .foregroundStyle(item.sets >= target ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                         .frame(width: 44, alignment: .trailing)
                 }
             }
         }
         .padding()
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16))
+        .background(theme.card, in: RoundedRectangle(cornerRadius: 16))
     }
 }

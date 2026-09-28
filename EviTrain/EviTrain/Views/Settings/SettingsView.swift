@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
     @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
+    @AppStorage(AppTheme.storageKey) private var theme = AppTheme.track
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt)
     private var workouts: [Workout]
 
@@ -25,10 +26,28 @@ struct SettingsView: View {
                     Text("目標を決めると、記録タブに部位ごとの今週のセット数が表示されます。")
                 }
 
-                Section("表示") {
-                    Picker("テーマ", selection: $appearance) {
+                Section {
+                    ForEach(AppTheme.allCases) { item in
+                        Button {
+                            theme = item
+                        } label: {
+                            HStack(spacing: 12) {
+                                ThemeSwatch(theme: item)
+                                Text(item.rawValue).foregroundStyle(.primary)
+                                Spacer()
+                                if theme == item {
+                                    Image(systemName: "checkmark.circle.fill").foregroundStyle(item.accent)
+                                }
+                            }
+                        }
+                    }
+                    Picker("明るさ", selection: $appearance) {
                         ForEach(Appearance.allCases) { Text($0.rawValue).tag($0) }
                     }
+                } header: {
+                    Text("色")
+                } footer: {
+                    Text("メインの色と背景の色が変わります。明るさは「端末に合わせる」だと、iPhone のダークモードに合わせて切り替わります。")
                 }
 
 
@@ -46,6 +65,7 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .themedBackground()
             .navigationTitle("設定")
         }
     }
@@ -89,5 +109,20 @@ extension Bundle {
         let version = infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
         let build = infoDictionary?["CFBundleVersion"] as? String ?? "-"
         return "\(version) (\(build))"
+    }
+}
+
+/// 設定画面の色見本（背景の上にメインの色の丸）。
+private struct ThemeSwatch: View {
+    let theme: AppTheme
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(theme.background)
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(.separator))
+            Circle().fill(theme.accent).frame(width: 16, height: 16)
+        }
+        .frame(width: 44, height: 30)
     }
 }

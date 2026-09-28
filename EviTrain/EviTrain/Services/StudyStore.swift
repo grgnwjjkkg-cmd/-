@@ -29,6 +29,7 @@ final class StudyStore {
     let allStudies: [Study]
     let fieldOrder: [String]
     private let charts: [String: StudyChart]
+    private let menus: [String: StudyMenu]
     private let questions: [String: String]
     private let bundledApprovals: [String: Approval]
 
@@ -50,6 +51,8 @@ final class StudyStore {
         allStudies = load("summaries", as: [Study].self) ?? []
         charts = Dictionary((load("charts", as: [StudyChart].self) ?? []).map { ($0.pmid, $0) },
                             uniquingKeysWith: { first, _ in first })
+        menus = Dictionary((load("menus", as: [StudyMenu].self) ?? []).map { ($0.pmid, $0) },
+                           uniquingKeysWith: { first, _ in first })
         let catalog = load("themes", as: ThemeCatalog.self)
         fieldOrder = catalog?.fieldOrder ?? []
         questions = Dictionary((catalog?.themes ?? []).map { ($0.field + "/" + $0.theme, $0.question) },
@@ -110,6 +113,18 @@ final class StudyStore {
     // MARK: - 表示用
 
     func chart(for study: Study) -> StudyChart? { charts[study.pmid] }
+
+    /// 論文のメニュー。App Store 版では「公開OK」のメニューだけ、開発用ビルドでは確認待ちも出す。
+    func menu(for study: Study) -> StudyMenu? {
+        guard let menu = menus[study.pmid] else { return nil }
+        #if DEBUG
+        return menu
+        #else
+        return menu.isPublished ? menu : nil
+        #endif
+    }
+
+    func study(pmid: String) -> Study? { allStudies.first { $0.pmid == pmid } }
 
     func question(for study: Study) -> String {
         questions[study.field + "/" + study.theme] ?? study.theme

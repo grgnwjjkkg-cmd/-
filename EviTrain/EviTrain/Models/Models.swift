@@ -51,6 +51,9 @@ final class Exercise {
     @Relationship(deleteRule: .nullify, inverse: \WorkoutEntry.exercise)
     var entries: [WorkoutEntry] = []
 
+    @Relationship(deleteRule: .nullify, inverse: \MenuItem.exercise)
+    var menuItems: [MenuItem] = []
+
     init(name: String, group: MuscleGroup, tracking: TrackingType, tags: [String] = [], isCustom: Bool = false) {
         self.name = name
         self.groupRaw = group.rawValue
@@ -76,6 +79,8 @@ final class Workout {
     var startedAt: Date
     var finishedAt: Date?
     var note: String
+    /// マイメニューから始めたときのメニュー名
+    var menuName: String?
 
     @Relationship(deleteRule: .cascade, inverse: \WorkoutEntry.workout)
     var entries: [WorkoutEntry] = []
@@ -99,6 +104,8 @@ final class WorkoutEntry {
     var order: Int
     var exercise: Exercise?
     var workout: Workout?
+    /// この種目の休憩時間（メニューで決めたもの）。nil なら設定の休憩時間
+    var restSeconds: Double?
 
     @Relationship(deleteRule: .cascade, inverse: \SetRecord.entry)
     var sets: [SetRecord] = []

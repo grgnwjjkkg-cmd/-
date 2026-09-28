@@ -20,6 +20,7 @@ struct HistoryView: View {
                 case .exercises: ExerciseHistoryList()
                 }
             }
+            .themedBackground()
             .navigationTitle("履歴")
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -75,6 +76,17 @@ private struct WorkoutRow: View {
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
             }
+            if let menuName = workout.menuName {
+                Label(menuName, systemImage: "star.square.on.square")
+                    .font(.caption.bold())
+                    .foregroundStyle(.tint)
+            }
+            HStack(spacing: -6) {
+                ForEach(workout.sortedEntries.prefix(6)) { entry in
+                    ExerciseIcon(exercise: entry.exercise, size: 22)
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.background, lineWidth: 1.5))
+                }
+            }
             Text(workout.sortedEntries.compactMap(\.exercise?.name).joined(separator: "・"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -104,7 +116,8 @@ private struct ExerciseHistoryList: View {
                 NavigationLink {
                     ExerciseProgressView(exercise: exercise)
                 } label: {
-                    HStack {
+                    HStack(spacing: 12) {
+                        ExerciseIcon(exercise: exercise, size: 34)
                         Text(exercise.name)
                         Spacer()
                         if let best = Stats.personalBest(for: exercise) {
@@ -163,6 +176,7 @@ struct ExerciseProgressView: View {
                 }
             }
         }
+        .themedBackground()
         .navigationTitle(exercise.name)
     }
 

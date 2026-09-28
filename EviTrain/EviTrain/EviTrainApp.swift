@@ -9,7 +9,8 @@ struct EviTrainApp: App {
 
     init() {
         do {
-            container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self)
+            container = try ModelContainer(for: Exercise.self, Workout.self, WorkoutEntry.self, SetRecord.self,
+                                           MenuTemplate.self, MenuItem.self)
         } catch {
             fatalError("データベースを開けませんでした: \(error)")
         }
@@ -18,9 +19,11 @@ struct EviTrainApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(studyStore)
-                .environment(restTimer)
+            ThemeProvider {
+                RootView()
+            }
+            .environment(studyStore)
+            .environment(restTimer)
         }
         .modelContainer(container)
     }
