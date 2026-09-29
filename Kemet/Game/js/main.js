@@ -291,7 +291,8 @@ class Game {
     const lidMesh = new THREE.Mesh(new THREE.BoxGeometry(1.14, 0.22, 0.74), B.M.gold()); lidMesh.position.set(0, 0.11, 0.35);
     lid.add(lidMesh);
     if (opened) lid.rotation.x = -1.8;
-    group.add(body, lid); group.position.set(c.x, 0, c.z);
+    const cy = this.zone.colliders.groundAt(c.x, c.z, 999);   // 屋上や足場の上にも置ける
+    group.add(body, lid); group.position.set(c.x, Number.isFinite(cy) ? cy : 0, c.z);
     group.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.scene.add(group);
     this.zone.colliders.circle(c.x, c.z, 0.6);
