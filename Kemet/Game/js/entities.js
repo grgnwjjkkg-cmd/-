@@ -36,15 +36,36 @@ export class Player {
 
     const mag = Math.min(1, Math.hypot(input.x, input.y));
     const armed = !!stats.weaponName;
-    if (this.air) {
-      this.vy -= (this.plunging ? 40 : 19) * dt;
-      this.pos.y += this.vy * dt;
-      if (this.pos.y <= 0) {
-        this.pos.y = 0; this.air = false; this.vy = 0;
-        if (this.plunging) { this.plunging = false; world.plungeHit(this); this.state = 'move'; this.actor.play('Jump_Land', { fade: 0.05, loop: false, speed: 1.6, restart: true }); }
-        else if (this.state === 'move') this.actor.play('Jump_Land', { fade: 0.05, loop: false, speed: 1.8, restart: true });
-        this.landTime = 0.18;
-      } else if (this.state === 'move' && this.vy < 2) this.actor.play('Jump_Loop', { fade: 0.15 });
+    // 高さ：地面・足場・空・水の中
+    const C = world.colliders, P = this.pos;
+    const ground = C.groundAt(P.x, P.z, P.y);
+    this.swimming = !!world.zone?.swim; this.flight = !!world.zone?.flight;
+    if (this.swimming) {
+      // 水の中：ゆっくり沈み、はじくと上下に泳ぐ
+      const surf = world.zone.swim.surface - 1.3;
+      this.vy += (-0.5 - this.vy) * Math.min(1, dt * 1.6);
+      P.y = Math.min(surf, P.y + this.vy * dt);
+      if (P.y <= Math.max(0, ground)) { P.y = Math.max(0, ground); if (this.vy < 0) this.vy = 0; }
+      this.air = P.y > Math.max(0, ground) + 0.3;
+    } else {
+      if (!this.air && P.y > ground + 0.05) { this.air = true; this.vy = 0; }   // 段や島のふちから落ちた
+      if (!this.air && P.y < ground) P.y = ground;                               // 低い段は上る
+      if (this.air) {
+        const gs = world.zone?.gravity || 1;
+        this.vy -= (this.plunging ? 40 : 19) * gs * dt;
+        // ホルスの翼：空の都ではゆっくり滑空する
+        this.gliding = world.zone?.flight && !this.plunging && this.vy < -2.2;
+        if (this.gliding) this.vy = Math.max(this.vy, -2.4);
+        P.y += this.vy * dt;
+        if (P.y <= ground) {
+          P.y = ground; this.air = false; this.vy = 0; this.gliding = false;
+          if (this.plunging) { this.plunging = false; world.plungeHit(this); this.state = 'move'; this.actor.play('Jump_Land', { fade: 0.05, loop: false, speed: 1.6, restart: true }); }
+          else if (this.state === 'move') this.actor.play('Jump_Land', { fade: 0.05, loop: false, speed: 1.8, restart: true });
+          this.landTime = 0.18;
+          this.safe = P.clone();
+        } else if (this.state === 'move' && this.vy < 2) this.actor.play(this.gliding ? 'Swim_Fwd_Loop' : 'Jump_Loop', { fade: 0.2 });
+        if (P.y < -45) world.fellOff?.(this);
+      } else if (!this.safe || Math.random() < 0.05) this.safe = P.clone();
     }
     this.landTime = Math.max(0, (this.landTime || 0) - dt);
 
@@ -64,7 +85,8 @@ export class Player {
         this.pos.z += Math.cos(this.face) * s * dt;
       }
       // 速さに合わせて足の動きを選ぶ（すべって見えないように再生速度も合わせる）
-      if (this.air || this.landTime > 0) { /* 空中・着地の動きのまま */ }
+      if (this.swimming) { this.actor.play(s > 0.4 ? 'Swim_Fwd_Loop' : 'Swim_Idle_Loop', { fade: 0.3 }); this.actor.setSpeed(0.6 + s * 0.2); }
+      else if (this.air || this.landTime > 0) { /* 空中・着地の動きのまま */ }
       else if (s < 0.25) this.actor.play(armed ? 'Sword_Idle' : 'Idle_Loop', { fade: 0.25 });
       else if (s < 2.6) { this.actor.play('Walk_Loop', { fade: 0.2 }); this.actor.setSpeed(Math.max(0.5, s / 1.7)); }
       else { this.actor.play('Jog_Fwd_Loop', { fade: 0.2 }); this.actor.setSpeed(s / 4.6); }
@@ -107,7 +129,7 @@ export class Player {
   }
 
   attack(stats) {
-    if (this.air && !this.plunging) return this.plunge();
+    if (this.air && !this.plunging && !this.swimming && !(this.flight && this.pos.y > 2)) return this.plunge();
     if (this.state === 'attack') { this.comboQueued = true; return; }
     if (this.state !== 'move') return;
     this.combo = 0;
@@ -116,16 +138,25 @@ export class Player {
 
   /** ジャンプ（地上で動ける時だけ） */
   jump() {
-    if (this.air || !['move', 'attack'].includes(this.state)) return false;
+    if (!['move', 'attack'].includes(this.state)) return false;
+    if (this.swimming) { this.vy = 5.5; audio.sfx('swim'); return true; }
+    if (this.air) {
+      if (!this.flight || (this.flapT || 0) > performance.now()) return false;
+      this.flapT = performance.now() + 330; this.vy = 7; this.plunging = false;   // 翼で羽ばたく
+      audio.sfx('flap'); return true;
+    }
     this.state = 'move'; this.air = true; this.vy = 7.2;
     this.actor.play('Jump_Start', { fade: 0.05, loop: false, speed: 1.8, restart: true });
     audio.sfx('jump');
     return true;
   }
 
+  /** 水の中で下へもぐる */
+  dive() { if (this.swimming) { this.vy = -5.5; audio.sfx('swim'); } }
+
   /** 空中から真下へ斬りおろす */
   plunge() {
-    if (!this.air || this.plunging) return;
+    if (!this.air || this.plunging || this.swimming) return;
     this.plunging = true; this.vy = Math.min(this.vy, -4);
     this.actor.play('Sword_Attack', { fade: 0.05, loop: false, speed: 1.4, restart: true });
     audio.sfx('swing');
@@ -198,7 +229,7 @@ export class Player {
 
   hurt(amount, from, stats) {
     if (this.invuln > 0 || this.state === 'dead') return false;
-    if (this.pos.y > 0.7) return false;   // 跳んでかわした
+    if (this.pos.y - (from.y || 0) > 0.7) return false;   // 跳んでかわした（同じ高さの相手の攻撃は当たる）
     this.hp -= amount;
     this.invuln = 0.6;
     this.actor.flash('#ff3030');
@@ -302,6 +333,7 @@ export class Enemy {
   get alive() { return this.state !== 'dead'; }
 
   update(dt, player, world) {
+    { const gy = world.colliders.groundAt(this.pos.x, this.pos.z, this.pos.y + 0.2); if (Number.isFinite(gy)) this.pos.y = gy; }   // 足場の上に立つ
     this.actor.update(dt);
     if (this.state === 'dead') {
       this.timer -= dt;

@@ -158,3 +158,9 @@ table.rates td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.1)
 .guide svg { width: 64px; height: 64px; display: block; margin: 0 auto 4px; }
 .guide b { display: block; color: var(--gold2); font-size: 14px; }
 .guide small { font-size: 11px; opacity: .8; }
+
+#breathBox { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+#breathBox .pIcon { color: #9fe2ff; font-size: 13px; }
+.bar.breath { flex: 1; height: 5px; background: rgba(0,0,0,.4); }
+.bar.breath b { background: linear-gradient(90deg, #5fb8e8, #c8f0ff); }
+#breathBox.low .bar.breath b { background: #ff6a5a; animation: pulse 0.6s infinite; }

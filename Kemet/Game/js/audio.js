@@ -389,6 +389,10 @@ export class Audio {
       case 'sands': [0, 3, 7, 10, 14].forEach((s_, i) => this.pluck(t + i * 0.05, scaleNote(s_, 1), 0.22, out, 0.9)); noise(1.2, 'bandpass', 3000, 1.5, 0.05, 900); break;   // 時の砂：砂がさらさら流れる音と、きらめき
       case 'sun': tone(523, 0.8, 'sine', 0.12, 0, 1046); tone(784, 0.8, 'sine', 0.08, 0.05); noise(0.6, 'lowpass', 900, 0.7, 0.3, 200); break;
       case 'thunder': noise(0.08, 'highpass', 4000, 0.7, 0.4); noise(1.2, 'lowpass', 400, 0.7, 0.45, 60); tone(60, 0.9, 'sawtooth', 0.12, 0.02, 30); break;
+      case 'swim': noise(0.4, 'lowpass', 700, 0.8, 0.14, 200); break;
+      case 'flap': noise(0.18, 'lowpass', 500, 0.9, 0.25, 150); noise(0.12, 'bandpass', 1400, 1, 0.08); break;
+      case 'bubble': [0, 0.07, 0.15].forEach(d => tone(400 + Math.random() * 300, 0.06, 'sine', 0.05, d, 1200)); break;
+      case 'screech': tone(1800, 0.35, 'sawtooth', 0.04, 0, 2600); tone(2400, 0.25, 'triangle', 0.03, 0.05, 1600); break;
       case 'rumble': noise(t, 'lowpass', 90, 40, 0.7, 3.2, 0.12); tone(t, 38, 30, 3, 0.05); break;
       case 'sand': noise(t, 'bandpass', 2500, 1200, 1.2, 1.8 + Math.random(), 0.035); break;
       case 'bubble': { const n = 2 + Math.floor(Math.random() * 5); for (let i = 0; i < n; i++) { const f = 300 + Math.random() * 500; tone(t + i * 0.07, f, f * 2.6, 0.06, 0.04); } break; }

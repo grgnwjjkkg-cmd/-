@@ -33,6 +33,7 @@ C = L.meta['colliders']['boxes']
 def isle(x0, x1, z0, z1, gaps=(), seed=0):
     """浮かぶ島：石の床、ふちの低いへり（gaps=[(辺, 中心, 幅)] は橋の口）、下にぶら下がる岩"""
     L.box('isles', 'pave', ((x0 + x1) / 2, -0.3, (z0 + z1) / 2), (x1 - x0, 0.6, z1 - z0), collide=False)
+    L.platform(x0, x1, z0, z1, 0)   # 乗れる地面（外は空）
     for side in 'nsew':
         g = sorted([(c - w / 2, c + w / 2) for s, c, w in gaps if s == side])
         a, b = (x0, x1) if side in 'ns' else (z0, z1)
@@ -58,6 +59,7 @@ def isle(x0, x1, z0, z1, gaps=(), seed=0):
 
 def bridge(x0, x1, z0, z1):
     L.box('isles', 'white', ((x0 + x1) / 2, -0.25, (z0 + z1) / 2), (x1 - x0, 0.5, z1 - z0), collide=False)
+    L.platform(x0, x1, z0, z1, 0)
     along_x = (x1 - x0) > (z1 - z0)
     for s in (0, 1):
         if along_x:
@@ -152,5 +154,7 @@ M['enemies'] = [{'type': 'guardian', 'x': 0, 'z': -66}, {'type': 'mummy', 'x': 6
 M['chests'] = [{'x': 72, 'z': -14, 'ankh': 500}, {'x': -74, 'z': 10, 'ankh': 450}, {'x': 10, 'z': -80, 'ankh': 900}]
 M['waters'] = []
 M['beams'] = []
+M['groundless'] = True        # 島と橋の外は空（落ちる）。ホルスの翼で飛べる
+M['flight'] = True
 
 L.bake_and_export()

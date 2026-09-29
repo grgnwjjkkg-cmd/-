@@ -130,7 +130,9 @@ export async function loadBakedZone(name, game) {
 
   // 当たり判定
   const C = new Colliders();
-  for (const [x0, x1, z0, z1] of meta.colliders.boxes) C.boxes.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 });
+  for (const [x0, x1, z0, z1, top] of meta.colliders.boxes) C.boxes.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1, top });
+  for (const [x0, x1, z0, z1, top] of meta.platforms || []) C.platforms.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1, top });
+  C.groundless = !!meta.groundless;
   for (const [x, z, r] of meta.colliders.circles) C.circles.push({ x, z, r });
 
   // 町：あとから置く物と、開け閉めする門
@@ -260,6 +262,7 @@ export async function loadBakedZone(name, game) {
     },
     sky, skyRot,
     seal, relic: meta.relic, waters: meta.waters, exposureMul: meta.exposureMul || 1,
+    swim: meta.swim || null, flight: !!meta.flight, gravity: meta.gravity || 1, hazards: meta.hazards || [],
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
       exitFx.forEach((m, i) => { m.material.opacity = 0.12 + Math.sin(t * 2 + i) * 0.05; });

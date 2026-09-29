@@ -88,7 +88,14 @@ function scaleBoxUV(geo, w, h, d, s) {
 
 // ---------- 当たり判定 ----------
 export class Colliders {
-  constructor() { this.boxes = []; this.circles = []; }
+  constructor() { this.boxes = []; this.circles = []; this.platforms = []; this.groundless = false; }
+
+  /** その場所の地面の高さ（足もとより少し高い段までは上れる）。空の上なら -Infinity */
+  groundAt(x, z, y = 0) {
+    let g = this.groundless ? -Infinity : 0;
+    for (const p of this.platforms) if (x >= p.minX && x <= p.maxX && z >= p.minZ && z <= p.maxZ && p.top <= y + 0.55 && p.top > g) g = p.top;
+    return g;
+  }
   box(cx, cz, w, d, rotY = 0) {
     // 回転は90度単位のみ想定
     const swap = Math.abs(Math.sin(rotY)) > 0.5;
@@ -99,7 +106,11 @@ export class Colliders {
 
   /** 円（半径 r）を押し戻す */
   resolve(p, r) {
-    for (const b of this.boxes) {
+    const y = p.y || 0;
+    // 高すぎて上れない足場は壁になる
+    const walls = this.platforms.filter(q => q.top > y + 0.55);
+    for (const b of this.boxes.concat(walls)) {
+      if (b.top != null && y > b.top - 0.05 && !walls.includes(b)) continue;   // 跳んで上を越えた
       const nx = Math.max(b.minX, Math.min(p.x, b.maxX)), nz = Math.max(b.minZ, Math.min(p.z, b.maxZ));
       const dx = p.x - nx, dz = p.z - nz, dist2 = dx * dx + dz * dz;
       if (dist2 < r * r) {

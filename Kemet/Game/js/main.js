@@ -11,6 +11,7 @@ import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, pla
 import { audio } from './audio.js';
 import { Gestures } from './gestures.js';
 import { FX } from './fx.js';
+import { Creature, CREATURE_SPAWNS } from './creatures.js';
 // 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
 const HERO_MODEL = 'human_hero';
 // まだ開いていない門に近づいたときのひとこと
@@ -242,6 +243,10 @@ class Game {
     }
     this.makeFinds(name);
     this.setupPyramid(!initial);
+    for (const c of this.creatures || []) { this.scene.remove(c.root); c.root.traverse(o => { o.geometry?.dispose(); o.material?.dispose?.(); }); }
+    this.creatures = (CREATURE_SPAWNS[name] || []).map(([t, x, y, z]) => { const c = new Creature(t, x, y, z); this.scene.add(c.root); return c; });
+    this.breath = 1;
+    this.setWings(!!this.zone.flight);
     if (!initial && name !== 'town' && !this.save.flags.sawGuide) { this.save.flags.sawGuide = true; setTimeout(() => this.showGuide(), 900); }
     if (!initial && ['necropolis', 'giza'].includes(name) && !this.save.flags.tipLookUp) {
       this.save.flags.tipLookUp = true;
@@ -403,12 +408,10 @@ class Game {
     zone.addEventListener('pointerdown', e => {
       audio.unlock();
       stickId = e.pointerId; zone.setPointerCapture(e.pointerId);
+      // スティックは決まった位置に固定（どこを触っても、その中心からの向きで動く）
       const r = base.getBoundingClientRect();
-      // 触ったところにスティックを移動
-      const zr = zone.getBoundingClientRect();
-      base.style.left = (e.clientX - zr.left - r.width / 2) + 'px';
-      base.style.bottom = (zr.bottom - e.clientY - r.height / 2) + 'px';
-      cx = e.clientX; cy = e.clientY;
+      cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+      zone.dispatchEvent(new PointerEvent('pointermove', { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }));
     });
     zone.addEventListener('pointermove', e => {
       if (e.pointerId !== stickId) return;
@@ -421,7 +424,7 @@ class Game {
     const end = e => {
       if (e.pointerId !== stickId) return;
       stickId = null; knob.style.transform = ''; this.input.x = 0; this.input.y = 0;
-      base.style.left = ''; base.style.bottom = '';
+
     };
     zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end);
 
@@ -439,7 +442,7 @@ class Game {
       tap: () => { if (ok()) this.player.attack(this.stats); },
       holdStart: () => { if (ok()) this.player.chargeStart(); },
       holdEnd: sec => { if (this.player) this.player.chargeRelease(this.stats, sec < 0 || !ok()); },
-      flick: (dx, dy) => { if (ok()) this.tryDash((this.camYaw + Math.PI) - Math.atan2(dx, -dy)); },
+      flick: (dx, dy) => { if (!ok()) return; if (this.player.swimming && dy > Math.abs(dx) * 1.2) this.player.dive(); else this.tryDash((this.camYaw + Math.PI) - Math.atan2(dx, -dy)); },
       jump: () => { if (ok()) this.player.jump(); },
       glyph: name => { if (ok()) this.tryGlyph(name); },
     });
@@ -661,7 +664,84 @@ class Game {
       hitAny = true;
       if (!e.alive) this.onEnemyDown(e);
     }
+    const chest = player.pos.clone().setY(player.pos.y + 1);
+    for (const c of this.creatures || []) {
+      if (!c.alive) continue;
+      const v = c.pos.clone().sub(chest), d = v.length();
+      if (d > s.reach + 1.1) continue;
+      const ang = Math.atan2(v.x, v.z) - player.face, diff = Math.abs(Math.atan2(Math.sin(ang), Math.cos(ang)));
+      if (diff > 1.4 && d > 1.2) continue;
+      const crit = Math.random() < s.crit;
+      const dmg = Math.round(s.atk * (0.9 + Math.random() * 0.2) * (crit ? 1.8 : 1) * (this.sands > 0 ? 2 : 1));
+      c.hurt(dmg, player.pos); this.popNumber(c.pos.clone().setY(c.pos.y - 1.5), dmg, crit ? 'crit' : ''); this.gainPower(5); hitAny = true;
+      if (!c.alive) this.onEnemyDown(c);
+    }
     if (hitAny) { audio.sfx('hit'); this.hitStop = 0.06; this.shake = 0.12; }
+  }
+
+  creatureHit(c, player) {
+    const dmg = Math.round(c.def.atk * (0.9 + Math.random() * 0.2));
+    if (player.hurt(dmg, c.pos.clone().setY(player.pos.y), this.stats)) {
+      this.popNumber(player.pos, dmg, 'hurt'); this.shake = 0.25;
+      if (!player.alive) this.onPlayerDown();
+    }
+  }
+
+  /** 水の中：息が続くあいだ潜れる。水面の近くで息を吸う */
+  updateBreath(dt) {
+    const sw = this.zone?.swim, P = this.player;
+    $('breathBox').classList.toggle('hidden', !sw);
+    if (!sw) return;
+    const deep = P.pos.y < sw.surface - 2.2;
+    this.breath = Math.max(0, Math.min(1, this.breath + (deep ? -dt / 45 : dt / 2.5)));
+    $('breathBar').style.width = (this.breath * 100) + '%';
+    $('breathBox').classList.toggle('low', this.breath < 0.25);
+    if (this.breath <= 0 && P.alive) { P.hp -= 5 * dt; if (P.hp <= 0) { P.hp = 0; P.state = 'dead'; P.actor.play('Death01', { fade: 0.1, loop: false }); this.onPlayerDown(); } }
+    if (deep && Math.random() < dt * 1.5) this.fx.puff(P.pos.clone().setY(P.pos.y + 1.6), 1, 0.1, 2);
+  }
+
+  /** 空の都：落ちたら最後に立っていた所へ戻る */
+  async fellOff(P) {
+    if (this.falling2) return; this.falling2 = true;
+    $('fade').classList.add('on'); await wait(400);
+    const s = P.safe || new THREE.Vector3(this.zone.spawn.x, 0, this.zone.spawn.z);
+    P.pos.copy(s); P.vy = 0; P.air = false; P.hp = Math.max(1, P.hp - 10); this.camPos = null;
+    this.toast('空から落ちた……（HP −10）');
+    await wait(150); $('fade').classList.remove('on'); this.falling2 = false;
+  }
+
+  /** ホルスの翼：空の都でだけ背中に出る */
+  setWings(on) {
+    const P = this.player;
+    if (!this.wings) {
+      const m = new THREE.MeshStandardMaterial({ color: '#f2d690', emissive: '#6a4a10', emissiveIntensity: 0.6, metalness: 0.5, roughness: 0.35, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
+      this.wings = new THREE.Group();
+      for (const s of [-1, 1]) {
+        const w = new THREE.Group(); w.userData.s = s;
+        for (let i = 0; i < 5; i++) {   // 羽根を重ねて翼にする
+          const f = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 1.1 - i * 0.12), m);
+          f.position.set(s * (0.25 + i * 0.26), -0.1 - i * 0.05, 0); f.rotation.z = s * (1.2 - i * 0.12);
+          w.add(f);
+        }
+        this.wings.add(w);
+      }
+    }
+    let spine = null; P.model.traverse(o => { if (!spine && o.isBone && /spine_03/.test(o.name)) spine = o; });
+    if (on && spine && this.wings.parent !== spine) {
+      spine.add(this.wings);
+      const ws = new THREE.Vector3(); spine.getWorldScale(ws); this.wings.scale.setScalar(1 / (ws.x || 1));
+      this.wings.position.set(0, 0, 0);
+      this.wings.rotation.set(0, 0, 0);
+    }
+    this.wings.visible = on;
+  }
+
+  updateWings(dt) {
+    if (!this.wings?.visible) return;
+    const P = this.player, open = P.air ? 1 : 0.25;
+    this.wingOpen = (this.wingOpen ?? 0.25) + (open - (this.wingOpen ?? 0.25)) * Math.min(1, dt * 6);
+    const flap = P.vy > 3 ? Math.sin(this.time * 22) * 0.5 : 0;
+    for (const w of this.wings.children) w.rotation.y = w.userData.s * (-0.2 + (1 - this.wingOpen) * 1.3 + flap);
   }
 
   /** 砂走り：敵の攻撃が当たる直前ならば「時の砂」（まわりがゆっくりになる） */
@@ -673,7 +753,7 @@ class Game {
       const d = e.pos.distanceTo(P.pos);
       if (d > e.def.reach + 1.6) return false;
       return (e.state === 'windup' && e.timer < 0.32) || (e.state === 'attack' && !e.hitDone);
-    });
+    }) || (this.creatures || []).some(c => c.alive && c.pos.distanceTo(P.pos) < 7 && ((c.state === 'windup' && c.timer < 0.35) || (c.state === 'lunge' && !c.hitDone)));
     if (perfect && this.sands <= 0) {
       this.sands = 2.6;
       this.gainPower(25);
@@ -699,10 +779,10 @@ class Game {
       audio.sfx('sun'); this.shake = 0.35;
       this.areaHit(P.pos, 6.5, s.atk * 2.4, 'crit');
     } else {                   // セトの雷：いちばん近い敵に雷を落とす
-      const t = this.enemies.filter(e => e.alive && e.pos.distanceTo(P.pos) < 18).sort((a, b) => a.pos.distanceTo(P.pos) - b.pos.distanceTo(P.pos))[0];
+      const t = [...this.enemies, ...(this.creatures || [])].filter(e => e.alive && e.pos.distanceTo(P.pos) < 18).sort((a, b) => a.pos.distanceTo(P.pos) - b.pos.distanceTo(P.pos))[0];
       const at = t ? t.pos : P.pos.clone().add(new THREE.Vector3(Math.sin(P.face) * 5, 0, Math.cos(P.face) * 5));
       this.fx.bolt(at); audio.sfx('thunder'); this.shake = 0.3;
-      if (t) this.areaHit(t.pos, 2.2, s.atk * 3.2, 'crit', true);
+      if (t) this.areaHit(t.pos.clone().setY(t.pos.y - 1), 2.2, s.atk * 3.2, 'crit', true);
     }
   }
 
@@ -715,6 +795,14 @@ class Game {
       e.hurt(dmg, center, { stun: stun || this.stats.stun });
       this.popNumber(e.pos, dmg, kind); any = true;
       if (!e.alive) this.onEnemyDown(e);
+    }
+    for (const c of this.creatures || []) {
+      if (!c.alive) continue;
+      const dx = c.pos.x - center.x, dz = c.pos.z - center.z, dy = c.pos.y - ((center.y || 0) + 1);
+      if (Math.hypot(dx, dz) > radius + 0.8 || Math.abs(dy) > radius * 0.8 + 1) continue;
+      const dmg = Math.round(base * (0.9 + Math.random() * 0.2) * (this.sands > 0 ? 2 : 1));
+      c.hurt(dmg, center); this.popNumber(c.pos.clone().setY(c.pos.y - 1.5), dmg, kind); any = true;
+      if (!c.alive) this.onEnemyDown(c);
     }
     if (any) { audio.sfx('hit'); this.hitStop = 0.08; }
     return any;
@@ -1111,6 +1199,8 @@ class Game {
       this.canvas.style.filter = this.sands > 0 ? `sepia(${Math.min(0.55, this.sands)}) saturate(1.25) contrast(1.05)` : '';
       if (this.sands > 0 && Math.random() < 0.5) this.fx.puff(this.player.pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0, (Math.random() - 0.5) * 8)), 1, 0.2, 1.5);
       this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
+      this.creatures = (this.creatures || []).filter(c => { const keep = c.update(edt, this.player, this); if (!keep) this.scene.remove(c.root); return keep; });
+      this.updateBreath(dt); this.updateWings(dt);
       // 敵どうしが重ならないように
       for (let i = 0; i < this.enemies.length; i++) for (let j = i + 1; j < this.enemies.length; j++) {
         const a = this.enemies[i].pos, b = this.enemies[j].pos, d = a.distanceTo(b), min = 1.0;
@@ -1143,7 +1233,12 @@ class Game {
     this.updateEscape(dt); this.updateFalling(dt);
     this.fx.update(dt); this.gestures?.draw();
     // 跳んでいるときは影を地面に残す
-    const sh = this.player.root.children[1]; if (sh) { sh.position.y = 0.03 - this.player.pos.y; sh.scale.setScalar(Math.max(0.5, 1 - this.player.pos.y * 0.15)); }
+    const sh = this.player.root.children[1];
+    if (sh) {
+      const P = this.player.pos, gy = this.colliders.groundAt(P.x, P.z, P.y), h = P.y - gy;
+      sh.visible = Number.isFinite(gy) && h < 12;
+      if (sh.visible) { sh.position.y = 0.03 - h; sh.scale.setScalar(Math.max(0.4, 1 - h * 0.12)); }
+    }
     this.telegraphs = this.telegraphs.filter(t => {
       t.left -= dt;
       const k = 1 - Math.max(0, t.left) / t.time;
@@ -1171,7 +1266,8 @@ class Game {
     const inside = this.inside > 0.5;
     const want = inside ? 5.2 : 6.8;
     this.camDist += (want - this.camDist) * Math.min(1, dt * 3);
-    const target = new THREE.Vector3(p.x, 1.45, p.z);
+    this.camY = (this.camY ?? p.y) + (p.y - (this.camY ?? p.y)) * Math.min(1, dt * 6);
+    const target = new THREE.Vector3(p.x, this.camY + 1.45, p.z);
     let dist = this.camDist;
     // 壁にさえぎられたら近づく
     const dirX = Math.sin(this.camYaw) * Math.cos(this.camPitch), dirZ = Math.cos(this.camYaw) * Math.cos(this.camPitch), dirY = Math.sin(this.camPitch);

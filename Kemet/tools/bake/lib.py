@@ -37,7 +37,7 @@ class Level:
         self.mats = {}
         self.parts = {}      # (group, mat) -> bmesh
         self.lm_size = {}    # group -> px
-        self.meta = {'colliders': {'boxes': [], 'circles': []}, 'torches': [], 'waters': [], 'beams': [],
+        self.meta = {'colliders': {'boxes': [], 'circles': []}, 'platforms': [], 'torches': [], 'waters': [], 'beams': [],
                      'regions': [], 'spawns': {}, 'exits': [], 'enemies': [], 'chests': [], 'groups': {}, 'sky': None}
 
     # ---------- 材質 ----------
@@ -99,7 +99,8 @@ class Level:
         if collide:
             swap = abs(math.sin(rot)) > 0.5
             hw, hd = (s[2] if swap else s[0]) / 2, (s[0] if swap else s[2]) / 2
-            self.meta['colliders']['boxes'].append([round(c[0] - hw, 3), round(c[0] + hw, 3), round(c[2] - hd, 3), round(c[2] + hd, 3)])
+            # 5つ目＝上の高さ（これより高く跳べば越えられる）
+            self.meta['colliders']['boxes'].append([round(c[0] - hw, 3), round(c[0] + hw, 3), round(c[2] - hd, 3), round(c[2] + hd, 3), round(c[1] + s[1] / 2, 3)])
 
     def tbox(self, group, mat, c, s, taper=0.8, collide=True):
         """上がすぼまる箱（神殿の塔門など）"""
@@ -201,6 +202,10 @@ class Level:
             c = bm.verts.new(b.co + Vector((0, depth, 0))); d = bm.verts.new(a.co + Vector((0, depth, 0)))
             f = bm.faces.new((a, b, c, d)); f.smooth = True; f[lay] = 1
             for lp in f.loops: lp[uvl].uv = (lp.vert.co.x / 7.0, lp.vert.co.y / 7.0)
+
+    def platform(self, x0, x1, z0, z1, top):
+        """上に乗れる足場（x0..x1, z0..z1 の範囲で、高さ top）。形は別に作る"""
+        self.meta['platforms'].append([round(x0, 3), round(x1, 3), round(z0, 3), round(z1, 3), round(top, 3)])
 
     def mesh_file(self, group, mat, path, loc, rot=0.0, scale=1.0, collide=None, tilt=0.0, roll=0.0):
         """別に作った形（OBJ）を置く。loc=ゲーム座標（足もと）、rot=y軸まわり、tilt=前後に倒す、roll=横に倒す"""
