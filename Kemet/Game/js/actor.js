@@ -248,6 +248,7 @@ export class Actor {
   update(dt) {
     this.mixer.update(dt);
     this.model.userData.vrm?.update(dt);   // 髪・スカートのゆれ、まばたき
+    this.model.userData.vrm?.costumeUpdate?.(dt);   // ツインテールのゆれ
     if (this.flashTime > 0) {
       this.flashTime -= dt;
       const k = Math.max(0, this.flashTime) > 0 ? 1 : 0;

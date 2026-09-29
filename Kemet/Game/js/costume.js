@@ -1,6 +1,7 @@
 // ネフィの衣装：体の形から作るケープ（体と一緒に動く）、金の胸飾り（ウセク）、ホルスの眼の額飾り、腰のルーペと手帳
 // 形はすべてコードで作るので、ファイルは増えない
 import * as THREE from 'three';
+import { makeHair } from './hair.js';
 
 const GOLD = new THREE.Color('#e9b949'), LAPIS = new THREE.Color('#1d3f9e'), LAPIS2 = new THREE.Color('#2c5cc8'), TURQ = new THREE.Color('#2bb3a6');
 
@@ -76,6 +77,88 @@ function retint(mat, filter) {
   }
 }
 
+/** ひだのあるスカート：腰から太ももの半ばまで。上は腰の骨、下は近い方の太ももの骨で動く */
+function pleatedSkirt(body, skel, bone, bp, waistY) {
+  const hipsB = skel.bones.indexOf(bone('hips')), lT = skel.bones.indexOf(bone('leftUpperLeg')), rT = skel.bones.indexOf(bone('rightUpperLeg'));
+  const lx = bp('leftUpperLeg').x, knee = bp('leftLowerLeg').y;
+  // 腰まわりの大きさ（体の点から）
+  const P = body.geometry.attributes.position; let rx = 0, rz = 0, cz = 0, n = 0;
+  for (let i = 0; i < P.count; i++) { const y = P.getY(i); if (Math.abs(y - waistY) < 0.02) { rx = Math.max(rx, Math.abs(P.getX(i))); cz += P.getZ(i); n++; } }
+  cz /= Math.max(1, n);
+  for (let i = 0; i < P.count; i++) { const y = P.getY(i); if (Math.abs(y - waistY) < 0.02) rz = Math.max(rz, Math.abs(P.getZ(i) - cz)); }
+  const bottom = knee + (waistY - knee) * 0.38, RINGS = 9, SEG = 48, pos = [], si = [], sw = [], col = [], idx = [];
+  const cc = new THREE.Color();
+  for (let r = 0; r <= RINGS; r++) {
+    const t = r / RINGS, y = waistY - (waistY - bottom) * t;
+    for (let k = 0; k <= SEG; k++) {
+      const a = k / SEG * Math.PI * 2, pleat = 1 + 0.06 * t * Math.cos(a * 12);
+      const fl = 1.12 + t * 0.75;
+      const x = Math.cos(a) * (rx + 0.012) * fl * pleat, z = cz + Math.sin(a) * (rz + 0.012) * fl * pleat;
+      pos.push(x, y, z);
+      const side = Math.sign(x) === Math.sign(lx) ? lT : rT, wl = Math.min(0.75, t * 0.9) * Math.min(1, Math.abs(x) / (rx * 0.5));
+      si.push(hipsB, side, 0, 0); sw.push(1 - wl, wl, 0, 0);
+      cc.copy(LAPIS); if (t > 0.86) cc.copy(GOLD); else if (t > 0.76) cc.set('#f5f1e6'); else if (Math.cos(a * 12) > 0.85) cc.copy(LAPIS2);
+      col.push(cc.r, cc.g, cc.b);
+    }
+  }
+  for (let r = 0; r < RINGS; r++) for (let k = 0; k < SEG; k++) { const a = r * (SEG + 1) + k, b = a + 1, c = a + SEG + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.SkinnedMesh(g, new THREE.MeshToonMaterial({ vertexColors: true, side: THREE.DoubleSide, gradientMap: toonRamp() }));
+  m.bind(skel, body.bindMatrix); m.frustumCulled = false; m.castShadow = true; body.parent.add(m);
+  return { rx, rz, cz, y: waistY };
+}
+
+/** 探偵のケープ：首から胸の下まで、体のまわりをなめらかに包む輪を重ねる。わきは二の腕の骨で動く */
+function capelet(body, skel, bone, neck, upper, lsh) {
+  const P = body.geometry.attributes.position, BINS = 36;
+  const top = neck.y - 0.005, bottom = upper.y - 0.14, RINGS = 8;
+  const chestB = skel.bones.indexOf(bone('upperChest') || bone('chest'));
+  const armL = skel.bones.indexOf(bone('leftUpperArm')), armR = skel.bones.indexOf(bone('rightUpperArm'));
+  const cx = 0, cz = neck.z + 0.01, maxR = Math.abs(lsh.x) + 0.05;
+  // 高さごと・向きごとに、体のいちばん外側（腕はのぞく）
+  const rad = [];
+  for (let r = 0; r <= RINGS; r++) {
+    const y = top - (top - bottom) * (r / RINGS), row = new Array(BINS).fill(0.06);
+    for (let i = 0; i < P.count; i++) {
+      const vy = P.getY(i); if (vy > y + 0.045 || vy < y - 0.045) continue;
+      const x = P.getX(i) - cx, z = P.getZ(i) - cz, d = Math.hypot(x, z); if (d > maxR) continue;
+      const b = Math.floor(((Math.atan2(z, x) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2) * BINS);
+      row[b] = Math.max(row[b], d);
+    }
+    rad.push(row);
+  }
+  // 下へいくほど広く（上の輪より内側に入らない）、となりとなめらかに
+  for (let r = 0; r <= RINGS; r++) {
+    const row = rad[r];
+    for (let k = 0; k < 2; k++) for (let b = 0; b < BINS; b++) row[b] = Math.max(row[b], (row[(b + BINS - 1) % BINS] + row[(b + 1) % BINS]) / 2 * 0.98);
+    if (r) for (let b = 0; b < BINS; b++) row[b] = Math.max(row[b], rad[r - 1][b] + 0.004);
+  }
+  const SEG = 72, pos = [], si = [], sw = [], col = [], idx = [], c = new THREE.Color();
+  for (let r = 0; r <= RINGS; r++) {
+    const t = r / RINGS, y = top - (top - bottom) * t;
+    for (let k = 0; k <= SEG; k++) {
+      const a = k / SEG * Math.PI * 2, f = (a / (Math.PI * 2)) * BINS, b0 = Math.floor(f) % BINS, b1 = (b0 + 1) % BINS, w = f - Math.floor(f);
+      const d = (rad[r][b0] * (1 - w) + rad[r][b1] * w) + 0.032 + t * 0.015;
+      const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+      pos.push(x, y - t * t * 0.01, z);
+      const side = Math.abs(Math.cos(a)) * t, arm = x > 0 === (lsh.x > 0) ? armL : armR;
+      si.push(chestB, arm, 0, 0); sw.push(1 - side * 0.5, side * 0.5, 0, 0);
+      c.copy(LAPIS); if (t > 0.88) c.copy(GOLD); else if (t > 0.8) c.copy(LAPIS2); if (t < 0.08) c.copy(GOLD);
+      col.push(c.r, c.g, c.b);
+    }
+  }
+  for (let r = 0; r < RINGS; r++) for (let k = 0; k < SEG; k++) { const a = r * (SEG + 1) + k, b = a + 1, cc = a + SEG + 1, d = cc + 1; idx.push(a, cc, b, b, cc, d); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.SkinnedMesh(g, new THREE.MeshToonMaterial({ vertexColors: true, side: THREE.DoubleSide, gradientMap: toonRamp() }));
+  m.bind(skel, body.bindMatrix); m.frustumCulled = false; m.castShadow = true; body.parent.add(m);
+}
+
 export function dressNefi(vrm) {
   const H = vrm.humanoid, bone = n => H.getRawBoneNode(n);
   let body = null;
@@ -84,39 +167,68 @@ export function dressNefi(vrm) {
   const skel = body.skeleton, bp = n => bindPos(skel, bone(n));
   const neck = bp('neck'), upper = bp('upperChest') || bp('chest'), lsh = bp('leftUpperArm'), lel = bp('leftLowerArm'), hips = bp('hips'), head = bp('head');
   const front = -1;   // VRM0 の体は -z が前
-  // 髪：ほんのりラピスがかった黒
-  vrm.scene.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (/HAIR/.test(m.name)) retint(m, 'grayscale(1) brightness(0.55) sepia(1) hue-rotate(185deg) saturate(2.2) brightness(0.75)'); });
+  // 見本の髪と服はかくし、髪・服はオリジナルを作る（体と顔の土台だけを使う）
+  let face = null;
+  vrm.scene.traverse(o => {
+    if (!o.isMesh) return;
+    for (const m of [].concat(o.material)) {
+      if (/HAIR|Tops/.test(m.name)) m.visible = false;
+      if (/EyeIris/.test(m.name)) retint(m, 'sepia(1) saturate(3.2) hue-rotate(-12deg) brightness(1.15)');   // 金の瞳
+    }
+    if (!face && [].concat(o.material).some(m => /Face_00_SKIN/.test(m.name))) face = o;
+  });
+  {
+    // 頭の大きさ：顔と後頭部の肌の点から測る
+    const bb = new THREE.Box3(), v = new THREE.Vector3();
+    vrm.scene.traverse(o => {
+      if (!o.isSkinnedMesh) return;
+      const mats = [].concat(o.material), P = o.geometry.attributes.position, idx = o.geometry.index.array;
+      for (const gr of o.geometry.groups) {
+        const m = mats[gr.materialIndex]; if (!/SKIN/.test(m?.name || '')) continue;
+        for (let t = gr.start; t < gr.start + gr.count; t++) { v.fromBufferAttribute(P, idx[t]); if (v.y > neck.y + 0.06 && Math.abs(v.x) < 0.14) bb.expandByPoint(v); }
+      }
+    });
+    const C = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3());
+    const R = sz.x / 2, Rz = sz.z / 2;
+    C.y = bb.max.y - R * 1.02;
+    const hair = makeHair(new THREE.Vector3(), R, toonRamp(), Rz / R);
+    attach(skel, bone('head'), hair.group, C);
+    vrm.costumeUpdate = hair.update;
+    // 額飾り：前髪の上を通る金の輪と、ホルスの眼（ラピスの石）
+    const band = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 6, 48), gold());
+    band.scale.set(R * 1.13, R * 1.13, R * 1.13 * Rz / R); band.rotation.x = Math.PI / 2 - 0.3;
+    attach(skel, bone('head'), band, C.clone().add(new THREE.Vector3(0, R * 0.42, 0)));
+    const eye = new THREE.Group();
+    eye.add(new THREE.Mesh(new THREE.SphereGeometry(0.012, 16, 10), lapis()));
+    const lid = new THREE.Mesh(new THREE.TorusGeometry(0.019, 0.0035, 6, 24), gold()); lid.scale.set(1.5, 0.8, 1); eye.add(lid);
+    const tear = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.02, 0.004), gold()); tear.position.set(0.004, -0.018, 0); eye.add(tear);
+    attach(skel, bone('head'), eye, C.clone().add(new THREE.Vector3(0, R * 0.62, -Rz * 1.12)));
+  }
+
+  // 上着：白い巫女服（体にそう）。えりと裾に金、胸にラピスの線
+  const WHITE = new THREE.Color('#f5f1e6');
+  const waistY = hips.y + 0.07;
+  garment(body, {
+    name: 'blouse',
+    pick: p => p.y > waistY - 0.03 && p.y < neck.y + 0.035 && Math.abs(p.x) < Math.abs(lsh.x) + 0.02,
+    off: () => 0.011,
+    color: (p, c) => { c.copy(WHITE); },
+  });
+  // 袖：肩からひじは細く、ひじから先はふわっと広がる（袖口はラピスと金）
+  garment(body, {
+    name: 'sleeves',
+    pick: p => Math.abs(p.x) >= Math.abs(lsh.x) + 0.0 && Math.abs(p.x) < Math.abs(bp('leftHand').x) - 0.03,
+    off: () => 0.012,
+    shape: (p, o) => { const k = THREE.MathUtils.clamp((Math.abs(p.x) - Math.abs(lel.x)) / (Math.abs(bp('leftHand').x) - Math.abs(lel.x)), 0, 1); o.y += (o.y - lel.y) * k * 1.4 - k * 0.02; o.z += (o.z - lel.z) * k * 1.4; },
+    color: (p, c) => { c.copy(WHITE); },
+  });
+  const SK = pleatedSkirt(body, skel, bone, bp, waistY);
 
   // ケープ（探偵のケープ風）：肩から胸・二の腕までをおおい、すそは広がる。ふちは金、内側に一本の金線
-  const capeBottom = upper.y - 0.13, armOut = Math.abs(lel.x) - 0.02;
-  garment(body, {
-    name: 'cape',
-    pick: p => p.y > capeBottom && p.y < neck.y + 0.01 && Math.abs(p.x) < armOut,
-    off: p => 0.075 + Math.max(0, (upper.y - p.y)) * 0.25,
-    shape: (p, o) => { const k = Math.max(0, (neck.y - p.y) / (neck.y - capeBottom)); o.x += Math.sign(p.x) * k * k * 0.05; o.y -= k * k * 0.02; },
-    color: (p, c) => { c.copy(LAPIS); if (p.y < capeBottom + 0.018) c.copy(GOLD); else if (p.y < capeBottom + 0.034) c.copy(LAPIS2); if (p.y > neck.y - 0.012) c.copy(GOLD); },
-  });
-  // 胸飾り（ウセク）：金・ラピス・トルコ石の半円の輪を重ねる（ケープの上）
-  const us = new THREE.Group();
-  const bands = [GOLD, LAPIS, GOLD, TURQ, GOLD];
-  bands.forEach((c, i) => {
-    const r = 0.07 + i * 0.013;
-    const t = new THREE.Mesh(new THREE.TorusGeometry(r, 0.0075, 6, 36, Math.PI), new THREE.MeshStandardMaterial({ color: c, metalness: c === GOLD ? 0.85 : 0.3, roughness: 0.3, emissive: c.clone().multiplyScalar(0.12) }));
-    t.rotation.set(-Math.PI / 2 - 0.55, 0, 0); t.scale.set(1.15, 1, 1); us.add(t);
-  });
-  attach(skel, bone('upperChest') || bone('chest'), us, new THREE.Vector3(0, neck.y - 0.035, neck.z + front * 0.045));
-  // 額飾り：金の輪と、ホルスの眼（ラピスの石）
-  const band = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.006, 6, 48), gold());
-  band.rotation.x = Math.PI / 2 - 0.22;
-  attach(skel, bone('head'), band, new THREE.Vector3(0, head.y + 0.105, head.z + front * 0.005));
-  const eye = new THREE.Group();
-  const gem = new THREE.Mesh(new THREE.SphereGeometry(0.013, 16, 10), lapis()); eye.add(gem);
-  const lid = new THREE.Mesh(new THREE.TorusGeometry(0.02, 0.0035, 6, 24), gold()); lid.scale.set(1.5, 0.8, 1); eye.add(lid);
-  const tear = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.022, 0.004), gold()); tear.position.set(0.004, -0.02, 0); eye.add(tear);
-  attach(skel, bone('head'), eye, new THREE.Vector3(0, head.y + 0.125, head.z + front * 0.1));
+  capelet(body, skel, bone, neck, upper, lsh);
   // 腰：金の帯、ホルスの眼のルーペ（虫めがね）、古い手帳
   const belt = new THREE.Mesh(new THREE.TorusGeometry(0.125, 0.012, 6, 40), gold()); belt.rotation.x = Math.PI / 2; belt.scale.set(1, 0.82, 1);
-  attach(skel, bone('hips'), belt, new THREE.Vector3(0, hips.y + 0.08, hips.z));
+  belt.scale.set(SK.rx * 1.2 / 0.125, SK.rz * 1.2 / 0.125, 1); attach(skel, bone('hips'), belt, new THREE.Vector3(0, SK.y + 0.004, SK.cz));
   const loupe = new THREE.Group();
   const rim = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.006, 8, 30), gold()); loupe.add(rim);
   const glass = new THREE.Mesh(new THREE.CircleGeometry(0.033, 24), new THREE.MeshStandardMaterial({ color: '#bfe8ff', metalness: 0.2, roughness: 0.05, transparent: true, opacity: 0.45, side: THREE.DoubleSide })); loupe.add(glass);
