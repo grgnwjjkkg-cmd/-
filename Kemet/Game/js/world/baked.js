@@ -48,7 +48,7 @@ const LOOKS = {
   heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.48, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, open: true, bg: '#8fbde6' },
   // 火山：煙で赤くくすむ／氷山：白く冷たい／夜の東京：暗い青にネオン／宇宙：まっ黒な空に星
   ember: { sun: 1.8, hemi: 0.9, lantern: 2.5, torch: 0, exposure: 0.85, fog: ['#4a2216', 50, 650], env: 0.4, sky: false, open: true, bg: '#2a120c' },
-  frost: { sun: 2.0, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.4, fog: ['#dfe8f2', 90, 1300], env: 0.9, sky: true },
+  frost: { sun: 2.0, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.4, fog: ['#c8d8e8', 60, 700], env: 0.9, sky: false, open: true, bg: '#b4cbe0' },
   night: { sun: 0.35, hemi: 0.35, lantern: 3.5, torch: 0, exposure: 1.1, fog: ['#0b1128', 60, 650], env: 0.2, sky: false, open: true, bg: '#060a1a' },
   space: { sun: 2.4, hemi: 0.3, lantern: 1.5, torch: 0, exposure: 0.55, fog: ['#02030a', 400, 4000], env: 0.25, sky: false, open: true, bg: '#010208' },
   underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0d4556' },
