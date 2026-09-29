@@ -662,6 +662,7 @@ class Game {
   // ---------- 戦闘 ----------
   playerHit(player) {
     const s = this.stats;
+    this.puzzles?.onHit(player);
     let hitAny = false;
     for (const e of this.enemies) {
       if (!e.alive) continue;
@@ -824,6 +825,7 @@ class Game {
   }
 
   chargedHit(P, k) {   // 溜め斬り：まわりをぐるりと斬る
+    this.puzzles?.onHit(P);
     this.fx.ring(P.pos, '#ffcf5a', this.stats.reach + 1.5 + k * 1.5, 0.35);
     if (this.areaHit(P.pos, this.stats.reach + 1 + k * 1.5, this.stats.atk * (1.6 + k * 1.4), k >= 1 ? 'crit' : '')) { this.shake = 0.25; this.gainPower(8); }
   }
@@ -1371,7 +1373,7 @@ class Game {
     this.hemi.intensity = lerp(this.hemi.intensity, look.hemi);
     this.lantern.intensity = lerp(this.lantern.intensity, look.lantern);
     this.lantern.position.set(p.x, 2.6, p.z);
-    this.renderer.toneMappingExposure = lerp(this.renderer.toneMappingExposure, look.exposure * (z.exposureMul || 1));
+    this.renderer.toneMappingExposure = lerp(this.renderer.toneMappingExposure, look.exposure * (z.exposureMul || 1) * (z.region(p).expo || 1));
     if (z.sky) {
       this.scene.environment = z.sky;
       this.scene.environmentIntensity = lerp(this.scene.environmentIntensity ?? 1, look.env);

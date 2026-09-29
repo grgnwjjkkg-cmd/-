@@ -357,6 +357,7 @@ export class Enemy {
 
     switch (this.state) {
       case 'idle':
+        if (this.dormant) break;   // 封印で眠っている
         if (player.alive && d < def.aggro && !world.colliders.blocked(this.pos, player.pos)) {
           this.state = 'chase';
           if (def.boss) world.bossAwake(this);

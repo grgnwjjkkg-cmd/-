@@ -17,6 +17,7 @@ export const WEAPONS = {
   mace:          { name: '大鎚', rarity: 4, model: 'Hammer_Small', tint: '#c9b7a0', atk: 21, speed: 0.8, reach: 2.0, stun: true, desc: '当てた敵をよろめかせる' },
   river_lance:   { name: 'ナイルの槍', rarity: 4, model: 'Spear', tint: '#6fc7d9', atk: 16, speed: 1.0, reach: 3.0, desc: '水の加護を受けた長槍' },
   ra_blade:      { name: '太陽剣ラー', rarity: 5, model: 'Sword_Golden', tint: '#ffd766', atk: 28, speed: 1.05, reach: 2.2, crit: 0.15, glow: '#ffb640', desc: '太陽の光を宿す黄金の剣' },
+  seal_blade:    { name: '封印破りの剣', rarity: 4, model: 'Sword_Golden', tint: '#ffb08a', atk: 18, speed: 1.0, reach: 2.2, glow: '#ff5a2a', noGacha: true, desc: 'セトの封印を砕く、赤く光る剣' },
   anubis_scythe: { name: '冥府の大鎌', rarity: 5, model: 'Scythe', tint: '#9aa0c8', atk: 26, speed: 0.9, reach: 3.0, drain: 0.1, glow: '#8a7bff', desc: '与えたダメージの10%を回復' },
 };
 
@@ -27,7 +28,7 @@ export const AMULETS = {
   eye_charm:    { name: 'ウアジェトの目', rarity: 4, crit: 0.12, desc: '会心率+12%' },
   ankh_charm:   { name: 'アンクの首飾り', rarity: 4, hp: 40, desc: '最大HP+40' },
   sun_disk:     { name: '太陽円盤', rarity: 5, atkMul: 0.18, desc: '攻撃力+18%' },
-  horus_eye:    { name: 'ホルスの眼', rarity: 5, hp: 30, crit: 0.1, desc: '大ピラミッドの秘宝。最大HP+30・会心率+10%' },
+  horus_eye:    { name: 'ホルスの眼', rarity: 5, noGacha: true, hp: 30, crit: 0.1, desc: '大ピラミッドの秘宝。最大HP+30・会心率+10%' },
 };
 
 export function itemDef(id) {
@@ -46,8 +47,8 @@ export const GACHA = {
 };
 
 const pool = rarity => [
-  ...Object.keys(WEAPONS).filter(k => WEAPONS[k].rarity === rarity),
-  ...Object.keys(AMULETS).filter(k => AMULETS[k].rarity === rarity),
+  ...Object.keys(WEAPONS).filter(k => WEAPONS[k].rarity === rarity && !WEAPONS[k].noGacha),
+  ...Object.keys(AMULETS).filter(k => AMULETS[k].rarity === rarity && !AMULETS[k].noGacha),
 ];
 
 /** 1回引く。state.pityCount を更新する */

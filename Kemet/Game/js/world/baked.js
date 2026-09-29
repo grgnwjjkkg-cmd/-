@@ -98,6 +98,15 @@ export async function loadBakedZone(name, game) {
   gltf.scene.traverse(o => {
     if (!o.isMesh) return;
     const [group, matName] = o.name.split('__').map(s => s.replace(/[._]\d+$/, ''));
+    // 遠景の地面が地下の部屋（墓・洞窟・山の中の神殿）に突き出ないよう、その下の頂点を沈める
+    if (group === 'far' && meta.sink) {
+      const a = o.geometry.attributes.position;
+      for (let i = 0; i < a.count; i++) {
+        const x = a.getX(i), z = a.getZ(i);
+        for (const [x0, x1, z0, z1, y] of meta.sink) if (x >= x0 && x <= x1 && z >= z0 && z <= z1 && a.getY(i) > y) a.setY(i, y);
+      }
+      a.needsUpdate = true; o.geometry.computeBoundingSphere();
+    }
     const g = meta.groups[group];
     const info = g?.materials?.[matName];
     const key = group + '/' + matName;

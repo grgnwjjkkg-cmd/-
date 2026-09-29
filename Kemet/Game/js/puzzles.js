@@ -29,6 +29,8 @@ const MIRROR = {
 // 押す石（墓地の東）
 const BLOCK = { start: [12, 81], plate: [15, 72], shrine: [22, 72], area: [9, 19.5, 62, 92] };
 
+const g_has = g => !!g.save.inventory.seal_blade;
+
 export class Puzzles {
   constructor(game, zoneName) {
     this.g = game; this.zone = zoneName; this.root = new THREE.Group(); game.scene.add(this.root);
@@ -40,6 +42,7 @@ export class Puzzles {
       this.makeMirrors(!!f.necMirror);
       this.makeBlock(!!f.necBlock);
       this.makeSpikes();
+      if (!f.bossDown) this.makeLair();
     }
   }
 
@@ -269,9 +272,142 @@ export class Puzzles {
     }
   }
 
+
+  // ---------- 第1章の山場：盗賊団の間からの脱出 ----------
+  // 入ると石の扉が閉まる → 祭壇でアンクを捧げて「封印破りの剣」→ 3つの封印を正しい順に砕く → 黒ジャッカルが目覚める → 倒すと扉が開く
+  makeLair() {
+    const g = this.g;
+    this.lair = { trapped: false, order: [], waveT: 0 };
+    const boss = g.enemies.find(e => e.def.boss);
+    if (boss && !g.save.flags.lairSeals) boss.dormant = true;   // 封印が解けるまで眠っている
+    const stone = B.M.pbr('large_sandstone_blocks_01');
+    // 閉まる扉（西の入口）
+    this.lairDoor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 4.6, 4.8), B.M.hiero()); this.lairDoor.position.set(52, 7, -95); this.root.add(this.lairDoor);
+    this.lairDoorBox = { minX: 51.5, maxX: 52.6, minZ: -97.4, maxZ: -92.6 };
+    // ラーの祭壇（アンクを捧げる）
+    const altar = new THREE.Group(); altar.position.set(56, 0, -87.2);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.0, 1.0), stone); base.position.y = 0.5; altar.add(base);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.12, 1.1), B.M.gold()); top.position.y = 1.06; altar.add(top);
+    this.altarGlow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffb640' })); this.altarGlow.position.y = 1.45; altar.add(this.altarGlow);
+    this.root.add(altar); g.zone.colliders.circle(56, -87.2, 0.9);
+    const altarIt = { kind: 'altar', label: '祈る（300☥）', x: 56, z: -87.2, r: 2.2 };
+    altarIt.act = () => this.pray();
+    this.items.push(altarIt);
+    // 壁の碑文（順番のヒント）
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 192;
+    const c = cv.getContext('2d'); c.fillStyle = '#6a4c32'; c.fillRect(0, 0, 512, 192);
+    c.fillStyle = '#ffd98a'; c.font = 'bold 64px serif'; c.textAlign = 'center'; c.fillText('☀ → ☾ → ✦', 256, 120);
+    const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+    const ins = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.9), new THREE.MeshStandardMaterial({ map: tx, emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0.25 }));
+    ins.position.set(66, 2.2, -84.45); ins.rotation.y = Math.PI; this.root.add(ins);
+    const insIt = { kind: 'inscription', label: '読む', x: 66, z: -85.4, r: 2.0 };
+    insIt.act = () => g.runSteps([{ who: 'narr', text: '壁に古い言葉が刻まれている。' }, { who: 'narr', text: '「日が沈み、月が昇り、星がまたたくとき、セトの封印は解ける」' }]);
+    this.items.push(insIt);
+    // 3つの封印（東の壁）：並びと砕く順番はちがう
+    const SYM = [['moon', '☾', -89], ['star', '✦', -95], ['sun', '☀', -101]];
+    this.seals = SYM.map(([id, ch, z]) => {
+      const sc = document.createElement('canvas'); sc.width = 128; sc.height = 192;
+      const q = sc.getContext('2d'); q.fillStyle = '#3a1410'; q.fillRect(0, 0, 128, 192);
+      q.strokeStyle = '#ff5a2a'; q.lineWidth = 6; q.strokeRect(8, 8, 112, 176);
+      q.fillStyle = '#ff7a3a'; q.font = 'bold 84px serif'; q.textAlign = 'center'; q.fillText(ch, 64, 124);
+      const st = new THREE.CanvasTexture(sc); st.colorSpace = THREE.SRGBColorSpace;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.4, 1.6), [stone, stone, stone, stone, stone, new THREE.MeshStandardMaterial({ map: st, emissive: '#ffffff', emissiveMap: st, emissiveIntensity: 0.9 })]);
+      m.rotation.y = -Math.PI / 2; m.position.set(75.6, 1.6, z); this.root.add(m);
+      return { id, mesh: m, x: 75.2, z, broken: false };
+    });
+    this.lairTip = 0;
+  }
+
+  pray() {
+    const g = this.g;
+    if (g.save.inventory.seal_blade) { g.toast('祭壇は静かに光っている'); return; }
+    if (g.save.ankh < 300) { g.toast('アンクが足りない（300必要）。盗賊を倒して集めよう'); return; }
+    g.save.ankh -= 300; g.refreshHUD?.();
+    audio.sfx('rare'); g.fx?.pillar(new THREE.Vector3(56, 0, -87.2), '#ff7a3a');
+    g.addItem('seal_blade'); g.save.weapon = 'seal_blade'; g.equipVisual();
+    g.runSteps([{ who: 'narr', text: '300アンクを捧げると、祭壇から赤く光る剣が現れた。' }, { who: 'narr', text: '「封印破りの剣」を手に入れ、装備した！ 東の壁の封印を、正しい順に斬れ。' }]);
+    g.persist();
+  }
+
+  /** 攻撃が当たったとき（main の playerHit から呼ぶ） */
+  onHit(P) {
+    if (!this.seals || !this.lair?.trapped) return;
+    for (const s of this.seals) {
+      if (s.broken) continue;
+      const dx = s.x - P.pos.x, dz = s.z - P.pos.z, d = Math.hypot(dx, dz);
+      if (d > 2.6) continue;
+      const g = this.g;
+      if (g.save.weapon !== 'seal_blade') {
+        audio.sfx('hit'); g.fx?.puff(P.pos.clone().setY(1.2), 3, 0.3, 1);
+        if (g.time - this.lairTip > 4) { this.lairTip = g.time; g.toast('かたい！ 普通の武器では傷もつかない……祭壇に祈ろう'); }
+        return;
+      }
+      const want = ['sun', 'moon', 'star'][this.lair.order.length];
+      if (s.id !== want) {   // 順番ちがい：封印がもどり、敵が出る
+        audio.sfx('rumble'); g.shake = 0.4;
+        g.toast('順番がちがう！ 封印が元にもどった……');
+        for (const q of this.seals) { q.broken = false; q.mesh.visible = true; }
+        this.lair.order = [];
+        g.spawnEnemy('mummy', { x: 60, z: -92 }); g.spawnEnemy('mummy', { x: 68, z: -98 });
+        return;
+      }
+      s.broken = true; s.mesh.visible = false; this.lair.order.push(s.id);
+      audio.sfx('thunder'); g.shake = 0.3;
+      g.fx?.puff(new THREE.Vector3(s.x - 0.3, 1.2, s.z), 10, 0.8, 2, '#ff7a3a');
+      if (this.lair.order.length === 3) this.wakeBoss();
+      else g.toast(`封印を砕いた！（${this.lair.order.length} / 3）`);
+      return;
+    }
+  }
+
+  wakeBoss() {
+    const g = this.g, boss = g.enemies.find(e => e.def.boss);
+    g.save.flags.lairSeals = true;
+    audio.sfx('rumble'); g.shake = 0.8;
+    g.toast('封印がすべて解けた……黒ジャッカルが目を覚ました！');
+    if (boss) { boss.dormant = false; boss.state = 'chase'; g.bossAwake(boss); }
+  }
+
+  updateLair(dt) {
+    if (!this.lair) return;
+    const g = this.g, P = g.player, L = this.lair;
+    const boss = g.enemies.find(e => e.def.boss);
+    if (boss && !g.save.flags.lairSeals) boss.dormant = true;
+    // 入ったら閉じこめられる
+    if (!L.trapped && !g.save.flags.bossDown && P.pos.x > 55 && P.pos.z < -84 && P.pos.z > -106) {
+      L.trapped = true; L.doorT = 0;
+      g.zone.colliders.boxes.push(this.lairDoorBox);
+      audio.sfx('rumble'); g.shake = 0.6;
+      g.runSteps([{ who: 'narr', text: '背後で重い石の扉が閉まった！ 閉じこめられた……' },
+        { who: 'narr', text: '奥の壁に赤く光る3つの封印。そして祭壇がある。ここから出る方法を探そう。' }]);
+    }
+    // 扉：閉まるときは上から落ち、開くときは床へ沈む
+    const want = L.trapped && !L.open ? 2.3 : L.open ? -2.4 : 7;
+    this.lairDoor.position.y += (want - this.lairDoor.position.y) * Math.min(1, dt * (L.open ? 1.2 : 9));
+    this.lairDoor.visible = this.lairDoor.position.y > -2.2;
+    // 封印が残っている間は、ときどき盗賊が乱入してくる（アンクが手に入る）
+    if (L.trapped && !g.save.flags.lairSeals) {
+      L.waveT += dt;
+      if (L.waveT > 24 && g.enemies.filter(e => e.alive && !e.def.boss).length < 3) {
+        L.waveT = 0;
+        g.spawnEnemy('bandit', { x: 58, z: -96 });
+        g.toast('盗賊が壁の穴から入ってきた！');
+      }
+    }
+    // ボスを倒したら扉が開く
+    if (L.trapped && !L.open && g.save.flags.bossDown) {
+      L.open = true;
+      const a = g.zone.colliders.boxes, i = a.indexOf(this.lairDoorBox); if (i >= 0) a.splice(i, 1);
+      audio.sfx('rumble');
+      setTimeout(() => g.toast('石の扉が開いた！ 脱出だ！'), 1500);
+    }
+  }
+
   update(dt) {
     this.t += dt;
+    this.updateLair(dt);
     for (const it of this.items) {
+      if (it.kind === 'altar') this.altarGlow.material.color.setHSL(0.09, 1, g_has(this.g) ? 0.3 : 0.5 + Math.sin(this.t * 3) * 0.15);
       if (it.kind === 'scarab') { it.mesh.rotation.y += dt * 1.6; it.mesh.position.y = 0.45 + Math.sin(this.t * 2.4 + it.x) * 0.08; it.mesh.children[2].material.opacity = 0.1 + Math.sin(this.t * 3) * 0.05; }
       if (it.kind === 'mirror' && it.want) {
         const yaw = Math.atan2(it.want.x, it.want.z), pitch = Math.asin(Math.max(-1, Math.min(1, it.want.y)));

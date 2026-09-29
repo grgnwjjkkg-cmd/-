@@ -124,4 +124,5 @@ M['waters'] = []
 M['beams'] = []
 M['exposureMul'] = 1.0
 
+L.meta['sink'] = [[-70, 70, -190, -60, -10]]   # 遠景の地面を地下の部屋の下へ沈める（ゲーム側）
 L.bake_and_export()
