@@ -22,6 +22,7 @@ export class Player {
     this.combo = 0;
     this.stepTimer = 0;
     this.speedNow = 0;
+    this.vy = 0; this.air = false; this.plunging = false;
     this.actor.play('Idle_Loop', { fade: 0 });
   }
 
@@ -35,6 +36,17 @@ export class Player {
 
     const mag = Math.min(1, Math.hypot(input.x, input.y));
     const armed = !!stats.weaponName;
+    if (this.air) {
+      this.vy -= (this.plunging ? 40 : 19) * dt;
+      this.pos.y += this.vy * dt;
+      if (this.pos.y <= 0) {
+        this.pos.y = 0; this.air = false; this.vy = 0;
+        if (this.plunging) { this.plunging = false; world.plungeHit(this); this.state = 'move'; this.actor.play('Jump_Land', { fade: 0.05, loop: false, speed: 1.6, restart: true }); }
+        else if (this.state === 'move') this.actor.play('Jump_Land', { fade: 0.05, loop: false, speed: 1.8, restart: true });
+        this.landTime = 0.18;
+      } else if (this.state === 'move' && this.vy < 2) this.actor.play('Jump_Loop', { fade: 0.15 });
+    }
+    this.landTime = Math.max(0, (this.landTime || 0) - dt);
 
     if (this.state === 'move') {
       let target = 0;
@@ -52,7 +64,8 @@ export class Player {
         this.pos.z += Math.cos(this.face) * s * dt;
       }
       // 速さに合わせて足の動きを選ぶ（すべって見えないように再生速度も合わせる）
-      if (s < 0.25) this.actor.play(armed ? 'Sword_Idle' : 'Idle_Loop', { fade: 0.25 });
+      if (this.air || this.landTime > 0) { /* 空中・着地の動きのまま */ }
+      else if (s < 0.25) this.actor.play(armed ? 'Sword_Idle' : 'Idle_Loop', { fade: 0.25 });
       else if (s < 2.6) { this.actor.play('Walk_Loop', { fade: 0.2 }); this.actor.setSpeed(Math.max(0.5, s / 1.7)); }
       else { this.actor.play('Jog_Fwd_Loop', { fade: 0.2 }); this.actor.setSpeed(s / 4.6); }
       if (s > 0.5) {
@@ -61,17 +74,27 @@ export class Player {
       }
     } else if (this.state === 'attack') {
       const p = this.actor.progress();
-      if (!this.hitDone && p > 0.32) { this.hitDone = true; world.playerHit(this); }
+      if (!this.hitDone && p > 0.32) { this.hitDone = true; if (this.charged != null) world.chargedHit(this, this.charged); else world.playerHit(this); }
       // 攻撃中は少し前に踏み込む
       if (p < 0.35) { this.pos.x += Math.sin(this.face) * 1.2 * dt; this.pos.z += Math.cos(this.face) * 1.2 * dt; }
       if (p > 0.55 && this.comboQueued) this.startAttack(stats);
-      else if (p > 0.8) this.state = 'move';
+      else if (p > 0.8) { this.state = 'move'; this.charged = null; }
     } else if (this.state === 'roll') {
       this.rollTime -= dt;
-      const k = Math.max(0, this.rollTime / 0.65);
-      this.pos.x += Math.sin(this.face) * 7.5 * k * dt;
-      this.pos.z += Math.cos(this.face) * 7.5 * k * dt;
+      const k = Math.max(0, this.rollTime / 0.55);
+      this.pos.x += Math.sin(this.face) * 10.5 * k * dt;
+      this.pos.z += Math.cos(this.face) * 10.5 * k * dt;
+      world.sandPuff?.(this.pos, k);
       if (this.rollTime <= 0) this.state = 'move';
+    } else if (this.state === 'charge') {
+      // 溜め：その場で力をためる（ゆっくりなら向きを変えられる）
+      this.chargeTime += dt;
+      if (mag > 0.12) this.face = turnTowards(this.face, camYaw - Math.atan2(input.x, input.y), dt * 6);
+      world.chargeGlow?.(this, Math.min(1, this.chargeTime / 1.2));
+    } else if (this.state === 'cast') {
+      const p = this.actor.progress();
+      if (!this.castDone && p > 0.32) { this.castDone = true; world.castGlyph(this, this.castName); }
+      if (p > 0.85) this.state = 'move';
     } else if (this.state === 'hurt') {
       this.hurtTime -= dt;
       this.pos.x += this.knock.x * dt; this.pos.z += this.knock.z * dt;
@@ -84,10 +107,67 @@ export class Player {
   }
 
   attack(stats) {
+    if (this.air && !this.plunging) return this.plunge();
     if (this.state === 'attack') { this.comboQueued = true; return; }
     if (this.state !== 'move') return;
     this.combo = 0;
     this.startAttack(stats);
+  }
+
+  /** ジャンプ（地上で動ける時だけ） */
+  jump() {
+    if (this.air || !['move', 'attack'].includes(this.state)) return false;
+    this.state = 'move'; this.air = true; this.vy = 7.2;
+    this.actor.play('Jump_Start', { fade: 0.05, loop: false, speed: 1.8, restart: true });
+    audio.sfx('jump');
+    return true;
+  }
+
+  /** 空中から真下へ斬りおろす */
+  plunge() {
+    if (!this.air || this.plunging) return;
+    this.plunging = true; this.vy = Math.min(this.vy, -4);
+    this.actor.play('Sword_Attack', { fade: 0.05, loop: false, speed: 1.4, restart: true });
+    audio.sfx('swing');
+  }
+
+  /** 溜め：長押しで始まり、離すと溜め斬り */
+  chargeStart() {
+    if (this.state !== 'move' || this.air) return false;
+    this.state = 'charge'; this.chargeTime = 0;
+    this.actor.play('Sword_Idle', { fade: 0.1 });
+    audio.sfx('charge');
+    return true;
+  }
+
+  chargeRelease(stats, cancel) {
+    if (this.state !== 'charge') return;
+    if (cancel || this.chargeTime < 0.25) { this.state = 'move'; return; }
+    this.charged = Math.min(1, this.chargeTime / 1.2);
+    this.state = 'attack'; this.hitDone = false; this.comboQueued = false; this.combo = 0;
+    this.actor.play('Sword_Attack', { fade: 0.05, loop: false, speed: 1.1 * stats.attackSpeed, restart: true });
+    audio.sfx('swing');
+  }
+
+  /** 神聖文字の術（描いた形の名前） */
+  cast(name) {
+    if (!['move', 'attack', 'charge'].includes(this.state)) return false;
+    this.state = 'cast'; this.castName = name; this.castDone = false;
+    this.actor.play('Spell_Simple_Shoot', { fade: 0.06, loop: false, speed: 1.5, restart: true });
+    return true;
+  }
+
+  /** 砂走り：向きを決めて素早く走り抜ける（その間は攻撃を受けない） */
+  dash(angle) {
+    if (!['move', 'attack', 'charge'].includes(this.state)) return false;
+    if (angle != null) { this.face = angle; this.root.rotation.y = angle; }
+    this.state = 'roll';
+    this.rollTime = 0.55;
+    this.invuln = 0.5;
+    this.charged = null;
+    this.actor.play('Roll', { fade: 0.05, loop: false, speed: 1.55, restart: true });
+    audio.sfx('roll');
+    return true;
   }
 
   startAttack(stats) {
@@ -104,6 +184,10 @@ export class Player {
   }
 
   roll() {
+    return this.dash(null);
+  }
+
+  rollOld() {
     if (this.state !== 'move' && this.state !== 'attack') return;
     this.state = 'roll';
     this.rollTime = 0.65;
@@ -114,6 +198,7 @@ export class Player {
 
   hurt(amount, from, stats) {
     if (this.invuln > 0 || this.state === 'dead') return false;
+    if (this.pos.y > 0.7) return false;   // 跳んでかわした
     this.hp -= amount;
     this.invuln = 0.6;
     this.actor.flash('#ff3030');

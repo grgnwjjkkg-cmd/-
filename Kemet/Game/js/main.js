@@ -9,6 +9,8 @@ import * as B from './world/builders.js';
 import { PEOPLE, TOWN_NPCS, CLUES, FINDS, objective, script } from './story.js';
 import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, playerStats, expToNext } from './items.js';
 import { audio } from './audio.js';
+import { Gestures } from './gestures.js';
+import { FX } from './fx.js';
 // 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
 const HERO_MODEL = 'human_hero';
 // まだ開いていない門に近づいたときのひとこと
@@ -95,6 +97,9 @@ class Game {
     this.composer.addPass(new OutputPass());
     this.resize();
     window.addEventListener('resize', () => this.resize());
+    this.fx = new FX(this.scene);
+    this.power = 0;       // 神力（技に使う。当てる・時の砂で たまる）
+    this.sands = 0;       // 時の砂（ゆっくりになる残り秒）
     this.setupInput();
     this.loop();
   }
@@ -155,7 +160,7 @@ class Game {
         { who: 'narr', text: '祭りの夜、神殿から秘宝「太陽のスカラベ」が盗まれた。' },
         { who: 'narr', text: '駆け出しの宝探し屋のあなたのもとに、神殿から呼び出しが届く――。' },
       ]);
-      this.toast('左下のスティックで歩く／右側をなぞって見回す');
+      this.toast('左で歩く／右をなぞって戦う（くわしくはメニュー→設定→操作の書）');
     }
   }
 
@@ -237,6 +242,7 @@ class Game {
     }
     this.makeFinds(name);
     this.setupPyramid(!initial);
+    if (!initial && name !== 'town' && !this.save.flags.sawGuide) { this.save.flags.sawGuide = true; setTimeout(() => this.showGuide(), 900); }
     if (!initial && ['necropolis', 'giza'].includes(name) && !this.save.flags.tipLookUp) {
       this.save.flags.tipLookUp = true;
       setTimeout(() => this.toast('画面の右側を上下になぞると、見上げたり見下ろしたりできる'), 1200);
@@ -419,25 +425,29 @@ class Game {
     };
     zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end);
 
-    // 画面の右側をなぞってカメラを回す
-    let camId = null, lx = 0, ly = 0;
-    this.canvas.addEventListener('pointerdown', e => {
-      audio.unlock();
-      if (camId !== null) return;
-      camId = e.pointerId; lx = e.clientX; ly = e.clientY; this.canvas.setPointerCapture(e.pointerId);
+    // 画面の右側：なぞり操作（タップ＝斬る、長押し＝溜め、はじく＝砂走り、上へはじく＝ジャンプ、円・ジグザグ＝神聖文字の術、ゆっくり＝カメラ）
+    const ok = () => !this.paused && !this.titleMode && this.player?.alive && $('panel').classList.contains('hidden');
+    this.gestures = new Gestures(this.canvas, $('gestureFx'), {
+      enabled: () => { audio.unlock(); return !this.titleMode; },
+      camera: (dx, dy) => {
+        this.camYaw -= dx * 0.008;
+        this.camPitch = THREE.MathUtils.clamp(this.camPitch + dy * 0.005, -0.75, 1.2);   // 上下になぞって見上げる・見下ろす
+        this.lastDrag = this.time;
+      },
+      cameraSnapshot: () => ({ yaw: this.camYaw, pitch: this.camPitch }),
+      cameraRestore: c => { this.camYaw = c.yaw; this.camPitch = c.pitch; },
+      tap: () => { if (ok()) this.player.attack(this.stats); },
+      holdStart: () => { if (ok()) this.player.chargeStart(); },
+      holdEnd: sec => { if (this.player) this.player.chargeRelease(this.stats, sec < 0 || !ok()); },
+      flick: (dx, dy) => { if (ok()) this.tryDash((this.camYaw + Math.PI) - Math.atan2(dx, -dy)); },
+      jump: () => { if (ok()) this.player.jump(); },
+      glyph: name => { if (ok()) this.tryGlyph(name); },
     });
-    this.canvas.addEventListener('pointermove', e => {
-      if (e.pointerId !== camId) return;
-      this.camYaw -= (e.clientX - lx) * 0.008;
-      this.camPitch = THREE.MathUtils.clamp(this.camPitch + (e.clientY - ly) * 0.005, -0.75, 1.2);  // 上下になぞって見上げる・見下ろす
-      lx = e.clientX; ly = e.clientY; this.lastDrag = this.time;
-    });
-    const endCam = e => { if (e.pointerId === camId) camId = null; };
-    this.canvas.addEventListener('pointerup', endCam); this.canvas.addEventListener('pointercancel', endCam);
 
     const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); audio.unlock(); fn(); });
     tap($('atkBtn'), () => { if (!this.paused) this.player.attack(this.stats); });
-    tap($('rollBtn'), () => { if (!this.paused) this.player.roll(); });
+    tap($('rollBtn'), () => { if (!this.paused) this.tryDash(null); });
+    this.showButtons(!!this.save?.buttons);
     tap($('actBtn'), () => this.interact());
     tap($('menuBtn'), () => this.openMenu());
 
@@ -450,8 +460,12 @@ class Game {
     };
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase(); keys.add(k); upd();
-      if (k === 'j' && !this.paused) this.player.attack(this.stats);
-      if (k === 'k' && !this.paused) this.player.roll();
+      if (e.repeat) return;
+      if (k === 'j' && !this.paused) { this.player.attack(this.stats); this.jHold = setTimeout(() => this.player.chargeStart(), 360); }
+      if (k === 'k' && !this.paused) this.tryDash(Math.hypot(this.input.x, this.input.y) > 0.2 ? (this.camYaw + Math.PI) - Math.atan2(this.input.x, this.input.y) : null);
+      if (k === ' ' && !this.paused) { e.preventDefault(); this.player.jump(); }
+      if (k === '1' && !this.paused) this.tryGlyph('circle');
+      if (k === '2' && !this.paused) this.tryGlyph('zigzag');
       if (k === 'e') this.interact();
       // 矢印キーでカメラ（上下＝見上げる・見下ろす、左右＝回す）
       if (k === 'arrowup') this.camPitch = Math.max(-0.75, this.camPitch - 0.12);
@@ -459,7 +473,10 @@ class Game {
       if (k === 'arrowleft') { this.camYaw += 0.15; this.lastDrag = this.time; }
       if (k === 'arrowright') { this.camYaw -= 0.15; this.lastDrag = this.time; }
     });
-    window.addEventListener('keyup', e => { keys.delete(e.key.toLowerCase()); upd(); });
+    window.addEventListener('keyup', e => {
+      const k = e.key.toLowerCase(); keys.delete(k); upd();
+      if (k === 'j') { clearTimeout(this.jHold); this.player?.chargeRelease(this.stats, false); }
+    });
   }
 
   // ---------- 調べる・話す ----------
@@ -636,7 +653,8 @@ class Game {
       const diff = Math.abs(Math.atan2(Math.sin(ang), Math.cos(ang)));
       if (diff > 1.25 && d > 0.9) continue;
       const crit = Math.random() < s.crit;
-      const dmg = Math.round(s.atk * (0.9 + Math.random() * 0.2) * (crit ? 1.8 : 1) * (player.combo === 0 ? 1.3 : 1));
+      const dmg = Math.round(s.atk * (0.9 + Math.random() * 0.2) * (crit ? 1.8 : 1) * (player.combo === 0 ? 1.3 : 1) * (this.sands > 0 ? 2 : 1));
+      this.gainPower(5);
       e.hurt(dmg, player.pos, { stun: s.stun });
       this.popNumber(e.pos, dmg, crit ? 'crit' : '');
       if (s.drain) this.player.hp = Math.min(s.maxHP, this.player.hp + dmg * s.drain);
@@ -645,6 +663,96 @@ class Game {
     }
     if (hitAny) { audio.sfx('hit'); this.hitStop = 0.06; this.shake = 0.12; }
   }
+
+  /** 砂走り：敵の攻撃が当たる直前ならば「時の砂」（まわりがゆっくりになる） */
+  tryDash(angle) {
+    const P = this.player;
+    if (!P.dash(angle)) return;
+    const perfect = this.enemies.some(e => {
+      if (!e.alive) return false;
+      const d = e.pos.distanceTo(P.pos);
+      if (d > e.def.reach + 1.6) return false;
+      return (e.state === 'windup' && e.timer < 0.32) || (e.state === 'attack' && !e.hitDone);
+    });
+    if (perfect && this.sands <= 0) {
+      this.sands = 2.6;
+      this.gainPower(25);
+      this.fx.ring(P.pos, '#ffd36a', 7, 0.6);
+      audio.sfx('sands');
+      this.toast('時の砂！ まわりがゆっくりに');
+    }
+  }
+
+  gainPower(n) { this.power = Math.min(100, this.power + n); }
+
+  /** 神聖文字の術 */
+  tryGlyph(name) {
+    const cost = { circle: 40, zigzag: 30 }[name];
+    if (this.power < cost) { this.toast(`神力が足りない（${cost} 必要）`); audio.sfx('ui'); return; }
+    if (this.player.cast(name)) this.power -= cost;
+  }
+
+  castGlyph(P, name) {
+    const s = this.stats;
+    if (name === 'circle') {   // ラーの円環：まわりの敵を太陽の輪で吹き飛ばす
+      this.fx.pillar(P.pos); this.fx.ring(P.pos, '#ffd36a', 7, 0.55); this.fx.ring(P.pos, '#fff2c0', 4.5, 0.4, 0.3);
+      audio.sfx('sun'); this.shake = 0.35;
+      this.areaHit(P.pos, 6.5, s.atk * 2.4, 'crit');
+    } else {                   // セトの雷：いちばん近い敵に雷を落とす
+      const t = this.enemies.filter(e => e.alive && e.pos.distanceTo(P.pos) < 18).sort((a, b) => a.pos.distanceTo(P.pos) - b.pos.distanceTo(P.pos))[0];
+      const at = t ? t.pos : P.pos.clone().add(new THREE.Vector3(Math.sin(P.face) * 5, 0, Math.cos(P.face) * 5));
+      this.fx.bolt(at); audio.sfx('thunder'); this.shake = 0.3;
+      if (t) this.areaHit(t.pos, 2.2, s.atk * 3.2, 'crit', true);
+    }
+  }
+
+  /** 範囲の攻撃（まわり全部） */
+  areaHit(center, radius, base, kind = '', stun = false) {
+    let any = false;
+    for (const e of this.enemies) {
+      if (!e.alive || e.pos.distanceTo(center) > radius + e.radius) continue;
+      const dmg = Math.round(base * (0.9 + Math.random() * 0.2) * (this.sands > 0 ? 2 : 1));
+      e.hurt(dmg, center, { stun: stun || this.stats.stun });
+      this.popNumber(e.pos, dmg, kind); any = true;
+      if (!e.alive) this.onEnemyDown(e);
+    }
+    if (any) { audio.sfx('hit'); this.hitStop = 0.08; }
+    return any;
+  }
+
+  chargedHit(P, k) {   // 溜め斬り：まわりをぐるりと斬る
+    this.fx.ring(P.pos, '#ffcf5a', this.stats.reach + 1.5 + k * 1.5, 0.35);
+    if (this.areaHit(P.pos, this.stats.reach + 1 + k * 1.5, this.stats.atk * (1.6 + k * 1.4), k >= 1 ? 'crit' : '')) { this.shake = 0.25; this.gainPower(8); }
+  }
+
+  plungeHit(P) {       // 急降下斬り：着地のまわりに衝撃
+    this.fx.ring(P.pos, '#e8cf98', 3.6, 0.35); this.fx.puff(P.pos, 24, 1.6, 2.5);
+    this.shake = 0.3;
+    if (this.areaHit(P.pos, 3.0, this.stats.atk * 1.7)) this.gainPower(6);
+  }
+
+  sandPuff(pos, k) { if (Math.random() < 0.7) this.fx.puff(pos, 2, 0.4, 0.8 * k); }
+  chargeGlow(P, k) { this.fx.charge(P.pos, k); }
+
+  /** 操作の書：なぞり操作の一覧（はじめて遊ぶときにも出す） */
+  showGuide() {
+    const svg = inner => `<svg viewBox="0 0 64 64" fill="none" stroke="#ffd36a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+    const dot = '<circle cx="32" cy="32" r="6" fill="#ffd36a"/>';
+    const items = [
+      [svg(dot + '<circle cx="32" cy="32" r="14" stroke-width="2" opacity=".5"/>'), 'タップ', '斬る（続けて3回）'],
+      [svg(dot + '<circle cx="32" cy="32" r="16" stroke-dasharray="4 5"/><circle cx="32" cy="32" r="24" stroke-width="2" opacity=".4"/>'), '長押し → はなす', '溜め斬り（まわりを一周）'],
+      [svg('<path d="M14 36 L50 28"/><path d="M42 20 L50 28 L42 36"/>'), '横・下にはじく', '砂走り（すばやく回避）'],
+      [svg('<path d="M32 52 L32 14"/><path d="M22 24 L32 14 L42 24"/>'), '上にはじく', 'ジャンプ（空中でタップ＝急降下斬り）'],
+      [svg('<circle cx="32" cy="32" r="18"/><path d="M50 32 L56 26"/>'), '円を描く', 'ラーの円環（神力40）'],
+      [svg('<path d="M12 16 L52 16 L12 48 L52 48"/>'), 'Zを描く', 'セトの雷（神力30）'],
+    ];
+    const body = `<div class="note" style="margin-bottom:10px">左側で歩く。右側は<b>なぞって</b>戦う。<br>敵の攻撃が当たる直前に砂走りすると「時の砂」で まわりがゆっくりになり、攻撃が2倍に。<br>神力（☥）は攻撃を当てるとたまる。</div>
+      <div class="guide">${items.map(([i, t, d]) => `<div class="g">${i}<b>${t}</b><small>${d}</small></div>`).join('')}</div>
+      <div class="note" style="margin-top:10px">ゆっくりなぞるとカメラが回る（上下で見上げる・見下ろす）。パソコン：J 斬る（長押しで溜め）／K 砂走り／スペース ジャンプ／1・2 術</div>`;
+    this.openPanel(`<div class="pHead"><h2>操作の書</h2><button class="close">✕</button></div>${body}`);
+  }
+
+  showButtons(on) { $('rollBtn').classList.toggle('hidden', !on); $('atkBtn').classList.toggle('hidden', !on); }
 
   enemyHit(enemy, player) {
     const dmg = Math.round(enemy.def.atk * (0.9 + Math.random() * 0.2) * (1 + (this.save.flags.bossDown ? 0 : 0)));
@@ -819,7 +927,9 @@ class Game {
       body = `<div class="clue" style="border-color:#6fd39a"><b>いまやること</b>${objective(save)}</div>` + body;
     } else {
       body = `<button class="btn sub" id="bgmBtn">BGM・効果音：${save.bgm ? 'オン' : 'オフ'}</button>
-        <div class="note" style="margin-top:14px">操作：左下のスティックで移動（倒す量で歩く／走る）。右側をなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。「回避」でかわせます。</div>
+        <button class="btn sub" id="guideBtn">操作の書を見る</button>
+        <button class="btn sub" id="btnMode">攻撃・回避ボタン：${save.buttons ? '表示する' : '表示しない（なぞり操作）'}</button>
+        <div class="note" style="margin-top:14px">操作：左下のスティックで移動（倒す量で歩く／走る）。右側をなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。画面の右側をはじく「砂走り」でかわせます。</div>
         <div class="note" style="margin-top:14px">3Dモデル・アニメーション：Quaternius（CC0）／実写素材：Poly Haven（CC0）</div>
         <div class="clue" style="margin-top:16px;border-color:#ff8a5a"><b>テスト用（完成版では消します）</b>
           <button class="btn sub" id="warpNecro">墓地へワープ</button>
@@ -864,6 +974,8 @@ class Game {
       root.querySelector('#addAnkh')?.addEventListener('click', () => { this.gainAnkh(1000); this.openMenu('settings'); });
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };
+      root.querySelector('#guideBtn')?.addEventListener('click', () => this.showGuide());
+      root.querySelector('#btnMode')?.addEventListener('click', () => { save.buttons = !save.buttons; this.showButtons(save.buttons); this.openMenu('settings'); });
     });
   }
 
@@ -994,7 +1106,11 @@ class Game {
     if (!this.paused) {
       const inp = this.underwater ? { ...this.input, x: this.input.x * 0.62, y: this.input.y * 0.62 } : this.input;
       this.player.update(dt, inp, this.camYaw + Math.PI, this.stats, this);
-      this.enemies = this.enemies.filter(e => { const keep = e.update(dt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
+      if (this.sands > 0) { this.sands -= dt; if (this.sands <= 0) this.sands = 0; }
+      const edt = this.sands > 0 ? dt * 0.25 : dt;
+      this.canvas.style.filter = this.sands > 0 ? `sepia(${Math.min(0.55, this.sands)}) saturate(1.25) contrast(1.05)` : '';
+      if (this.sands > 0 && Math.random() < 0.5) this.fx.puff(this.player.pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0, (Math.random() - 0.5) * 8)), 1, 0.2, 1.5);
+      this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
       // 敵どうしが重ならないように
       for (let i = 0; i < this.enemies.length; i++) for (let j = i + 1; j < this.enemies.length; j++) {
         const a = this.enemies[i].pos, b = this.enemies[j].pos, d = a.distanceTo(b), min = 1.0;
@@ -1025,6 +1141,9 @@ class Game {
     for (const f of this.finds || []) { f.fx.rotation.y += dt * 0.8; f.fx.material.opacity = 0.55 + Math.sin(this.time * 3 + f.def.x) * 0.35; }
     for (const k of this.pickups) { k.mesh.rotation.y += dt * 1.5; k.mesh.position.y = (k.baseY ?? 1) + Math.sin(this.time * 2) * 0.15; }
     this.updateEscape(dt); this.updateFalling(dt);
+    this.fx.update(dt); this.gestures?.draw();
+    // 跳んでいるときは影を地面に残す
+    const sh = this.player.root.children[1]; if (sh) { sh.position.y = 0.03 - this.player.pos.y; sh.scale.setScalar(Math.max(0.5, 1 - this.player.pos.y * 0.15)); }
     this.telegraphs = this.telegraphs.filter(t => {
       t.left -= dt;
       const k = 1 - Math.max(0, t.left) / t.time;
@@ -1146,6 +1265,8 @@ class Game {
     const s = this.stats, hp = Math.ceil(this.player.hp);
     if (hp !== this.lastHP) { this.lastHP = hp; $('hpText').textContent = `${hp}/${s.maxHP}`; $('hpBar').style.width = (hp / s.maxHP * 100) + '%'; }
     if (this.boss) $('bossHp').style.width = (this.boss.hp / this.boss.maxHP * 100) + '%';
+    const pw = Math.floor(this.power);
+    if (pw !== this.lastPower) { this.lastPower = pw; $('powerBar').style.width = pw + '%'; $('powerBox').classList.toggle('full', pw >= 40); }
     // 話す・調べるボタン
     const t = this.paused ? null : this.nearest();
     const act = $('actBtn');
