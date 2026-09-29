@@ -10,6 +10,7 @@
 input string          InpSymbols  = "EURUSD#,USDJPY#,GBPUSD#,AUDUSD#,NZDUSD#,USDCAD#,USDCHF#,EURJPY#,GBPJPY#,AUDJPY#,GOLD#,SILVER#,US30Cash#,US500Cash#,US100Cash#,JP225Cash#,GER40Cash#,OILCash#"; // 銘柄（カンマ区切り、無いものは飛ばす）
 input ENUM_TIMEFRAMES InpTF       = PERIOD_M5;  // 時間足
 input int             InpFromYear = 2016;       // 何年から
+input bool            InpBars     = true;       // 足データを書き出す
 input bool            InpCalendar = true;       // 経済指標カレンダーも書き出す
 
 void OnStart()
@@ -20,7 +21,7 @@ void OnStart()
    datetime to   = TimeCurrent();
    string tf = StringSubstr(EnumToString(InpTF), 7);
 
-   for(int s = 0; s < ns && !IsStopped(); s++)
+   for(int s = 0; InpBars && s < ns && !IsStopped(); s++)
      {
       string sym = syms[s];
       StringTrimLeft(sym);
@@ -107,41 +108,61 @@ void ExportSymbol(string sym, string tf, datetime from, datetime to)
 // 重要度が中以上の指標を、発表時刻（サーバー時間）・通貨・結果・予想・前回つきで書き出す
 void ExportCalendar(datetime from, datetime to)
   {
-   MqlCalendarValue v[];
-   if(!CalendarValueHistory(v, from, to))
-     {
-      Print("カレンダーを取れませんでした（", GetLastError(), "）");
-      return;
-     }
    int h = FileOpen("multi\\calendar.csv", FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
    if(h == INVALID_HANDLE)
-      return;
-   FileWrite(h, "time", "currency", "importance", "event_id", "event", "actual", "forecast", "previous");
-   int n = 0;
-   for(int i = 0; i < ArraySize(v); i++)
      {
-      MqlCalendarEvent e;
-      if(!CalendarEventById(v[i].event_id, e))
-         continue;
-      if(e.importance < CALENDAR_IMPORTANCE_MODERATE)
-         continue;
-      MqlCalendarCountry c;
-      if(!CalendarCountryById(e.country_id, c))
-         continue;
-      string name = e.name;
-      StringReplace(name, ",", " ");
-      FileWrite(h,
-                TimeToString(v[i].time, TIME_DATE | TIME_MINUTES),
-                c.currency,
-                (int)e.importance,
-                (long)e.id,
-                name,
-                v[i].HasActualValue()   ? DoubleToString(v[i].GetActualValue(), 3)   : "",
-                v[i].HasForecastValue() ? DoubleToString(v[i].GetForecastValue(), 3) : "",
-                v[i].HasPreviousValue() ? DoubleToString(v[i].GetPreviousValue(), 3) : "");
-      n++;
+      Print("calendar.csv を作れませんでした（", GetLastError(), "）");
+      return;
+     }
+   FileWrite(h, "time", "currency", "importance", "event_id", "event", "actual", "forecast", "previous");
+   int n = 0, failed = 0;
+   // 一度に長い期間を取ると失敗するので、1か月ずつ取る
+   for(datetime a = from; a < to && !IsStopped(); )
+     {
+      MqlDateTime d;
+      TimeToStruct(a, d);
+      d.mon++;
+      if(d.mon > 12) { d.mon = 1; d.year++; }
+      datetime b = StructToTime(d);
+      MqlCalendarValue v[];
+      ResetLastError();
+      bool ok = false;
+      for(int tries = 0; tries < 5 && !ok; tries++)
+        {
+         ok = CalendarValueHistory(v, a, b);
+         if(!ok) Sleep(500);
+        }
+      if(!ok)
+        {
+         failed++;
+         PrintFormat("カレンダー %s：取れませんでした（%d）", TimeToString(a, TIME_DATE), GetLastError());
+        }
+      for(int i = 0; i < ArraySize(v); i++)
+        {
+         MqlCalendarEvent e;
+         if(!CalendarEventById(v[i].event_id, e))
+            continue;
+         if(e.importance < CALENDAR_IMPORTANCE_MODERATE)
+            continue;
+         MqlCalendarCountry c;
+         if(!CalendarCountryById(e.country_id, c))
+            continue;
+         string name = e.name;
+         StringReplace(name, ",", " ");
+         FileWrite(h,
+                   TimeToString(v[i].time, TIME_DATE | TIME_MINUTES),
+                   c.currency,
+                   (int)e.importance,
+                   (long)e.id,
+                   name,
+                   v[i].HasActualValue()   ? DoubleToString(v[i].GetActualValue(), 3)   : "",
+                   v[i].HasForecastValue() ? DoubleToString(v[i].GetForecastValue(), 3) : "",
+                   v[i].HasPreviousValue() ? DoubleToString(v[i].GetPreviousValue(), 3) : "");
+         n++;
+        }
+      a = b;
      }
    FileClose(h);
-   PrintFormat("カレンダー：%d件 → multi\\calendar.csv", n);
+   PrintFormat("カレンダー：%d件 → multi\\calendar.csv（取れなかった月 %d）", n, failed);
   }
 //+------------------------------------------------------------------+
