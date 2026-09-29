@@ -407,6 +407,7 @@ class Game {
   }
 
   async equipVisual() {
+    this.fpOn = null;   // 体の表示をやり直す
     const id = this.save.weapon;
     if (!id) { this.player?.actor.hold(null); return; }
     const w = WEAPONS[id];
@@ -451,8 +452,8 @@ class Game {
       },
       cameraSnapshot: () => ({ yaw: this.camYaw, pitch: this.camPitch }),
       cameraRestore: c => { this.camYaw = c.yaw; this.camPitch = c.pitch; },
-      tap: () => { if (ok()) this.player.attack(this.stats); },
-      holdStart: () => { if (ok()) this.player.chargeStart(); },
+      tap: () => { if (ok()) (this.aim(), this.player.attack(this.stats)); },
+      holdStart: () => { if (ok()) (this.aim(), this.player.chargeStart()); },
       holdEnd: sec => { if (this.player) this.player.chargeRelease(this.stats, sec < 0 || !ok()); },
       flick: (dx, dy) => { if (!ok()) return; if (this.player.swimming && dy > Math.abs(dx) * 1.2) this.player.dive(); else this.tryDash((this.camYaw + Math.PI) - Math.atan2(dx, -dy)); },
       jump: () => { if (ok()) this.player.jump(); },
@@ -460,7 +461,7 @@ class Game {
     });
 
     const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); audio.unlock(); fn(); });
-    tap($('atkBtn'), () => { if (!this.paused) this.player.attack(this.stats); });
+    tap($('atkBtn'), () => { if (!this.paused) (this.aim(), this.player.attack(this.stats)); });
     tap($('rollBtn'), () => { if (!this.paused) this.tryDash(null); });
     this.showButtons(!!this.save?.buttons);
     tap($('actBtn'), () => this.interact());
@@ -476,7 +477,7 @@ class Game {
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase(); keys.add(k); upd();
       if (e.repeat) return;
-      if (k === 'j' && !this.paused) { this.player.attack(this.stats); this.jHold = setTimeout(() => this.player.chargeStart(), 360); }
+      if (k === 'j' && !this.paused) { (this.aim(), this.player.attack(this.stats)); this.jHold = setTimeout(() => (this.aim(), this.player.chargeStart()), 360); }
       if (k === 'k' && !this.paused) this.tryDash(Math.hypot(this.input.x, this.input.y) > 0.2 ? (this.camYaw + Math.PI) - Math.atan2(this.input.x, this.input.y) : null);
       if (k === ' ' && !this.paused) { e.preventDefault(); this.player.jump(); }
       if (k === '1' && !this.paused) this.tryGlyph('circle');
@@ -785,6 +786,7 @@ class Game {
   tryGlyph(name) {
     const cost = { circle: 40, zigzag: 30 }[name];
     if (this.power < cost) { this.toast(`神力が足りない（${cost} 必要）`); audio.sfx('ui'); return; }
+    this.aim();
     if (this.player.cast(name)) this.power -= cost;
   }
 
@@ -1040,6 +1042,7 @@ class Game {
       body = `<div class="clue" style="border-color:#6fd39a"><b>いまやること</b>${objective(save)}</div>` + body;
     } else {
       body = `<button class="btn sub" id="bgmBtn">BGM・効果音：${save.bgm ? 'オン' : 'オフ'}</button>
+        <button class="btn sub" id="fpBtn">視点：${save.fp ? '自分の目線（試し）' : 'うしろから'}</button>
         <button class="btn sub" id="guideBtn">操作の書を見る</button>
         <button class="btn sub" id="btnMode">攻撃・回避ボタン：${save.buttons ? '表示する' : '表示しない（なぞり操作）'}</button>
         <div class="note" style="margin-top:14px">操作：画面の左半分をなぞって移動（大きくなぞると走る）。右側をゆっくりなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。画面の右側をはじく「砂走り」でかわせます。</div>
@@ -1092,6 +1095,7 @@ class Game {
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };
       root.querySelector('#guideBtn')?.addEventListener('click', () => this.showGuide());
+      root.querySelector('#fpBtn')?.addEventListener('click', () => { save.fp = !save.fp; this.persist(); this.openMenu('settings'); });
       root.querySelector('#btnMode')?.addEventListener('click', () => { save.buttons = !save.buttons; this.showButtons(save.buttons); this.openMenu('settings'); });
     });
   }
@@ -1292,7 +1296,71 @@ class Game {
     if (render) { this.updateHUD(); this.composer.render(); }
   }
 
+  /** 自分の目線のとき：見ている方向へ体を向ける（攻撃・術が視線の先に出る） */
+  aim() {
+    if (!this.save.fp || !this.player || this.player.state !== 'move') return;
+    this.player.face = this.camYaw + Math.PI; this.player.root.rotation.y = this.player.face;
+  }
+
+  /** 自分の目線：目の高さから見る。体は見えず、手に持った武器だけが見える */
+  updateFPCamera(dt) {
+    const P = this.player, p = P.pos;
+    this.camY = (this.camY ?? p.y) + (p.y - (this.camY ?? p.y)) * Math.min(1, dt * 12);
+    const fwd = this.camYaw + Math.PI, pitch = THREE.MathUtils.clamp(this.camPitch - 0.3, -1.1, 1.2);
+    const moving = Math.hypot(this.input.x, this.input.y) > 0.2 && !P.air;
+    this.fpBob = (this.fpBob || 0) + (moving ? dt * P.speedNow * 2.2 : 0);
+    const bob = moving ? Math.sin(this.fpBob) * 0.04 : 0;
+    const eye = new THREE.Vector3(p.x + Math.sin(fwd) * 0.18, this.camY + 1.58 + bob, p.z + Math.cos(fwd) * 0.18);
+    this.camera.position.copy(eye);
+    if (this.shake > 0) { this.shake -= dt; const s = this.shake * 0.3; this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; }
+    this.camera.lookAt(eye.x + Math.sin(fwd) * Math.cos(pitch), eye.y - Math.sin(pitch), eye.z + Math.cos(fwd) * Math.cos(pitch));
+    // 止まっているときは体を視線の方へ
+    if (!moving && P.state === 'move') P.face = fwd;
+    this.camPos = null;
+    this.updateViewWeapon(dt, bob);
+  }
+
+  /** 自分の目線で見える武器（画面の右下）。斬るとふり下ろす */
+  updateViewWeapon(dt, bob) {
+    const P = this.player, src = P.actor.weapon;
+    if (this.vwSrc !== src) {
+      if (this.vw) { this.vw.removeFromParent(); this.vw = null; }
+      this.vwSrc = src;
+      if (src) {
+        this.vw = new THREE.Group();
+        const c = src.clone(true); c.position.set(0, 0, 0); c.rotation.set(0, 0, 0); c.scale.setScalar(0.85);
+        this.vwInner = c; this.vw.add(c);
+        this.camera.add(this.vw);
+        if (!this.camera.parent) this.scene.add(this.camera);
+      }
+    }
+    if (src) src.visible = false;
+    if (!this.vw) return;
+    // 構え：右下で刃を斜め上へ
+    let rx = -0.35, ry = 0.25, rz = 0.45, x = 0.46, y = -0.4 + bob * 0.5, z = -0.7;
+    if (P.state === 'attack') {
+      const k = P.actor.progress(), s = Math.sin(Math.min(1, k / 0.45) * Math.PI);   // 振りかぶって → 斬る
+      const side = P.combo % 2 ? -1 : 1;
+      rz = 0.55 - side * 2.2 * Math.min(1, k / 0.4); rx = -0.35 - 0.8 * s; x = 0.34 - side * 0.35 * Math.min(1, k / 0.4); y = -0.38 + 0.12 * s;
+    } else if (P.state === 'charge') {
+      const k = Math.min(1, P.chargeTime / 1.2); rz = 0.55 + 0.5 * k; x = 0.42; y = -0.3 + Math.sin(this.time * 40) * 0.005 * k;
+    } else if (P.state === 'roll') { y = -0.6; rx = -0.8; }
+    const v = this.vw, a = Math.min(1, dt * 18);
+    v.position.lerp(new THREE.Vector3(x, y, z), a);
+    v.rotation.x += (rx - v.rotation.x) * a; v.rotation.y += (ry - v.rotation.y) * a; v.rotation.z += (rz - v.rotation.z) * a;
+  }
+
+  /** 体（肌と服）を隠す／出す。武器と翼は残す */
+  setBodyVisible(on) {
+    this.player?.actor.model.traverse(o => { if (o.isSkinnedMesh) o.visible = on; });
+    if (on) { if (this.player?.actor.weapon) this.player.actor.weapon.visible = true; if (this.vw) { this.vw.removeFromParent(); this.vw = null; this.vwSrc = null; } }
+    this.camera.near = on ? 0.1 : 0.05; this.camera.updateProjectionMatrix();
+  }
+
   updateCamera(dt) {
+    const fp = !!this.save.fp;
+    if (fp !== this.fpOn) { this.fpOn = fp; this.setBodyVisible(!fp); }
+    if (fp) return this.updateFPCamera(dt);
     const p = this.player.pos;
     // 歩いている間は、ゆっくり主人公の後ろへ回り込む
     const moving = Math.hypot(this.input.x, this.input.y) > 0.3;
