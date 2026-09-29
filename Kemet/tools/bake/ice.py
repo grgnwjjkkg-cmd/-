@@ -33,6 +33,7 @@ M['slippery'] = []
 
 
 def drifts(x, z):
+    if abs(x) < 14 and -97 < z < -60: return -0.3                      # 崖の中の神殿の床に雪の丘が出ないように
     k = max(0.0, min(1.0, max(abs(x) - 86, z - 84, -70 - z) / 26))
     return k * (5 + 4 * math.sin(x * 0.05) * math.sin(z * 0.06 + 1)) + 0.3 * math.sin(x * 0.21 + z * 0.13) * (1 - k) + 0.1
 

@@ -31,6 +31,8 @@ M['hazards'] = []
 
 def ashland(x, z):
     k = max(0.0, min(1.0, max(abs(x) - 92, z - 84, -64 - z) / 30))   # 遊ぶ所は平ら、外は灰の丘
+    if abs(x) < 14 and -99 < z < -60: k = 0.0                          # 山の中の神殿の床に丘が出ないように
+    if abs(x) < 14 and -99 < z < -60: return -0.3
     return k * (6 * math.sin(x * 0.05 + 1) * math.sin(z * 0.04) + 5) + 0.25 * math.sin(x * 0.4) * math.sin(z * 0.35) * (1 - k) - 0.05
 
 
