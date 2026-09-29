@@ -13,6 +13,11 @@ export const PEOPLE = {
   seti:  { name: 'セティ', title: '漁師' },
   kash:  { name: 'カシュ', title: '西門の衛兵' },
   kem:   { name: 'ケム', title: '老学者' },
+  // 東京（時の止まった夜の街で、なぜか動ける人たち。戦いには巻きこまれない）
+  tk_prof: { name: '佐伯', title: '考古学者' },
+  tk_reporter: { name: 'ミオ', title: '記者' },
+  tk_tourist: { name: 'ルーカス', title: '旅行者' },
+  tk_guard: { name: '大森', title: '駅の警備員' },
 };
 
 // 町にいる人（model は assets/chars/<model>.glb、anim は待機の動き）
@@ -25,6 +30,17 @@ export const TOWN_NPCS = [
   { id: 'kash', model: 'human_kash', pos: [-45, 3.5], face: 1.57, anim: 'Sword_Idle' },
   { id: 'kem', model: 'human_kem', pos: [-22, -22], face: 0.6, anim: 'Idle_Loop' },
 ];
+
+// 東京にいる人（安全な場所：歩道の角や屋上）
+export const TOKYO_NPCS = [
+  { id: 'tk_prof', model: 'human_tk_prof', pos: [-6, 12.5], face: Math.PI, anim: 'Idle_Loop', safe: true },
+  { id: 'tk_reporter', model: 'human_tk_reporter', pos: [22, 22], face: -2.4, anim: 'Idle_Talking_Loop', safe: true },
+  { id: 'tk_tourist', model: 'human_tk_tourist', pos: [-22, 21], face: 2.4, anim: 'Idle_Loop', safe: true },
+  { id: 'tk_guard', model: 'human_tk_guard', pos: [4, 64], face: Math.PI, anim: 'Idle_Loop', safe: true },
+];
+
+/** 場所ごとの人 */
+export const ZONE_NPCS = { town: TOWN_NPCS, tokyo: TOKYO_NPCS };
 
 /** 探索で見つかる物（場所ごと） */
 export const FINDS = {
@@ -65,6 +81,40 @@ export const CLUES = {
 export function script(id, s) {
   const f = s.flags;
   switch (id) {
+    case 'tk_guard':
+      if (f.tkGuard) return [say('tk_guard', '気をつけてな。影の化け物は、光る遺跡から出てくるみたいだ。')];
+      return [
+        say('tk_guard', 'おっと、君も動けるのか！ 夜中の0時ちょうどに、街じゅうの時間が止まってしまったんだ。'),
+        say('tk_guard', '交差点の真ん中に、いきなりオベリスクが生えてきてね。そこから黒い影があふれてる。'),
+        say('tk_guard', 'ここは駅の入口だから、影も近寄ってこない。困ったら戻っておいで。'),
+        run(g => { g.setFlag('tkGuard'); g.giveAnkh(50); }),
+      ];
+    case 'tk_prof':
+      if (f.tkProf) return [say('tk_prof', 'オベリスクの頂の金は「ベンベン石」をかたどったものだ。太陽が最初に降り立つ場所だよ。')];
+      return [
+        say('tk_prof', '……信じられん。これは本物だ。ヘリオポリスのオベリスクと同じ様式だよ。'),
+        say('tk_prof', '君、エジプトから来たのかね？ その服……まるで壁画から抜け出してきたようだ。'),
+        say('tk_prof', '碑文によると、「空の門」が開くたびに、ふたつの時代が重なるらしい。'),
+        say('tk_prof', '北西のビルの屋上に、何か光る物が見えた。低い屋根から順に跳んでいけば届くはずだ。'),
+        run(g => { g.setFlag('tkProf'); g.giveExp(40); }),
+      ];
+    case 'tk_reporter':
+      if (f.tkReporter) return [say('tk_reporter', '写真はばっちり！ ……でも誰も信じてくれないだろうなあ。')];
+      return [
+        say('tk_reporter', 'スクープの予感！ ……って、あなたも止まってないの？'),
+        say('tk_reporter', '取材メモ：影の化け物は、攻撃の直前に体がぼうっと光る。'),
+        say('tk_reporter', 'そのしゅんかんに横へ飛べば、周りの時間がゆっくりになる……って、あなたなら分かるよね？'),
+        run(g => { g.setFlag('tkReporter'); g.giveAnkh(80); }),
+      ];
+    case 'tk_tourist':
+      if (f.tkTourist) return [say('tk_tourist', '南東の店の裏にも何かあったよ。ボクは怖くて近づけなかったけど。')];
+      return [
+        say('tk_tourist', 'やあ！ 東京観光に来たら、とんでもない夜になっちゃったよ。'),
+        say('tk_tourist', '南東の角の店のあたりで、金色の箱を見たんだ。きっと宝箱だよね？'),
+        say('tk_tourist', 'あと、帰り道は南の端の光る門だよ。ボクもあそこから来た……気がする。'),
+        run(g => { g.setFlag('tkTourist'); }),
+      ];
+
     case 'nefer':
       if (f.chapterClear) return [say('nefer', 'スカラベが戻り、祭りも再開できました。本当にありがとう。'), say('nefer', '……ただ、ケム先生が気になることを言っていましたね。')];
       if (f.gotScarab) return [

@@ -80,10 +80,12 @@ export class Player {
       // 急に止まらず、なめらかに加減速
       this.speedNow += (target - this.speedNow) * Math.min(1, dt * 10);
       const s = this.speedNow;
-      if (s > 0.05) {
-        this.pos.x += Math.sin(this.face) * s * dt;
-        this.pos.z += Math.cos(this.face) * s * dt;
-      }
+      // 凍った湖の上はすべる（向きを変えてもすぐには曲がれない）
+      const ice = !this.air && (world.zone?.slippery || []).some(b => P.x > b[0] && P.x < b[1] && P.z > b[2] && P.z < b[3]);
+      const sl = this.slide || (this.slide = { x: 0, z: 0 }), wx = Math.sin(this.face) * s, wz = Math.cos(this.face) * s;
+      const k = ice ? Math.min(1, dt * 1.2) : 1;
+      sl.x += (wx - sl.x) * k; sl.z += (wz - sl.z) * k;
+      this.pos.x += sl.x * dt; this.pos.z += sl.z * dt;
       // 速さに合わせて足の動きを選ぶ（すべって見えないように再生速度も合わせる）
       if (this.swimming) { this.actor.play(s > 0.4 ? 'Swim_Fwd_Loop' : 'Swim_Idle_Loop', { fade: 0.3 }); this.actor.setSpeed(0.6 + s * 0.2); }
       else if (this.air || this.landTime > 0) { /* 空中・着地の動きのまま */ }

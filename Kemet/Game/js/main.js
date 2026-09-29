@@ -6,15 +6,18 @@ import { buildTown } from './world/zones.js';
 import { loadBakedZone, disposeZone } from './world/baked.js';
 import { skyTexture } from './world/textures.js';
 import * as B from './world/builders.js';
-import { PEOPLE, TOWN_NPCS, CLUES, FINDS, objective, script } from './story.js';
+import { PEOPLE, TOWN_NPCS, ZONE_NPCS, CLUES, FINDS, objective, script } from './story.js';
 import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, playerStats, expToNext } from './items.js';
 import { audio } from './audio.js';
+import { Hazards } from './hazards.js';
 import { Gestures } from './gestures.js';
 import { FX } from './fx.js';
 import { Creature, CREATURE_SPAWNS } from './creatures.js';
 // 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
 const HERO_MODEL = 'human_hero';
 // まだ開いていない門に近づいたときのひとこと
+// 遊べる場所（光の計算が終わって、アプリに入っている場所）
+const READY_ZONES = new Set(['town', 'necropolis', 'giza', 'pyramid', 'sunken', 'sky']);
 const LOCKED = { gateOpen: '西門は閉ざされている。衛兵の許しが必要だ', pyrEscaped: '太陽の門は閉ざされている。大ピラミッドの秘宝が鍵らしい' };
 // 世界地図（arrive は、その場所のどの入口に出るか）
 const AREAS = [
@@ -224,14 +227,15 @@ class Game {
     this.player.revive(this.stats.maxHP);
     if (this.save.hp && initial) this.player.hp = Math.min(this.save.hp, this.stats.maxHP);
 
+    for (const def of ZONE_NPCS[name] || []) {
+      const npc = new NPC(new Actor(await this.assets.makeChar(def.model), this.assets), def);
+      npc.root.position.y = Math.max(0, this.zone.colliders.groundAt(def.pos[0], def.pos[1], 999) || 0);
+      this.npcs.push(npc); this.scene.add(npc.root);
+      const label = document.createElement('div'); label.className = 'label';
+      $('labels').appendChild(label); npc.label = label;
+    }
     if (name === 'town') {
       if (this.save.flags.gateOpen) this.zone.openGate(true);
-      for (const def of TOWN_NPCS) {
-        const npc = new NPC(new Actor(await this.assets.makeChar(def.model), this.assets), def);
-        this.npcs.push(npc); this.scene.add(npc.root);
-        const label = document.createElement('div'); label.className = 'label';
-        $('labels').appendChild(label); npc.label = label;
-      }
     } else {
       for (const s of this.zone.enemySpawns) {
         if (s.boss && this.save.flags.bossDown) continue;
@@ -245,6 +249,8 @@ class Game {
     this.setupPyramid(!initial);
     for (const c of this.creatures || []) { this.scene.remove(c.root); c.root.traverse(o => { o.geometry?.dispose(); o.material?.dispose?.(); }); }
     this.creatures = (CREATURE_SPAWNS[name] || []).map(([t, x, y, z]) => { const c = new Creature(t, x, y, z); this.scene.add(c.root); return c; });
+    this.hazards?.dispose(this.scene);
+    this.hazards = new Hazards(this.zone, this.scene);
     this.breath = 1;
     this.setWings(!!this.zone.flight);
     if (!initial && name !== 'town' && !this.save.flags.sawGuide) { this.save.flags.sawGuide = true; setTimeout(() => this.showGuide(), 900); }
@@ -952,6 +958,10 @@ class Game {
   important(id) {
     const f = this.save.flags;
     switch (id) {
+      case 'tk_guard': return !f.tkGuard;
+      case 'tk_prof': return !f.tkProf;
+      case 'tk_reporter': return !f.tkReporter;
+      case 'tk_tourist': return !f.tkTourist;
       case 'nefer': return !f.metNefer || (f.gotScarab && !f.chapterClear);
       case 'amen': return f.metNefer && !f.clueDocks && !!f.hasCandy;
       case 'tawi': return f.metNefer && !f.clueDocks && !f.hasCandy;
@@ -1205,7 +1215,12 @@ class Game {
       if (this.sands > 0 && Math.random() < 0.5) this.fx.puff(this.player.pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0, (Math.random() - 0.5) * 8)), 1, 0.2, 1.5);
       this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
       this.creatures = (this.creatures || []).filter(c => { const keep = c.update(edt, this.player, this); if (!keep) this.scene.remove(c.root); return keep; });
-      this.updateBreath(dt); this.updateWings(dt);
+      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this);
+      // 安全な場所（東京の人のまわり）には敵は入れない
+      for (const n of this.npcs) if (n.def.safe) for (const e of this.enemies) {
+        const dx = e.pos.x - n.root.position.x, dz = e.pos.z - n.root.position.z, d = Math.hypot(dx, dz);
+        if (d < 6 && d > 1e-3) { e.pos.x += dx / d * (6 - d); e.pos.z += dz / d * (6 - d); }
+      }
       // 敵どうしが重ならないように
       for (let i = 0; i < this.enemies.length; i++) for (let j = i + 1; j < this.enemies.length; j++) {
         const a = this.enemies[i].pos, b = this.enemies[j].pos, d = a.distanceTo(b), min = 1.0;
@@ -1214,6 +1229,10 @@ class Game {
       // 出口
       for (const ex of this.zone.exits) {
         const near = Math.hypot(this.player.pos.x - ex.x, this.player.pos.z - ex.z) < ex.r;
+        if (near && !READY_ZONES.has(ex.to)) {   // まだ作っている場所
+          if (this.time - (this.lockedTip || -99) > 6) { this.lockedTip = this.time; this.toast('時の門はまだ眠っている……（準備中）'); }
+          continue;
+        }
         if (near && ex.requires && !this.save.flags[ex.requires]) {   // まだ開いていない門
           if (this.time - (this.lockedTip || -99) > 6) { this.lockedTip = this.time; this.toast(LOCKED[ex.requires] || 'まだ先へは進めない'); }
           continue;
@@ -1327,7 +1346,7 @@ class Game {
   updateBakedLight(p) {
     const z = this.zone, look = z.look(p), a = 0.06;
     const lerp = (x, y) => x + (y - x) * a;
-    this.inside = lerp(this.inside, look.sky ? 0 : 1);
+    this.inside = lerp(this.inside, look.sky || look.open ? 0 : 1);
     if (!this.bakedFog) { this.bakedFog = new THREE.Fog(look.fog[0], look.fog[1], look.fog[2]); }
     if (this.scene.fog !== this.bakedFog) this.scene.fog = this.bakedFog;
     this.bakedFog.color.lerp(new THREE.Color(look.fog[0]), a);
@@ -1354,10 +1373,10 @@ class Game {
     const region = z.region(p);
     if (!this.titleMode && !this.boss && region.name !== this.lastRegion) { this.lastRegion = region.name; audio.play(region.music); }
     // 環境音と足音の種類
-    const amb = region.name === 'town' || this.zone.name === 'town' ? 'town' : region.kind === 'outdoor' ? 'desert' : region.kind === 'cave' ? 'cave' : region.kind === 'underwater' ? 'underwater' : 'tomb';
+    const amb = region.name === 'town' || this.zone.name === 'town' ? 'town' : ['outdoor', 'heaven', 'ember', 'frost', 'night'].includes(region.kind) ? 'desert' : region.kind === 'space' ? 'tomb' : region.kind === 'cave' ? 'cave' : region.kind === 'underwater' ? 'underwater' : 'tomb';
     audio.ambience(this.titleMode ? (this.zone.name === 'town' ? 'town' : 'desert') : amb);
     const inWater = (z.waters || []).some(w => p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1);
-    audio.surface = inWater ? 'water' : (region.kind === 'outdoor' && amb !== 'town') || amb === 'underwater' ? 'sand' : 'stone';
+    audio.surface = inWater ? 'water' : (['outdoor', 'ember'].includes(region.kind) && amb !== 'town') || amb === 'underwater' ? 'sand' : 'stone';
     this.underwater = amb === 'underwater';
   }
 

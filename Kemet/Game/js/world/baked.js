@@ -45,7 +45,12 @@ const LOOKS = {
   outdoor: { sun: 2.2, hemi: 0.8, lantern: 0, torch: 0, exposure: 0.42, fog: ['#d8c6a4', 260, 2600], env: 0.8, sky: true },
   indoor: { sun: 0, hemi: 0.18, lantern: 6, torch: 14, exposure: 1.25, fog: ['#120c07', 8, 80], env: 0.15, sky: false },
   cave: { sun: 0, hemi: 0.14, lantern: 7, torch: 14, exposure: 1.3, fog: ['#0e0b08', 5, 50], env: 0.12, sky: false },
-  heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.48, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, bg: '#8fbde6' },
+  heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.48, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, open: true, bg: '#8fbde6' },
+  // 火山：煙で赤くくすむ／氷山：白く冷たい／夜の東京：暗い青にネオン／宇宙：まっ黒な空に星
+  ember: { sun: 1.6, hemi: 0.5, lantern: 1.5, torch: 0, exposure: 0.62, fog: ['#4a2216', 50, 650], env: 0.4, sky: false, open: true, bg: '#2a120c' },
+  frost: { sun: 2.0, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.4, fog: ['#dfe8f2', 90, 1300], env: 0.9, sky: true },
+  night: { sun: 0.35, hemi: 0.35, lantern: 3.5, torch: 0, exposure: 1.1, fog: ['#0b1128', 60, 650], env: 0.2, sky: false, open: true, bg: '#060a1a' },
+  space: { sun: 2.4, hemi: 0.3, lantern: 1.5, torch: 0, exposure: 0.55, fog: ['#02030a', 400, 4000], env: 0.25, sky: false, open: true, bg: '#010208' },
   underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0d4556' },
 };
 
@@ -181,7 +186,7 @@ export async function loadBakedZone(name, game) {
   });
   // ちり
   const dustPos = [];
-  for (const r of meta.regions) if (r.kind !== 'outdoor') {
+  for (const r of meta.regions) if (!LOOKS[r.kind]?.sky && !LOOKS[r.kind]?.open) {
     const [x0, x1, z0, z1] = r.box;
     const n = Math.min(900, Math.round((x1 - x0) * (z1 - z0) * 0.8));
     for (let i = 0; i < n; i++) dustPos.push(x0 + Math.random() * (x1 - x0), Math.random() * 6, z0 + Math.random() * (z1 - z0));
@@ -189,6 +194,32 @@ export async function loadBakedZone(name, game) {
   const dust = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(dustPos, 3)),
     new THREE.PointsMaterial({ color: '#fff0c8', size: 0.03, transparent: true, opacity: 0.45, depthWrite: false }));
   root.add(dust);
+
+  // 天気：雪（氷山）・火の粉（火山）・星（宇宙・夜）
+  const kind0 = meta.regions[0].kind;
+  let weather = null;
+  if (kind0 === 'frost' || kind0 === 'ember') {
+    const N = kind0 === 'frost' ? 1400 : 500, pos = new Float32Array(N * 3), spd = new Float32Array(N);
+    for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 60; pos[i * 3 + 1] = Math.random() * 24; pos[i * 3 + 2] = (Math.random() - 0.5) * 60; spd[i] = 0.5 + Math.random(); }
+    const frost = kind0 === 'frost';
+    weather = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(pos, 3)),
+      new THREE.PointsMaterial({ color: frost ? '#ffffff' : '#ff9a3a', size: frost ? 0.09 : 0.07, transparent: true, opacity: frost ? 0.85 : 0.9, depthWrite: false, blending: frost ? THREE.NormalBlending : THREE.AdditiveBlending }));
+    weather.userData = { spd, dir: frost ? -1.6 : 1.4 }; weather.frustumCulled = false;
+    root.add(weather);
+  }
+  if (kind0 === 'space' || kind0 === 'night') {
+    const N = kind0 === 'space' ? 3000 : 600, pos = [];
+    for (let i = 0; i < N; i++) {
+      const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = 5000;
+      const y = kind0 === 'space' ? u : Math.abs(u) * 0.9 + 0.1;
+      const q = Math.sqrt(1 - y * y);
+      pos.push(Math.cos(a) * q * r, y * r, Math.sin(a) * q * r);
+    }
+    const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)),
+      new THREE.PointsMaterial({ color: '#ffffff', size: kind0 === 'space' ? 2.2 : 1.4, sizeAttenuation: false, transparent: true, opacity: kind0 === 'space' ? 0.95 : 0.5, fog: false, depthWrite: false }));
+    stars.frustumCulled = false; stars.renderOrder = -1;
+    root.add(stars);
+  }
 
   // 出入口のしるし：足もとから立ちのぼる淡い光
   const exitMat = new THREE.MeshBasicMaterial({ color: '#ffe2a8', transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
@@ -251,7 +282,7 @@ export async function loadBakedZone(name, game) {
     scarab: meta.scarab,
     sunDir,
     region: regionAt,
-    isInside: p => regionAt(p).kind !== 'outdoor',
+    isInside: p => { const l = LOOKS[regionAt(p).kind]; return !(l?.sky || l?.open); },
     look: p => LOOKS[regionAt(p).kind],
     pot: props?.pot,
     gate: props ? { object: props.gate } : null,
@@ -262,7 +293,7 @@ export async function loadBakedZone(name, game) {
     },
     sky, skyRot,
     seal, relic: meta.relic, waters: meta.waters, exposureMul: meta.exposureMul || 1,
-    swim: meta.swim || null, flight: !!meta.flight, gravity: meta.gravity || 1, hazards: meta.hazards || [],
+    swim: meta.swim || null, flight: !!meta.flight, gravity: meta.gravity || 1, hazards: meta.hazards || [], jets: meta.jets || [], slippery: meta.slippery || [],
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
       exitFx.forEach((m, i) => { m.material.opacity = 0.12 + Math.sin(t * 2 + i) * 0.05; });
@@ -273,6 +304,17 @@ export async function loadBakedZone(name, game) {
           let y = a.getY(i) + sp[i] * dt, x = a.getX(i) + Math.sin(t * 2 + i) * dt * 0.15;
           if (y > 14 || Math.abs(x - P.x) > 16 || Math.abs(a.getZ(i) - P.z) > 16) { y = 0; x = P.x + (Math.random() - 0.5) * 30; a.setZ(i, P.z + (Math.random() - 0.5) * 30); }
           a.setX(i, x); a.setY(i, y);
+        }
+        a.needsUpdate = true;
+      }
+      if (weather && player) {
+        const a = weather.geometry.attributes.position, sp = weather.userData.spd, P = player.pos, dir = weather.userData.dir;
+        for (let i = 0; i < sp.length; i++) {
+          let y = a.getY(i) + sp[i] * dir * dt, x = a.getX(i) + Math.sin(t * 0.8 + i) * dt * 0.4, z = a.getZ(i);
+          if (y < P.y - 2 || y > P.y + 24 || Math.abs(x - P.x) > 30 || Math.abs(z - P.z) > 30) {
+            x = P.x + (Math.random() - 0.5) * 60; z = P.z + (Math.random() - 0.5) * 60; y = dir < 0 ? P.y + 20 + Math.random() * 4 : P.y - 1 + Math.random() * 2;
+          }
+          a.setXYZ(i, x, y, z);
         }
         a.needsUpdate = true;
       }
