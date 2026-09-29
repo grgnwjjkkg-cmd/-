@@ -26,8 +26,8 @@ input int    InpMaxLevels         = 5;     // 最大段数（最初の1回を含
 input double InpTPATR             = 0.5;   // 利確＝平均値からATR×この値
 
 input group "資金管理"
-input double InpBaseRiskPct       = 0.25;  // 最初の1ロットがATR 1本分逆行したときの損失（口座の%）
-input double InpBasketStopPct     = 25.0;  // バスケットの含み損がこれに達したら全決済（口座の%）
+input double InpBaseRiskPct       = 0.3;   // 最初の1ロットがATR 1本分逆行したときの損失（口座の%）
+input double InpBasketStopPct     = 5.0;   // バスケットの含み損がこれに達したら全決済（口座の%）
 input double InpWeekTargetPct     = 0.0;   // 週の利益がこれを超えたらその週は新規なし（%、0で無効）
 input double InpWeekStopPct       = 20.0;  // 週の損失がこれを超えたらその週は新規なし（%、0で無効）
 input double InpMaxLot            = 50.0;  // 1ポジションのロット上限
