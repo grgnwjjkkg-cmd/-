@@ -364,12 +364,14 @@ export class Audio {
     far.connect(pan).connect(this.ambBus);
     const tone = (at, f0, f1, dur, vol, type = 'sine') => {
       const o = c.createOscillator(), g = c.createGain(); o.type = type;
+      if (!Number.isFinite(f0 + f1 + at + dur)) return;
       o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
       g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
       o.connect(g).connect(far); o.start(at); o.stop(at + dur + 0.05);
     };
     const noise = (at, type, f0, f1, q, dur, vol) => {
       const n = c.createBufferSource(); n.buffer = this.noiseBuf;
+      if (!Number.isFinite(f0 + f1 + at + dur)) return;
       const f = c.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, at); f.frequency.exponentialRampToValueAtTime(f1, at + dur);
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + dur * 0.15); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
       n.connect(f).connect(g).connect(far); n.start(at, Math.random() * 0.5); n.stop(at + dur + 0.05);
@@ -408,14 +410,14 @@ export class Audio {
     const noise = (dur, type, freq, q, vol, sweepTo) => {
       const n = c.createBufferSource(); n.buffer = this.noiseBuf;
       const f = c.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
-      if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+      if (Number.isFinite(sweepTo) && sweepTo > 0) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
       const g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
       n.connect(f).connect(g).connect(out); n.start(t, Math.random()); n.stop(t + dur + 0.02);
     };
     const tone = (freq, dur, type = 'sine', vol = 0.2, at = 0, to) => {
       const o = c.createOscillator(), g = c.createGain(); o.type = type;
       o.frequency.setValueAtTime(freq, t + at);
-      if (to) o.frequency.exponentialRampToValueAtTime(to, t + at + dur);
+      if (Number.isFinite(to) && to > 0) o.frequency.exponentialRampToValueAtTime(to, t + at + dur);
       g.gain.setValueAtTime(0.0001, t + at); g.gain.linearRampToValueAtTime(vol, t + at + 0.01);
       g.gain.exponentialRampToValueAtTime(0.001, t + at + dur);
       o.connect(g).connect(out); o.start(t + at); o.stop(t + at + dur + 0.02);

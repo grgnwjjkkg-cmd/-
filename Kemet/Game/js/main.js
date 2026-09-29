@@ -1267,7 +1267,7 @@ class Game {
       d = Math.atan2(Math.sin(d), Math.cos(d));
       this.camYaw += d * Math.min(1, dt * 0.8);
     }
-    const inside = this.inside > 0.5;
+    const inside = this.inside > 0.5 && !this.zone?.swim;   // 水の中は天井がない
     const want = inside ? 5.2 : 6.8;
     this.camDist += (want - this.camDist) * Math.min(1, dt * 3);
     this.camY = (this.camY ?? p.y) + (p.y - (this.camY ?? p.y)) * Math.min(1, dt * 6);

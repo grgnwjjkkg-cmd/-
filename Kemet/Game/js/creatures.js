@@ -15,8 +15,8 @@ export const CREATURE_SPAWNS = {
 
 function fishMesh() {
   const g = new THREE.Group();
-  const skin = new THREE.MeshStandardMaterial({ color: '#4d5a52', roughness: 0.45, metalness: 0.3 });
-  const belly = new THREE.MeshStandardMaterial({ color: '#b9b08a', roughness: 0.6 });
+  const skin = new THREE.MeshStandardMaterial({ color: '#7d968a', roughness: 0.4, metalness: 0.25, emissive: '#1c2e28' });
+  const belly = new THREE.MeshStandardMaterial({ color: '#d8cfa8', roughness: 0.6, emissive: '#2a2618' });
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 12), skin); body.scale.set(0.7, 0.8, 2.2); g.add(body);
   const b2 = new THREE.Mesh(new THREE.SphereGeometry(0.46, 16, 10), belly); b2.scale.set(0.62, 0.55, 2.0); b2.position.y = -0.12; g.add(b2);
   const tail = new THREE.Group(); tail.position.z = -1.05; g.add(tail);
