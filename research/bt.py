@@ -47,7 +47,7 @@ def htf(df, rule, n):
 
 @njit(cache=True)
 def run(o, h, l, spr, sigL, sigS, sld, rr, be, maxhold, hour, dow, day,
-        start_h, end_h, maxday, cool, fri_h, maxspr, slip):
+        start_h, end_h, maxday, cool, fri_h, maxspr, slip, trail=0.0):
     n = len(o)
     ent = np.empty(n, np.int64); ext = np.empty(n, np.int64)
     dirs = np.empty(n, np.int64); R = np.empty(n); k = 0
@@ -81,6 +81,8 @@ def run(o, h, l, spr, sigL, sigS, sld, rr, be, maxhold, hour, dow, day,
                     x = tp; break
                 if be > 0 and not moved and h[j] - e >= d * be:
                     sl = e + 0.05; moved = True
+                if trail > 0 and h[j] - d * trail > sl:
+                    sl = h[j] - d * trail
             else:
                 a_h = h[j] + spr[j]; a_l = l[j] + spr[j]
                 if a_h >= sl:
@@ -89,6 +91,8 @@ def run(o, h, l, spr, sigL, sigS, sld, rr, be, maxhold, hour, dow, day,
                     x = tp; break
                 if be > 0 and not moved and e - a_l >= d * be:
                     sl = e - 0.05; moved = True
+                if trail > 0 and a_l + d * trail < sl:
+                    sl = a_l + d * trail
             j += 1
         pnl = (x - e) if go == 1 else (e - x)
         ent[k] = i; ext[k] = j; dirs[k] = go; R[k] = pnl / d; k += 1
