@@ -159,12 +159,16 @@ export async function loadBakedZone(name, game) {
   if (name === 'town') props = addTownProps(root, C);
 
   // 水面
-  const murks = [];
+  const murks = [], mirrors = [];
   for (const w of meta.waters) {
     const sx = w.x1 - w.x0, sz = w.z1 - w.z0;
-    const water = new Reflector(new THREE.PlaneGeometry(sx, sz), { textureWidth: 512, textureHeight: 512, color: '#8a8270', clipBias: 0.003 });
+    const water = new Reflector(new THREE.PlaneGeometry(sx, sz), { textureWidth: 384, textureHeight: 384, color: '#8a8270', clipBias: 0.003 });
     water.rotation.x = -Math.PI / 2; water.position.set((w.x0 + w.x1) / 2, w.y, (w.z0 + w.z1) / 2);
     root.add(water);
+    // 映りこみは場面をもう一度描くので重い → 近くにいるときだけ。遠くからは暗い水面で代わりに見せる
+    const plain = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#23231c' }));
+    plain.position.copy(water.position); root.add(plain);
+    mirrors.push({ water, plain, w });
     const murk = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, uniforms: { time: { value: 0 } },
       vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
@@ -306,6 +310,11 @@ export async function loadBakedZone(name, game) {
     swim: meta.swim || null, flight: !!meta.flight, gravity: meta.gravity || 1, hazards: meta.hazards || [], jets: meta.jets || [], slippery: meta.slippery || [],
     update(dt, t, player) {
       for (const m of murks) m.material.uniforms.time.value = t;
+      if (player) for (const r of mirrors) {
+        const dx = Math.max(r.w.x0 - player.pos.x, 0, player.pos.x - r.w.x1), dz = Math.max(r.w.z0 - player.pos.z, 0, player.pos.z - r.w.z1);
+        const near = Math.hypot(dx, dz) < 26;
+        r.water.visible = near; r.plain.visible = !near;
+      }
       exitFx.forEach((m, i) => { m.material.opacity = 0.12 + Math.sin(t * 2 + i) * 0.05; });
       cUni.cTime.value = t;
       if (bubbles && player) {

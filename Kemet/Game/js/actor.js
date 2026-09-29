@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from '../lib/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../lib/jsm/utils/SkeletonUtils.js';
+import { mergeGeometries } from '../lib/jsm/utils/BufferGeometryUtils.js';
 
 const loader = new GLTFLoader();
 const load = url => new Promise((res, rej) => loader.load(url, res, undefined, rej));
@@ -41,7 +42,7 @@ export class Assets {
   }
 
   async weaponTemplate(name) {
-    if (!this.weapons.has(name)) this.weapons.set(name, load(`${this.base}weapons/${name}.glb`).then(g => g.scene));
+    if (!this.weapons.has(name)) this.weapons.set(name, load(`${this.base}weapons/${name}.glb`).then(g => mergeByMaterial(g.scene)));
     return this.weapons.get(name);
   }
 
@@ -81,6 +82,29 @@ export class Assets {
     });
     return w;
   }
+}
+
+/** 武器は小さな部品が数十個に分かれていて描く回数が多い → 同じ材質どうしを1つにまとめる */
+function mergeByMaterial(root) {
+  root.updateMatrixWorld(true);
+  const groups = new Map();
+  root.traverse(o => {
+    if (!o.isMesh || Array.isArray(o.material)) return;
+    const m = o.material, key = m.name + '|' + (m.color?.getHexString() || '') + '|' + (m.map?.uuid || '');
+    if (!groups.has(key)) groups.set(key, { mat: m, geos: [], meshes: [] });
+    const gg = o.geometry.clone().applyMatrix4(o.matrixWorld);
+    for (const k of Object.keys(gg.attributes)) if (!['position', 'normal', 'uv'].includes(k)) gg.deleteAttribute(k);
+    if (!gg.index) gg.setIndex([...Array(gg.attributes.position.count).keys()]);
+    groups.get(key).geos.push(gg); groups.get(key).meshes.push(o);
+  });
+  const out = new THREE.Group(); out.name = root.name;
+  for (const { mat, geos, meshes } of groups.values()) {
+    const same = geos.every(q => Object.keys(q.attributes).sort().join() === Object.keys(geos[0].attributes).sort().join());
+    const merged = same ? mergeGeometries(geos, false) : null;
+    if (merged) out.add(new THREE.Mesh(merged, mat));
+    else for (const o of meshes) { const c = o.clone(); c.applyMatrix4(o.matrixWorld); out.add(c); }
+  }
+  return out;
 }
 
 // 足もとのやわらかい影（計算済みの光の場所でも、キャラが地面に立って見えるように）

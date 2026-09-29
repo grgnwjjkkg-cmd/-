@@ -19,6 +19,15 @@ export class FX {
     this.chargeRing = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.0, 48).rotateX(-Math.PI / 2),
       new THREE.MeshBasicMaterial({ color: '#ffcf5a', transparent: true, opacity: 0, blending: add, depthWrite: false, side: THREE.DoubleSide }));
     scene.add(this.chargeRing);
+    // 光は最初から置いておき、明るさだけ変える（光の数が変わると全部の材質を作り直すので、一瞬止まる）
+    this.lights = [0, 1].map(() => { const l = new THREE.PointLight('#ffffff', 0, 20); scene.add(l); return l; });
+    this.lightI = 0;
+  }
+
+  light(color, pos, y, intensity, dist) {
+    const l = this.lights[this.lightI = (this.lightI + 1) % this.lights.length];
+    l.color.set(color); l.position.set(pos.x, y, pos.z); l.distance = dist; l.intensity = intensity;
+    return l;
   }
 
   /** 足もとから砂を舞い上げる */
@@ -46,9 +55,9 @@ export class FX {
     const m = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.4, 14, 32, 1, true),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, blending: add, depthWrite: false, side: THREE.DoubleSide }));
     m.position.set(pos.x, 7, pos.z);
-    const light = new THREE.PointLight(color, 60, 18); light.position.set(pos.x, 2, pos.z);
-    this.scene.add(m, light);
-    this.items.push({ m, extra: [light], t: 0, dur: 0.7, update: (it, k) => { it.m.material.opacity = 0.8 * (1 - k); it.m.scale.set(1 + k, 1, 1 + k); light.intensity = 60 * (1 - k); } });
+    const light = this.light(color, pos, 2, 60, 18);
+    this.scene.add(m);
+    this.items.push({ m, t: 0, dur: 0.7, update: (it, k) => { it.m.material.opacity = 0.8 * (1 - k); it.m.scale.set(1 + k, 1, 1 + k); light.intensity = 60 * (1 - k); } });
   }
 
   /** 空から落ちる雷 */
@@ -62,9 +71,9 @@ export class FX {
     const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.12, 6);
     const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: '#cfe4ff', transparent: true, opacity: 1, blending: add, depthWrite: false }));
     const glow = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.45, 6), new THREE.MeshBasicMaterial({ color: '#6a8cff', transparent: true, opacity: 0.5, blending: add, depthWrite: false }));
-    const light = new THREE.PointLight('#9ab8ff', 120, 26); light.position.set(to.x, 3, to.z);
-    this.scene.add(m, glow, light);
-    this.items.push({ m, extra: [glow, light], t: 0, dur: 0.45, update: (it, k) => { const f = Math.random() < 0.5 ? 1 : 0.4; it.m.material.opacity = (1 - k) * f; glow.material.opacity = 0.5 * (1 - k) * f; light.intensity = 120 * (1 - k) * f; } });
+    const light = this.light('#9ab8ff', to, 3, 120, 26);
+    this.scene.add(m, glow);
+    this.items.push({ m, extra: [glow], t: 0, dur: 0.45, update: (it, k) => { const f = Math.random() < 0.5 ? 1 : 0.4; it.m.material.opacity = (1 - k) * f; glow.material.opacity = 0.5 * (1 - k) * f; light.intensity = 120 * (1 - k) * f; } });
   }
 
   /** 溜めの輪（0〜1） */

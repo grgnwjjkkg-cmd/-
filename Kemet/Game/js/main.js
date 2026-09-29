@@ -50,8 +50,13 @@ const newSave = () => ({
 class Game {
   constructor() {
     this.canvas = $('view');
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 光のにじみの処理を通すので、画面のなめらか処理（MSAA）は使わない（重いだけ）
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: 'high-performance' });
+    // 解像度は動きに合わせて自動で上げ下げする（重いときは下げる）
+    this.isPhone = /iPhone|iPad|Android/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+    this.maxPR = Math.min(window.devicePixelRatio, this.isPhone ? 1.6 : 2);
+    this.pr = this.maxPR;
+    this.renderer.setPixelRatio(this.pr);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -102,6 +107,7 @@ class Game {
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.35, 0.6, 0.85);
+    { const bs = this.bloom.setSize.bind(this.bloom); this.bloom.setSize = (w, h) => bs(Math.round(w / 2), Math.round(h / 2)); }   // にじみは半分の解像度で十分
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.resize();
@@ -329,7 +335,7 @@ class Game {
     const mesh = new THREE.Group();
     const eye = new THREE.Mesh(new THREE.SphereGeometry(0.26, 24, 16), new THREE.MeshStandardMaterial({ color: '#3fa0ff', emissive: '#2a7bff', emissiveIntensity: 1.4, metalness: 0.4, roughness: 0.15 }));
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 12, 40), new THREE.MeshStandardMaterial({ color: '#ffd35a', emissive: '#ff9a20', emissiveIntensity: 0.8, metalness: 0.9, roughness: 0.2 }));
-    mesh.add(eye, ring); mesh.add(new THREE.PointLight('#7ab8ff', 25, 9));
+    mesh.add(eye, ring);
     mesh.position.set(r.x, 1.6, r.z);
     this.scene.add(mesh);
     this.pickups.push({ mesh, kind: 'relic', baseY: 1.6 });
@@ -400,7 +406,6 @@ class Game {
   dropScarab(pos) {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 14), new THREE.MeshStandardMaterial({ color: '#ffd35a', emissive: '#ff9a20', emissiveIntensity: 1.2, metalness: 0.8, roughness: 0.2 }));
     mesh.scale.set(1, 0.6, 1.3);
-    const light = new THREE.PointLight('#ffb040', 20, 8); mesh.add(light);
     mesh.position.copy(pos).setY(1);
     this.scene.add(mesh);
     this.pickups.push({ mesh, kind: 'scarab' });
@@ -1042,6 +1047,7 @@ class Game {
       body = `<div class="clue" style="border-color:#6fd39a"><b>いまやること</b>${objective(save)}</div>` + body;
     } else {
       body = `<button class="btn sub" id="bgmBtn">BGM・効果音：${save.bgm ? 'オン' : 'オフ'}</button>
+        <button class="btn sub" id="qBtn">画質：${save.quality === 'low' ? '軽さ優先' : 'きれい（自動調整）'}</button>
         <button class="btn sub" id="fpBtn">視点：${save.fp ? '自分の目線（試し）' : 'うしろから'}</button>
         <button class="btn sub" id="guideBtn">操作の書を見る</button>
         <button class="btn sub" id="btnMode">攻撃・回避ボタン：${save.buttons ? '表示する' : '表示しない（なぞり操作）'}</button>
@@ -1095,6 +1101,7 @@ class Game {
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };
       root.querySelector('#guideBtn')?.addEventListener('click', () => this.showGuide());
+      root.querySelector('#qBtn')?.addEventListener('click', () => { save.quality = save.quality === 'low' ? 'auto' : 'low'; this.persist(); this.openMenu('settings'); });
       root.querySelector('#fpBtn')?.addEventListener('click', () => { save.fp = !save.fp; this.persist(); this.openMenu('settings'); });
       root.querySelector('#btnMode')?.addEventListener('click', () => { save.buttons = !save.buttons; this.showButtons(save.buttons); this.openMenu('settings'); });
     });
@@ -1198,7 +1205,24 @@ class Game {
 
   loop() {
     requestAnimationFrame(() => this.loop());
-    this.tick(Math.min(0.05, this.clock.getDelta()), true);
+    const dt = this.clock.getDelta();
+    this.adaptResolution(dt);
+    this.tick(Math.min(0.05, dt), true);
+  }
+
+  /** 1秒ごとに平均の描画時間を見て、重ければ解像度を下げ、余裕があれば上げる */
+  adaptResolution(dt) {
+    const light = this.save?.quality === 'low';
+    const cap = light ? Math.min(1, this.maxPR) : this.maxPR;
+    this.bloom.enabled = !light;
+    this.frameAcc = (this.frameAcc || 0) + dt; this.frameN = (this.frameN || 0) + 1;
+    if (this.frameAcc < 1) return;
+    const avg = this.frameAcc / this.frameN * 1000; this.frameAcc = 0; this.frameN = 0;
+    let pr = this.pr;
+    if (avg > 24 && pr > 0.75) pr = Math.max(0.75, pr - 0.15);          // 40fps より遅い → 下げる
+    else if (avg < 17.5 && pr < cap) pr = Math.min(cap, pr + 0.1);      // 57fps 以上 → 少し上げる
+    if (pr > cap) pr = cap;
+    if (Math.abs(pr - this.pr) > 0.01) { this.pr = pr; this.renderer.setPixelRatio(pr); this.resize(); }
   }
 
   /** テスト用：描画せずに時間だけ進める */
@@ -1232,6 +1256,7 @@ class Game {
       this.canvas.style.filter = this.sands > 0 ? `sepia(${Math.min(0.55, this.sands)}) saturate(1.25) contrast(1.05)` : '';
       if (this.sands > 0 && Math.random() < 0.5) this.fx.puff(this.player.pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0, (Math.random() - 0.5) * 8)), 1, 0.2, 1.5);
       this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
+      for (const e of this.enemies) e.root.visible = e.pos.distanceToSquared(this.player.pos) < 60 * 60;   // 遠くの敵は描かない
       this.creatures = (this.creatures || []).filter(c => { const keep = c.update(edt, this.player, this); if (!keep) this.scene.remove(c.root); return keep; });
       this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this); this.puzzles?.update(dt);
       // 安全な場所（東京の人のまわり）には敵は入れない

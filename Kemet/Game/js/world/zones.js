@@ -317,7 +317,7 @@ export function buildNecropolis() {
   floor.position.set(21, 0.03, -82); root.add(floor);
 
   // ミイラの広間は浸水している：水面の反射と濁り
-  const water = new Reflector(new THREE.PlaneGeometry(29, 45), { textureWidth: 512, textureHeight: 512, color: '#8a8270', clipBias: 0.003 });
+  const water = new Reflector(new THREE.PlaneGeometry(29, 45), { textureWidth: 384, textureHeight: 384, color: '#8a8270', clipBias: 0.003 });
   water.rotation.x = -Math.PI / 2; water.position.set(25, 0.12, -73);
   root.add(water);
   const murk = new THREE.Mesh(new THREE.PlaneGeometry(29, 45).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
