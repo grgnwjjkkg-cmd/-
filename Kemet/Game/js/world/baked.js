@@ -85,8 +85,17 @@ export async function loadBakedZone(name, game) {
     ...Object.values(meta.groups).map(g => loadTex(base + g.lightmap)),
   ]);
   const lm = {};
+  // スマホでは大きな光の画像を2048に縮める（光はなめらかなので見た目はほぼ同じ、メモリは1/4）
+  const phone = /iPhone|iPad|Android/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+  const shrink = t => {
+    const img = t.image;
+    if (!phone || !img || img.width <= 2048) return t;
+    const c = document.createElement('canvas'); c.width = c.height = 2048;
+    c.getContext('2d').drawImage(img, 0, 0, 2048, 2048);
+    const n = new THREE.CanvasTexture(c); t.dispose(); return n;
+  };
   Object.keys(meta.groups).forEach((g, i) => {
-    const t = lightmaps[i];
+    const t = lightmaps[i] = shrink(lightmaps[i]);
     t.channel = 1; t.flipY = false; t.colorSpace = THREE.SRGBColorSpace;
     lm[g] = t;
   });
