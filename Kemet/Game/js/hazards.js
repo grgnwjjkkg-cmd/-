@@ -61,6 +61,7 @@ export class Hazards {
   }
 
   hit(P, g, dmg, msg, from) {
+    if (this.cool > 0) return;
     this.cool = 0.9;
     if (!P.alive) return;
     P.hp -= dmg; P.invuln = Math.max(P.invuln, 0.5);

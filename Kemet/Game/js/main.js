@@ -10,6 +10,7 @@ import { PEOPLE, TOWN_NPCS, ZONE_NPCS, CLUES, FINDS, objective, script } from '.
 import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, playerStats, expToNext } from './items.js';
 import { audio } from './audio.js';
 import { Hazards } from './hazards.js';
+import { Puzzles, GOLD_SCARABS } from './puzzles.js';
 import { Gestures } from './gestures.js';
 import { FX } from './fx.js';
 import { Creature, CREATURE_SPAWNS } from './creatures.js';
@@ -253,6 +254,8 @@ class Game {
     this.setupPyramid(!initial);
     for (const c of this.creatures || []) { this.scene.remove(c.root); c.root.traverse(o => { o.geometry?.dispose(); o.material?.dispose?.(); }); }
     this.creatures = (CREATURE_SPAWNS[name] || []).map(([t, x, y, z]) => { const c = new Creature(t, x, y, z); this.scene.add(c.root); return c; });
+    this.puzzles?.dispose();
+    this.puzzles = new Puzzles(this, name);
     this.hazards?.dispose(this.scene);
     this.hazards = new Hazards(this.zone, this.scene);
     this.breath = 1;
@@ -500,6 +503,7 @@ class Game {
     if (this.zone.pot) { const d = Math.hypot(p.x - this.zone.pot.x, p.z - this.zone.pot.z); if (d < 4 && d < bd) { bd = d; best = { kind: 'pot', label: '祈る' }; } }
     for (const c of this.chests) if (!c.opened) { const d = Math.hypot(p.x - c.x, p.z - c.z); if (d < 2 && d < bd) { bd = d; best = { kind: 'chest', chest: c, label: '開ける' }; } }
     for (const f of this.finds || []) { const d = Math.hypot(p.x - f.def.x, p.z - f.def.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'find', find: f, label: '調べる' }; } }
+    const pz = this.puzzles?.nearest(p); if (pz && pz.d < bd) { bd = pz.d; best = pz; }
     for (const k of this.pickups) { const d = Math.hypot(p.x - k.mesh.position.x, p.z - k.mesh.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'pickup', pickup: k, label: '拾う' }; } }
     return best;
   }
@@ -515,6 +519,8 @@ class Game {
       this.player.face = Math.atan2(npc.root.position.x - this.player.pos.x, npc.root.position.z - this.player.pos.z);
       await this.runSteps(script(npc.id, this.save), npc.id);
       npc.endTalk();
+    } else if (t.kind === 'puzzle') {
+      t.item.act();
     } else if (t.kind === 'pot') {
       this.openGacha();
     } else if (t.kind === 'chest') {
@@ -972,7 +978,7 @@ class Game {
       case 'seti': return f.clueDocks && !f.clueCloth;
       case 'kash': return f.clueCloth && !f.gateOpen && !!this.save.weapon;
       case 'hatra': return f.clueCloth && !this.save.weapon;
-      case 'kem': return f.metNefer && !f.clueTwo;
+      case 'kem': return f.metNefer && (!f.clueTwo || !f.kemSecrets);
     }
     return false;
   }
@@ -1022,7 +1028,7 @@ class Game {
     } else if (tab === 'map') {
       // 行ったことのある場所へ移動できる（未踏の場所は「？」）
       const visited = save.visited || [];
-      body = `<div class="note" style="margin-bottom:8px">行ったことのある場所へ移動できます。</div><div class="list">` + AREAS.filter(a => READY_ZONES.has(a.id)).map(a => {
+      body = `<div class="note" style="margin-bottom:8px">行ったことのある場所へ移動できます。　<b style="color:#ffd36a">黄金のスカラベ ${(save.scarabs || []).length} / ${GOLD_SCARABS.length}</b></div><div class="list">` + AREAS.filter(a => READY_ZONES.has(a.id)).map(a => {
         const known = visited.includes(a.id), here = this.zone?.name === a.id;
         return `<button class="item ${here ? 'equipped' : ''}" ${known && !here && !this.escape ? `data-go="${a.id}"` : 'disabled'}><div class="icon">${known ? a.icon : '？'}</div>
           <div class="t"><b>${known ? a.name : '？？？'}</b>${known ? a.desc : a.hint}</div><div class="r">${here ? 'いまここ' : known ? '移動' : ''}</div></button>`;
@@ -1221,7 +1227,7 @@ class Game {
       if (this.sands > 0 && Math.random() < 0.5) this.fx.puff(this.player.pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0, (Math.random() - 0.5) * 8)), 1, 0.2, 1.5);
       this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
       this.creatures = (this.creatures || []).filter(c => { const keep = c.update(edt, this.player, this); if (!keep) this.scene.remove(c.root); return keep; });
-      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this);
+      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this); this.puzzles?.update(dt);
       // 安全な場所（東京の人のまわり）には敵は入れない
       for (const n of this.npcs) if (n.def.safe) for (const e of this.enemies) {
         const dx = e.pos.x - n.root.position.x, dz = e.pos.z - n.root.position.z, d = Math.hypot(dx, dz);

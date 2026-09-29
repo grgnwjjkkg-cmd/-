@@ -440,6 +440,7 @@ export class Audio {
       case 'rare': [0, 2, 4, 7, 9, 12, 14].forEach((s, i) => this.pluck(t + i * 0.07, scaleNote(s, 1), 0.3, out, 0.8)); tone(1046, 1.2, 'sine', 0.08, 0.5); break;
       case 'death': tone(300, 0.6, 'sawtooth', 0.12, 0, 60); break;
       case 'rumble': noise(1.6, 'lowpass', 160, 0.7, 0.5, 50); tone(42, 1.4, 'sine', 0.25, 0, 30); noise(0.5, 'bandpass', 700, 1, 0.12, 200); break;  // 地鳴り・石が崩れる音
+      case 'stone': noise(0.35, 'bandpass', 420, 1.2, 0.3, 180); tone(70, 0.25, 'sine', 0.12, 0, 50); break;  // 石がこすれる・動く音
     }
   }
 }
