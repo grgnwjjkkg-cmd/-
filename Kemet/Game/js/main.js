@@ -18,7 +18,7 @@ import { Creature, CREATURE_SPAWNS } from './creatures.js';
 const HERO_MODEL = 'vrm:nefi';
 // まだ開いていない門に近づいたときのひとこと
 // 遊べる場所（光の計算が終わって、アプリに入っている場所）
-const READY_ZONES = new Set(['town', 'necropolis', 'giza', 'pyramid', 'sunken', 'sky', 'ice']);
+const READY_ZONES = new Set(['town', 'necropolis', 'giza', 'pyramid', 'sunken', 'sky', 'ice', 'tokyo', 'space']);
 const LOCKED = { gateOpen: '西門は閉ざされている。衛兵の許しが必要だ', pyrEscaped: '太陽の門は閉ざされている。大ピラミッドの秘宝が鍵らしい' };
 // 世界地図（arrive は、その場所のどの入口に出るか）
 const AREAS = [
