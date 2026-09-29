@@ -15,14 +15,14 @@ import { Gestures } from './gestures.js';
 import { FX } from './fx.js';
 import { Creature, CREATURE_SPAWNS } from './creatures.js';
 // 主人公の見た目（MakeHuman で作ったリアルな人。tools/chars/make_human.py）
-const HERO_MODEL = 'human_hero';
+const HERO_MODEL = 'vrm:nefi';
 // まだ開いていない門に近づいたときのひとこと
 // 遊べる場所（光の計算が終わって、アプリに入っている場所）
 const READY_ZONES = new Set(['town', 'necropolis', 'giza', 'pyramid', 'sunken', 'sky', 'ice']);
 const LOCKED = { gateOpen: '西門は閉ざされている。衛兵の許しが必要だ', pyrEscaped: '太陽の門は閉ざされている。大ピラミッドの秘宝が鍵らしい' };
 // 世界地図（arrive は、その場所のどの入口に出るか）
 const AREAS = [
-  { id: 'town', name: 'メンネフェルの町', icon: '🏛', desc: 'ナイルのほとりの町。市場と神殿、船着き場', hint: '', arrive: 'necropolis' },
+  { id: 'town', name: 'メンメリトの町', icon: '🏛', desc: 'ナイルのほとりの町。市場と神殿、船着き場', hint: '', arrive: 'necropolis' },
   { id: 'necropolis', name: '西岸の墓地', icon: '⚱', desc: '巨像が守る岩の墓、水没した柱の広間、洞窟', hint: '町の西門の向こう', arrive: 'town' },
   { id: 'giza', name: 'ギザの台地', icon: '△', desc: '段々に積まれた大ピラミッドと石の墓の通り', hint: '墓地から西へ続く道の先', arrive: 'necropolis' },
   { id: 'pyramid', name: '大ピラミッドの中', icon: '▲', desc: '大回廊、女王の間、封印された王の間', hint: '大ピラミッドのふもとの穴', arrive: 'giza' },
@@ -143,10 +143,10 @@ class Game {
     const set = p => { bar.style.width = Math.round(p * 100) + '%'; };
     await this.assets.init(set);
     const models = [...new Set(Object.values(WEAPONS).map(w => w.model))];
-    await this.assets.preload([HERO_MODEL, ...TOWN_NPCS.map(n => n.model), 'human_bandit', 'human_mummy', 'jackal'], models, set);
+    await this.assets.preload([...TOWN_NPCS.map(n => n.model), 'human_bandit', 'human_mummy', 'jackal'], models, set);
     await this.makeIcons(models);
     await this.enterZone(this.save.zone, true);
-    $('loadText').textContent = 'ナイルのほとり、古代の都メンネフェル。';
+    $('loadText').textContent = 'ナイルのほとり、古代の都メンメリト。';
     $('startBtn').classList.remove('hidden');
     if (localStorage.getItem(SAVE_KEY)) $('continueBtn').classList.remove('hidden');
     this.titleMode = true;
@@ -171,7 +171,7 @@ class Game {
     audio.play(this.zone.music);
     if (fresh) {
       await this.runSteps([
-        { who: 'narr', text: '古代エジプト、ナイルのほとりの都メンネフェル。' },
+        { who: 'narr', text: '古代エジプト、ナイルのほとりの都メンメリト。' },
         { who: 'narr', text: '祭りの夜、神殿から秘宝「太陽のスカラベ」が盗まれた。' },
         { who: 'narr', text: '駆け出しの宝探し屋のあなたのもとに、神殿から呼び出しが届く――。' },
       ]);
@@ -569,7 +569,7 @@ class Game {
       this.save.items.scarab = 1;
       this.save.flags.gotScarab = true;
       audio.sfx('rare');
-      await this.runSteps([{ who: 'narr', text: '太陽のスカラベを取り戻した！' }, { who: 'narr', text: '神殿のネフェルに届けよう。' }]);
+      await this.runSteps([{ who: 'narr', text: '太陽のスカラベを取り戻した！' }, { who: 'narr', text: '神殿のメリトに届けよう。' }]);
       this.refreshHUD(); this.persist();
     }
   }
@@ -1063,7 +1063,7 @@ class Game {
         <button class="btn sub" id="guideBtn">操作の書を見る</button>
         <button class="btn sub" id="btnMode">攻撃・回避ボタン：${save.buttons ? '表示する' : '表示しない（なぞり操作）'}</button>
         <div class="note" style="margin-top:14px">操作：画面の左半分をなぞって移動（大きくなぞると走る）。右側をゆっくりなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。画面の右側をはじく「砂走り」でかわせます。</div>
-        <div class="note" style="margin-top:14px">3Dモデル・アニメーション：Quaternius（CC0）／実写素材：Poly Haven（CC0）</div>
+        <div class="note" style="margin-top:14px">3Dモデル・アニメーション：Quaternius（CC0）／実写素材：Poly Haven（CC0）／主人公の素体：VRoid Studio サンプルモデル（pixiv, CC0）／three-vrm（pixiv, MIT）</div>
         <div class="clue" style="margin-top:16px;border-color:#ff8a5a"><b>テスト用（完成版では消します）</b>
           <button class="btn sub" id="warpNecro">墓地へワープ</button>
           <button class="btn sub" id="warpTown">町へ戻る</button>
@@ -1221,7 +1221,7 @@ class Game {
       <div class="rank rank${st.rank}">${st.rank}</div>
       <div class="clue"><b>探索率 ${st.rate}%</b>${rows}<div class="statRow"><span>プレイ時間</span><b>${st.min} 分</b></div><div class="statRow"><span>倒れた回数</span><b>${st.deaths}</b></div>
       ${st.rate < 100 ? '<div class="note">まだ見つけていない秘密がある……。地図から墓地へ戻って探せます。</div>' : '<div class="note">すべての秘密を見つけた！</div>'}</div>
-      <div class="clue"><b>盗まれた太陽のスカラベ</b>秘宝は神殿に戻り、メンネフェルに祭りの灯がともった。</div>
+      <div class="clue"><b>盗まれた太陽のスカラベ</b>秘宝は神殿に戻り、メンメリトに祭りの灯がともった。</div>
       <div class="clue"><b>つづく…</b>盗賊団はなぜ「1つだけ」盗んだのか。対になる「月のスカラベ」の行方とは――。</div>
       <button class="btn close">町を歩く</button>`);
   }

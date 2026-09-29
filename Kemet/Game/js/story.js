@@ -6,7 +6,7 @@ const run = fn => ({ run: fn });
 
 export const PEOPLE = {
   player: { name: 'あなた' },
-  nefer: { name: 'ネフェル', title: '神官長' },
+  nefer: { name: 'メリト', title: '神官長' },
   amen:  { name: 'アメン', title: '市場の少年' },
   tawi:  { name: 'タウィ', title: '菓子売り' },
   hatra: { name: 'ハトラ', title: '武器商人' },
@@ -61,12 +61,12 @@ export function objective(s) {
   const f = s.flags;
   if (f.pyrEscaped) return '第2章クリア！ ギザの「太陽の門」が開いた。天空都市へ';
   if (f.chapterClear) return '第2章：ギザの大ピラミッドへ（墓地から西の道の先）。ケムに話を聞くのもよい';
-  if (f.gotScarab) return 'スカラベを神殿のネフェルに届けよう';
+  if (f.gotScarab) return 'スカラベを神殿のメリトに届けよう';
   if (f.gateOpen) return '西岸の墓地の奥へ。盗賊団を追え';
   if (f.clueCloth) return s.weapon ? '西門の衛兵カシュに話そう' : '武器を手に入れて西門へ（ハトラの店・神託の壺）';
   if (f.clueDocks) return '船着き場の漁師セティに話を聞こう';
   if (f.metNefer) return f.hasCandy ? 'お菓子を市場の少年アメンに渡そう' : '市場で聞き込みをしよう';
-  return '神殿の神官長ネフェルに会いに行こう（北）';
+  return '神殿の神官長メリトに会いに行こう（北）';
 }
 
 /** ヒント帳に書かれる手がかり */
@@ -121,7 +121,7 @@ export function script(id, s) {
       if (f.chapterClear) return [say('nefer', 'スカラベが戻り、祭りも再開できました。本当にありがとう。'), say('nefer', '……ただ、ケム先生が気になることを言っていましたね。')];
       if (f.gotScarab) return [
         say('nefer', 'それは……太陽のスカラベ！ 取り戻してくれたのですね！'),
-        say('nefer', 'メンネフェルを代表してお礼を。これは神殿からの報酬です。'),
+        say('nefer', 'メンメリトを代表してお礼を。これは神殿からの報酬です。'),
         run(g => { g.setFlag('chapterClear'); g.giveAnkh(1000); g.takeItem('scarab'); g.giveExp(200); }),
         say('nefer', '……でも、盗賊はなぜスカラベを「1つだけ」盗んだのでしょう。'),
         run(g => g.chapterClear()),

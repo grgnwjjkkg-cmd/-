@@ -3,6 +3,19 @@ import * as THREE from 'three';
 import { GLTFLoader } from '../lib/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../lib/jsm/utils/SkeletonUtils.js';
 import { mergeGeometries } from '../lib/jsm/utils/BufferGeometryUtils.js';
+import { VRMLoaderPlugin, VRMUtils } from '../lib/three-vrm.module.js';
+import { dressNefi } from './costume.js';
+
+// VRM（アニメ風のキャラ）の骨の名前を、動きのデータ（UAL）の骨の名前にそろえる
+const VRM_TO_UAL = { hips: 'pelvis', spine: 'spine_01', chest: 'spine_02', upperChest: 'spine_03', neck: 'neck_01', head: 'Head' };
+for (const [s, t] of [['left', 'l'], ['right', 'r']]) {
+  Object.assign(VRM_TO_UAL, { [s + 'Shoulder']: 'clavicle_' + t, [s + 'UpperArm']: 'upperarm_' + t, [s + 'LowerArm']: 'lowerarm_' + t, [s + 'Hand']: 'hand_' + t,
+    [s + 'UpperLeg']: 'thigh_' + t, [s + 'LowerLeg']: 'calf_' + t, [s + 'Foot']: 'foot_' + t, [s + 'Toes']: 'ball_' + t,
+    [s + 'ThumbMetacarpal']: 'thumb_01_' + t, [s + 'ThumbProximal']: 'thumb_02_' + t, [s + 'ThumbDistal']: 'thumb_03_' + t });
+  for (const [f, u] of [['Index', 'index'], ['Middle', 'middle'], ['Ring', 'ring'], ['Little', 'pinky']])
+    Object.assign(VRM_TO_UAL, { [s + f + 'Proximal']: `${u}_01_${t}`, [s + f + 'Intermediate']: `${u}_02_${t}`, [s + f + 'Distal']: `${u}_03_${t}` });
+}
+const vrmLoader = new GLTFLoader(); vrmLoader.register(p => new VRMLoaderPlugin(p));
 
 const loader = new GLTFLoader();
 const load = url => new Promise((res, rej) => loader.load(url, res, undefined, rej));
@@ -46,8 +59,27 @@ export class Assets {
     return this.weapons.get(name);
   }
 
+  /** アニメ風の主人公（VRM）：骨の名前をそろえ、髪やスカートのゆれ（スプリングボーン）も動かす */
+  async makeVRM(id) {
+    const g = await new Promise((res, rej) => vrmLoader.load(`${this.base}chars/${id}.vrm`, res, undefined, rej));
+    const vrm = g.userData.vrm;
+    VRMUtils.rotateVRM0(vrm);
+    vrm.humanoid.autoUpdateHumanBones = false;       // 動きは骨に直接あてる
+    if (id === 'nefi') dressNefi(vrm);
+    for (const [k, n] of Object.entries(VRM_TO_UAL)) { const b = vrm.humanoid.getRawBoneNode(k); if (b) b.name = n; }
+    const model = vrm.scene;
+    const tpl = SkeletonUtils.clone(model);   // 動きの乗せかえは、画面に置く前の姿勢で計算する
+    model.userData.vrm = vrm;
+    model.rotation.y += Math.PI;   // 動きを乗せると体が後ろ向きになるので、見た目だけ前へ向け直す
+    model.userData.rig = { tpl, clips: new Map(), handFix: restFix(this.animRig, tpl, 'hand_r') };
+    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; for (const m of [].concat(o.material)) m.toneMapped = false; } });   // アニメの色をそのまま出す
+    model.scale.setScalar(1.08);
+    return model;
+  }
+
   /** キャラを複製（材質も複製して、ダメージの点滅を個別にできるように） */
   async makeChar(id) {
+    if (id.startsWith('vrm:')) return this.makeVRM(id.slice(4));
     const tpl = await this.charTemplate(id);
     const model = SkeletonUtils.clone(tpl);
     // 別の骨組みのリアルな人（MakeHuman）は、アニメをその骨に合わせて変換して使う
@@ -215,6 +247,7 @@ export class Actor {
 
   update(dt) {
     this.mixer.update(dt);
+    this.model.userData.vrm?.update(dt);   // 髪・スカートのゆれ、まばたき
     if (this.flashTime > 0) {
       this.flashTime -= dt;
       const k = Math.max(0, this.flashTime) > 0 ? 1 : 0;
