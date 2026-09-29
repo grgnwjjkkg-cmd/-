@@ -50,6 +50,19 @@ CHARS = {
     # 盗賊：黒っぽい腰布、腕輪
     'bandit': dict(macro=M_(1.0, 0.45, 0.7, 0.5, 0.55, 0.7, RACE(0.5, 0.35, 0.15)), skin='young_african_male', hair='short04', hair_color=BLACK_HAIR,
                    kilt=dict(top_f=0.565, bottom_f=0.3, color=(0.28, 0.22, 0.18), belt=(0.6, 0.15, 0.1)), armbands=True),
+    # ---- 現代の東京（時の止まった街で動ける人。話すとヒント） ----
+    # 考古学の教授：年配、スーツ、白髪まじり
+    'tk_prof': dict(macro=M_(1.0, 0.82, 0.4, 0.5, 0.5, 0.6, RACE(0.1, 0.3, 0.6)), skin='old_asian_male', hair='short01', hair_color=(0.55, 0.53, 0.5),
+                    wear=['male_elegantsuit01', 'shoes02']),
+    # 記者：若い女性、私服、ポニーテール
+    'tk_reporter': dict(macro=M_(0.0, 0.4, 0.45, 0.4, 0.55, 0.8, RACE(0.1, 0.25, 0.65)), skin='young_asian_female', hair='ponytail01', hair_color=(0.12, 0.08, 0.06),
+                        wear=['female_casualsuit02', 'shoes05']),
+    # 旅行者：若い男性、私服
+    'tk_tourist': dict(macro=M_(1.0, 0.38, 0.55, 0.45, 0.6, 0.8, RACE(0.2, 0.7, 0.1)), skin='young_caucasian_male', hair='short04', hair_color=(0.35, 0.24, 0.14),
+                       wear=['male_casualsuit03', 'shoes01']),
+    # 駅の警備員：中年、作業着
+    'tk_guard': dict(macro=M_(1.0, 0.6, 0.6, 0.6, 0.5, 0.7, RACE(0.1, 0.2, 0.7)), skin='middleage_asian_male', hair='short02', hair_color=(0.1, 0.08, 0.07),
+                     wear=['male_worksuit01', 'shoes03']),
     # ミイラ：全身に包帯
     'mummy': dict(macro=M_(1.0, 0.6, 0.35, 0.25, 0.6, 0.7), skin='old_african_male', hair=None, bandage=True,
                   kilt=dict(top_f=0.56, bottom_f=0.36, color=(0.62, 0.55, 0.42))),
@@ -84,13 +97,16 @@ C.setdefault('brows', 'eyebrow001'); C.setdefault('skin_tex', 1024)
 for f, t in ((f"eyes/low-poly/low-poly.mhclo", 'Eyes'), (f"eyebrows/{C['brows']}/{C['brows']}.mhclo", 'Eyebrows'),
              ("eyelashes/eyelashes01/eyelashes01.mhclo", 'Eyelashes')) + (((f"hair/{C['hair']}/{C['hair']}.mhclo", 'Hair'),) if C.get('hair') else ()):
     parts[t] = HumanService.add_mhclo_asset(os.path.join(D, f), body, asset_type=t, subdiv_levels=0, material_type='MAKESKIN')
+for cid in C.get('wear', []):
+    parts['wear_' + cid] = HumanService.add_mhclo_asset(os.path.join(D, f'clothes/{cid}/{cid}.mhclo'), body, asset_type='Clothes', subdiv_levels=0, material_type='MAKESKIN')
 rig = body.parent
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
 
 # 体の形（シェイプキー）と、補助の頂点（マスク）を確定させる
 activate(body)
 if body.data.shape_keys: bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-bpy.ops.object.modifier_apply(modifier='Hide helpers')
+for m in [m for m in body.modifiers if m.type == 'MASK']:
+    bpy.ops.object.modifier_apply(modifier=m.name)
 for o in meshes:
     if o.data.shape_keys:
         activate(o); bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
@@ -467,6 +483,8 @@ simple(parts['Eyes'], 256, 0.1, name='eyes')
 simple(parts['Eyebrows'], 256, 0.9, alpha=True, name='brows')
 simple(parts['Eyelashes'], 256, 0.9, alpha=True, name='lashes')
 if 'Hair' in parts: simple(parts['Hair'], 512, 0.7, alpha=True, tint=C['hair_color'], name='hair')
+for k, o in parts.items():
+    if k.startswith('wear_'): simple(o, 512, 0.8, alpha=True, name=k[5:])
 
 arm['realHuman'] = 1
 
