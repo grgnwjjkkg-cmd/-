@@ -158,9 +158,20 @@ double BaseLot(int dir, double atr)
 
 bool Open(int dir, double lots, string comment)
   {
+   double want = lots;
    lots = NormalizeLot(lots);
    if(lots <= 0)
+     {
+      // 口座が小さくて最小ロットでもリスクを超えるときは入らない。理由は1日1回だけ出す
+      static datetime warned = 0;
+      if(TimeCurrent() - warned > 86400)
+        {
+         PrintFormat("ロット %.4f が最小ロット %.2f 未満なので建てません。資金を増やすか、1ロットが小さい口座を使ってください",
+                     want, SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN));
+         warned = TimeCurrent();
+        }
       return false;
+     }
    double margin = 0.0;
    double price = (dir == 1) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK) : SymbolInfoDouble(_Symbol, SYMBOL_BID);
    ENUM_ORDER_TYPE type = (dir == 1) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
