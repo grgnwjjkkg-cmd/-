@@ -141,7 +141,7 @@ function capelet(body, skel, bone, neck, upper, lsh) {
     const t = r / RINGS, y = top - (top - bottom) * t;
     for (let k = 0; k <= SEG; k++) {
       const a = k / SEG * Math.PI * 2, f = (a / (Math.PI * 2)) * BINS, b0 = Math.floor(f) % BINS, b1 = (b0 + 1) % BINS, w = f - Math.floor(f);
-      const d = (rad[r][b0] * (1 - w) + rad[r][b1] * w) + 0.032 + t * 0.015;
+      const d0 = (rad[r][b0] * (1 - w) + rad[r][b1] * w) + 0.032 + t * 0.015, e = Math.min(1, t / 0.4), d = THREE.MathUtils.lerp(Math.min(d0, 0.085), d0, e * e * (3 - 2 * e));   // 首元はすぼまり、肩へなだらかに
       const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
       pos.push(x, y - t * t * 0.01, z);
       const side = Math.abs(Math.cos(a)) * t, arm = x > 0 === (lsh.x > 0) ? armL : armR;
@@ -223,6 +223,15 @@ export function dressNefi(vrm) {
     color: (p, c) => { c.copy(WHITE); },
   });
   const SK = pleatedSkirt(body, skel, bone, bp, waistY);
+  // 探偵ブーツ：ひざ下まで。ふちは金（靴は茶色に塗り直す）
+  const knee = bp('leftLowerLeg'), foot = bp('leftFoot');
+  garment(body, {
+    name: 'boots',
+    pick: p => p.y < knee.y + 0.02 && p.y > foot.y - 0.05,
+    off: () => 0.012,
+    color: (p, c) => { c.set('#5a3a22'); if (p.y > knee.y - 0.015) c.copy(GOLD); },
+  });
+  vrm.scene.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (/Shoes/.test(m.name)) retint(m, 'sepia(1) saturate(1.3) hue-rotate(-12deg) brightness(0.42)'); });
 
   // ケープ（探偵のケープ風）：肩から胸・二の腕までをおおい、すそは広がる。ふちは金、内側に一本の金線
   capelet(body, skel, bone, neck, upper, lsh);
