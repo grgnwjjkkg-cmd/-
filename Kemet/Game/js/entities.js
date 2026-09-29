@@ -149,7 +149,7 @@ export class Player {
     }
     this.state = 'move'; this.air = true; this.vy = 7.2;
     this.actor.play('Jump_Start', { fade: 0.05, loop: false, speed: 1.8, restart: true });
-    audio.sfx('jump');
+    audio.sfx('jump'); audio.voice('jump', { chance: 0.35, gap: 1.5 });
     return true;
   }
 
@@ -169,7 +169,7 @@ export class Player {
     if (this.state !== 'move' || this.air) return false;
     this.state = 'charge'; this.chargeTime = 0;
     this.actor.play('Sword_Idle', { fade: 0.1 });
-    audio.sfx('charge');
+    audio.sfx('charge'); audio.voice('charge', { chance: 0.6, gap: 2 });
     return true;
   }
 
@@ -179,7 +179,7 @@ export class Player {
     this.charged = Math.min(1, this.chargeTime / 1.2);
     this.state = 'attack'; this.hitDone = false; this.comboQueued = false; this.combo = 0;
     this.actor.play('Sword_Attack', { fade: 0.05, loop: false, speed: 1.1 * stats.attackSpeed, restart: true });
-    audio.sfx('swing');
+    audio.sfx('swing'); audio.voice('release', { gap: 0.3 });
   }
 
   /** 神聖文字の術（描いた形の名前） */
@@ -199,7 +199,7 @@ export class Player {
     this.invuln = 0.5;
     this.charged = null;
     this.actor.play('Roll', { fade: 0.05, loop: false, speed: 1.55, restart: true });
-    audio.sfx('roll');
+    audio.sfx('roll'); audio.voice('dash', { chance: 0.3, gap: 2 });
     return true;
   }
 
@@ -213,7 +213,7 @@ export class Player {
     // 3段目は少し重く
     const speed = (armed ? 1.35 : 1.5) * stats.attackSpeed * (this.combo === 0 ? 0.9 : 1.05);
     this.actor.play(name, { fade: 0.08, loop: false, speed, restart: true });
-    audio.sfx('swing');
+    audio.sfx('swing'); audio.voice(['atk1', 'atk2', 'atk3'][this.combo === 0 ? 2 : this.combo - 1], { chance: this.combo === 0 ? 0.9 : 0.45, gap: 0.35 });
   }
 
   roll() {
@@ -242,10 +242,10 @@ export class Player {
       this.hp = 0;
       this.state = 'dead';
       this.actor.play('Death01', { fade: 0.1, loop: false });
-      audio.sfx('death');
+      audio.sfx('death'); audio.voice('down', { gap: 0 });
     } else {
       this.state = 'hurt';
-      this.hurtTime = 0.35;
+      this.hurtTime = 0.35; audio.voice(Math.random() < 0.5 ? 'hurt1' : 'hurt2', { chance: 0.7, gap: 1.2 });
       this.actor.play('Hit_Chest', { fade: 0.05, loop: false, speed: 1.6, restart: true });
     }
     return true;

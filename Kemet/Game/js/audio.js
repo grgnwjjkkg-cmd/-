@@ -67,6 +67,33 @@ export class Audio {
     if (this.pendingTheme) { const t = this.pendingTheme; this.pendingTheme = null; this.play(t); }
   }
 
+  /** ネフィの声（assets/voice/nefi_<name>.mp3）。chance：鳴らす確率、同じ声は gap 秒あける。前の声は止める */
+  voice(name, { chance = 1, gap = 0.6, who = 'nefi' } = {}) {
+    if (!this.ctx || Math.random() > chance) return;
+    const now = this.ctx.currentTime;
+    if (now - (this.lastVoice || -9) < gap) return;
+    this.lastVoice = now;
+    this.voiceBuf ||= new Map();
+    const url = `assets/voice/${who}_${name}.mp3`;
+    const play = buf => {
+      if (!buf) return;
+      try { this.curVoice?.stop(); } catch (_) { }
+      const src = this.ctx.createBufferSource(); src.buffer = buf;
+      const g = this.ctx.createGain(); g.gain.value = 1.15;
+      src.connect(g).connect(this.master); src.start(); this.curVoice = src;
+    };
+    if (this.voiceBuf.has(url)) return this.voiceBuf.get(url).then(play);
+    const p = fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && this.ctx.decodeAudioData(a)).catch(() => null);
+    this.voiceBuf.set(url, p); p.then(play);
+  }
+
+  /** 先に読んでおく（最初の1回の遅れをなくす） */
+  preloadVoices(names, who = 'nefi') {
+    if (!this.ctx) return;
+    this.voiceBuf ||= new Map();
+    for (const n of names) { const url = `assets/voice/${who}_${n}.mp3`; if (!this.voiceBuf.has(url)) this.voiceBuf.set(url, fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && this.ctx.decodeAudioData(a)).catch(() => null)); }
+  }
+
   setMuted(m) {
     this.muted = m;
     if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 1, this.ctx.currentTime, 0.05);

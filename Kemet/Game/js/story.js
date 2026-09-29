@@ -5,7 +5,7 @@ const say = (who, text) => ({ who, text });
 const run = fn => ({ run: fn });
 
 export const PEOPLE = {
-  player: { name: 'あなた' },
+  player: { name: 'ネフィ' },
   nefer: { name: 'メリト', title: '神官長' },
   amen:  { name: 'アメン', title: '市場の少年' },
   tawi:  { name: 'タウィ', title: '菓子売り' },
@@ -59,6 +59,12 @@ export const FINDS = {
 /** 今やること（画面上部に出す） */
 export function objective(s) {
   const f = s.flags;
+  if (!f.chapterClear && !f.escaped) {
+    if (!f.leverPulled) return '閉じこめられた。部屋を調べて、出口をさがそう';
+    if (!f.gotScarab) return '墓の奥へ。盗賊団のアジトで太陽のスカラベを取り戻そう';
+    return '墓が崩れる！ 入口まで走れ！';
+  }
+  if (f.gotScarab && !f.chapterClear) return '町へ戻り、神官長メリトにスカラベを届けよう（墓地の南の道）';
   if (f.pyrEscaped) return '第2章クリア！ ギザの「太陽の門」が開いた。天空都市へ';
   if (f.chapterClear) return '第2章：ギザの大ピラミッドへ（墓地から西の道の先）。ケムに話を聞くのもよい';
   if (f.gotScarab) return 'スカラベを神殿のメリトに届けよう';
@@ -121,7 +127,7 @@ export function script(id, s) {
       if (f.chapterClear) return [say('nefer', 'スカラベが戻り、祭りも再開できました。本当にありがとう。'), say('nefer', '……ただ、ケム先生が気になることを言っていましたね。')];
       if (f.gotScarab) return [
         say('nefer', 'それは……太陽のスカラベ！ 取り戻してくれたのですね！'),
-        say('nefer', 'メンメリトを代表してお礼を。これは神殿からの報酬です。'),
+        say('nefer', 'メンネフェルを代表してお礼を。これは神殿からの報酬です。'),
         run(g => { g.setFlag('chapterClear'); g.giveAnkh(1000); g.takeItem('scarab'); g.giveExp(200); }),
         say('nefer', '……でも、盗賊はなぜスカラベを「1つだけ」盗んだのでしょう。'),
         run(g => g.chapterClear()),

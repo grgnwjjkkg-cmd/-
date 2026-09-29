@@ -42,16 +42,18 @@ const loadTex = url => new Promise((res, rej) => texLoader.load(url, t => res(t)
 
 // 場所の種類ごとの明るさ（キャラ用のリアルタイムの光）
 const LOOKS = {
-  outdoor: { sun: 2.2, hemi: 0.8, lantern: 0, torch: 0, exposure: 0.42, fog: ['#d8c6a4', 260, 2600], env: 0.8, sky: true },
-  indoor: { sun: 0, hemi: 0.18, lantern: 6, torch: 14, exposure: 1.25, fog: ['#120c07', 8, 80], env: 0.15, sky: false },
-  cave: { sun: 0, hemi: 0.14, lantern: 7, torch: 14, exposure: 1.3, fog: ['#0e0b08', 5, 50], env: 0.12, sky: false },
-  heaven: { sun: 2.2, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.48, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, open: true, bg: '#8fbde6' },
+  // 外：日差しは強く、影は濃く（明るさを抑えて、色づくりでメリハリ）。grade＝色づくりの強さ
+  outdoor: { sun: 3.2, hemi: 0.5, lantern: 0, torch: 0, exposure: 0.29, fog: ['#d9c49c', 400, 3200], env: 0.7, sky: true, bloom: 0.1, grade: { contrast: 1.42, saturation: 1.28, warm: 0.07, cool: 0.08, lift: -0.05, vignette: 0.32 } },
+  // 中：暗く。たいまつの近くだけオレンジ。奥は黒へ沈む
+  indoor: { sun: 0, hemi: 0.1, lantern: 3.5, torch: 22, exposure: 0.95, fog: ['#050302', 5, 34], env: 0.1, sky: false, grade: { contrast: 1.22, saturation: 1.1, warm: 0.1, cool: 0.08, lift: -0.03, vignette: 0.45 } },
+  cave: { sun: 0, hemi: 0.08, lantern: 4, torch: 22, exposure: 1.0, fog: ['#040302', 4, 30], env: 0.1, sky: false, grade: { contrast: 1.22, saturation: 1.05, warm: 0.06, cool: 0.1, lift: -0.03, vignette: 0.5 } },
+  heaven: { sun: 2.6, hemi: 0.9, lantern: 0, torch: 0, exposure: 0.4, bloom: 0.15, fog: ['#c9dcf0', 150, 1400], env: 0.9, sky: false, open: true, bg: '#8fbde6', grade: { contrast: 1.15, saturation: 1.12, warm: 0.06, cool: 0.04, vignette: 0.25 } },
   // 火山：煙で赤くくすむ／氷山：白く冷たい／夜の東京：暗い青にネオン／宇宙：まっ黒な空に星
-  ember: { sun: 1.8, hemi: 0.9, lantern: 2.5, torch: 0, exposure: 0.85, fog: ['#4a2216', 50, 650], env: 0.4, sky: false, open: true, bg: '#2a120c' },
-  frost: { sun: 2.0, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.4, fog: ['#c8d8e8', 60, 700], env: 0.9, sky: false, open: true, bg: '#b4cbe0' },
-  night: { sun: 0.35, hemi: 0.35, lantern: 3.5, torch: 0, exposure: 1.1, fog: ['#0b1128', 60, 650], env: 0.2, sky: false, open: true, bg: '#060a1a' },
-  space: { sun: 2.4, hemi: 0.3, lantern: 1.5, torch: 0, exposure: 0.55, fog: ['#02030a', 400, 4000], env: 0.25, sky: false, open: true, bg: '#010208' },
-  underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0d4556' },
+  ember: { sun: 1.8, hemi: 0.9, lantern: 2.5, torch: 0, exposure: 0.85, fog: ['#4a2216', 50, 650], env: 0.4, sky: false, open: true, bg: '#2a120c', grade: { contrast: 1.25, saturation: 1.15, warm: 0.1, cool: 0.03, vignette: 0.38 } },
+  frost: { sun: 2.0, hemi: 1.0, lantern: 0, torch: 0, exposure: 0.32, bloom: 0.12, fog: ['#c8d8e8', 60, 700], env: 0.9, sky: false, open: true, bg: '#b4cbe0', grade: { contrast: 1.18, saturation: 1.05, warm: 0.02, cool: 0.08, vignette: 0.3 } },
+  night: { sun: 0.35, hemi: 0.35, lantern: 3.5, torch: 0, exposure: 1.1, fog: ['#0b1128', 60, 650], env: 0.2, sky: false, open: true, bg: '#060a1a', grade: { contrast: 1.2, saturation: 1.25, warm: 0.04, cool: 0.1, vignette: 0.42 } },
+  space: { sun: 2.4, hemi: 0.3, lantern: 1.5, torch: 0, exposure: 0.55, fog: ['#02030a', 400, 4000], env: 0.25, sky: false, open: true, bg: '#010208', grade: { contrast: 1.2, saturation: 1.1, warm: 0.05, cool: 0.08, vignette: 0.4 } },
+  underwater: { sun: 0.5, hemi: 0.4, lantern: 2, torch: 0, exposure: 1.15, fog: ['#0d4556', 1, 48], env: 0.25, sky: false, bg: '#0d4556', grade: { contrast: 1.12, saturation: 1.1, warm: 0.0, cool: 0.06, vignette: 0.42 } },
 };
 
 // 水の中：水面でゆれた光の模様（コースティクス）を、床や壁に重ねる
@@ -286,7 +288,7 @@ export async function loadBakedZone(name, game) {
   }
 
   // キャラを照らすたいまつの光（近い4つだけ動かして使う）
-  const pool = Array.from({ length: 4 }, () => { const l = new THREE.PointLight('#ff9a4a', 0, 10, 1.6); root.add(l); return l; });
+  const pool = Array.from({ length: 4 }, () => { const l = new THREE.PointLight('#ff7a28', 0, 9, 1.8); root.add(l); return l; });   // たいまつ：まわりだけ濃いオレンジ
 
   if (sky) { sky.mapping = THREE.EquirectangularReflectionMapping; }
   const skyRot = -(meta.sky?.rotation || 0);

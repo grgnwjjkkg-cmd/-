@@ -189,3 +189,13 @@ table.rates td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.1)
 .rank { font: 700 64px/1 serif; text-align: center; margin: 4px 0 10px; color: #ffd36a; text-shadow: 0 0 18px rgba(255, 190, 80, .7); }
 .rank.rankS { color: #fff2b0; } .rank.rankC { color: #c9b89a; text-shadow: none; }
 .statRow { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255, 220, 160, .12); font-size: 14px; }
+
+/* ムービー：上下の黒い帯と字幕 */
+#cine { position: fixed; inset: 0; pointer-events: none; z-index: 40; opacity: 0; transition: opacity .6s; }
+#cine.on { opacity: 1; }
+#cine .bar { position: absolute; left: 0; right: 0; height: 11vh; background: #000; }
+#cine .bar.top { top: 0; } #cine .bar.bot { bottom: 0; }
+#cine .tint { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: 0; transition: opacity 1s; }
+#cine .sub { position: absolute; left: 50%; bottom: 13vh; transform: translateX(-50%); max-width: 86vw; text-align: center; color: #fff; font-size: clamp(14px, 2.2vw, 20px); line-height: 1.5; text-shadow: 0 2px 6px #000, 0 0 2px #000; opacity: 0; transition: opacity .3s; }
+#cine .sub.show { opacity: 1; }
+#cine .sub b { display: block; color: #ffd98a; font-size: .8em; letter-spacing: .1em; }

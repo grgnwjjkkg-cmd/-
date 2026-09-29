@@ -11,6 +11,7 @@ import { WEAPONS, AMULETS, RARITY, GACHA, itemDef, pull, pull10, gachaTable, pla
 import { audio } from './audio.js';
 import { Hazards } from './hazards.js';
 import { Puzzles, GOLD_SCARABS } from './puzzles.js';
+import { prologue, Tomb } from './chapter1.js';
 import { Gestures } from './gestures.js';
 import { FX } from './fx.js';
 import { Creature, CREATURE_SPAWNS } from './creatures.js';
@@ -22,7 +23,7 @@ const READY_ZONES = new Set(['town', 'necropolis', 'giza', 'pyramid', 'sunken', 
 const LOCKED = { gateOpen: '西門は閉ざされている。衛兵の許しが必要だ', pyrEscaped: '太陽の門は閉ざされている。大ピラミッドの秘宝が鍵らしい' };
 // 世界地図（arrive は、その場所のどの入口に出るか）
 const AREAS = [
-  { id: 'town', name: 'メンメリトの町', icon: '🏛', desc: 'ナイルのほとりの町。市場と神殿、船着き場', hint: '', arrive: 'necropolis' },
+  { id: 'town', name: 'メンネフェルの町', icon: '🏛', desc: 'ナイルのほとりの町。市場と神殿、船着き場', hint: '', arrive: 'necropolis' },
   { id: 'necropolis', name: '西岸の墓地', icon: '⚱', desc: '巨像が守る岩の墓、水没した柱の広間、洞窟', hint: '町の西門の向こう', arrive: 'town' },
   { id: 'giza', name: 'ギザの台地', icon: '△', desc: '段々に積まれた大ピラミッドと石の墓の通り', hint: '墓地から西へ続く道の先', arrive: 'necropolis' },
   { id: 'pyramid', name: '大ピラミッドの中', icon: '▲', desc: '大回廊、女王の間、封印された王の間', hint: '大ピラミッドのふもとの穴', arrive: 'giza' },
@@ -37,13 +38,15 @@ import { EffectComposer } from '../lib/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../lib/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '../lib/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from '../lib/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from '../lib/jsm/postprocessing/ShaderPass.js';
+import { GradeShader } from './grade.js';
 
 const $ = id => document.getElementById(id);
 const SAVE_KEY = 'kemet-save-v1';
 const WEAPON_LENGTH = { Dagger: 0.5, Sword: 1.0, Sword_2: 0.95, Spear: 2.0, Axe_Small: 0.75, Axe: 1.15, Hammer_Small: 0.85, Sword_Golden: 1.1, Scythe: 1.8 };
 
 const newSave = () => ({
-  zone: 'town', x: 0, z: 30, face: Math.PI, flags: {}, clues: [], ankh: 0, level: 1, exp: 0,
+  zone: 'necropolis', x: 0.5, z: -22.5, face: Math.PI, flags: {}, clues: [], ankh: 0, level: 1, exp: 0,
   weapon: null, amulets: [null, null], inventory: {}, items: {}, pityCount: 0, chests: [], finds: [], bgm: true,
 });
 
@@ -58,7 +61,7 @@ class Game {
     this.pr = this.maxPR;
     this.renderer.setPixelRatio(this.pr);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMapping = THREE.AgXToneMapping;   // 明るい所が白く飛びにくい（映画のような階調）
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -110,6 +113,7 @@ class Game {
     { const bs = this.bloom.setSize.bind(this.bloom); this.bloom.setSize = (w, h) => bs(Math.round(w / 2), Math.round(h / 2)); }   // にじみは半分の解像度で十分
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
+    this.grade = new ShaderPass(GradeShader); this.composer.addPass(this.grade);   // 色づくり：コントラスト・色味・画面の端の影
     this.resize();
     window.addEventListener('resize', () => this.resize());
     this.fx = new FX(this.scene);
@@ -146,7 +150,7 @@ class Game {
     await this.assets.preload([...TOWN_NPCS.map(n => n.model), 'human_bandit', 'human_mummy', 'jackal'], models, set);
     await this.makeIcons(models);
     await this.enterZone(this.save.zone, true);
-    $('loadText').textContent = 'ナイルのほとり、古代の都メンメリト。';
+    $('loadText').textContent = 'ナイルのほとり、古代の都メンネフェル。';
     $('startBtn').classList.remove('hidden');
     if (localStorage.getItem(SAVE_KEY)) $('continueBtn').classList.remove('hidden');
     this.titleMode = true;
@@ -161,7 +165,7 @@ class Game {
     if (fresh) {
       const bgm = this.save.bgm;
       this.save = newSave(); this.save.bgm = bgm;
-      await this.enterZone('town', true);
+      await this.enterZone('necropolis', true);
     }
     this.titleMode = false;
     $('title').classList.add('hidden');
@@ -169,14 +173,7 @@ class Game {
     this.paused = false;
     this.refreshHUD();
     audio.play(this.zone.music);
-    if (fresh) {
-      await this.runSteps([
-        { who: 'narr', text: '古代エジプト、ナイルのほとりの都メンメリト。' },
-        { who: 'narr', text: '祭りの夜、神殿から秘宝「太陽のスカラベ」が盗まれた。' },
-        { who: 'narr', text: '駆け出しの宝探し屋のあなたのもとに、神殿から呼び出しが届く――。' },
-      ]);
-      this.toast('左で歩く／右をなぞって戦う（くわしくはメニュー→設定→操作の書）');
-    }
+    if (fresh && !window.SKIP_PROLOGUE) await prologue(this);   // テスト用：SKIP_PROLOGUE で飛ばせる
   }
 
   /** 武器のアイコン（3Dモデルを小さく撮影） */
@@ -262,6 +259,8 @@ class Game {
     this.creatures = (CREATURE_SPAWNS[name] || []).map(([t, x, y, z]) => { const c = new Creature(t, x, y, z); this.scene.add(c.root); return c; });
     this.puzzles?.dispose();
     this.puzzles = new Puzzles(this, name);
+    if (this.tomb) { this.scene.remove(this.tomb.root); this.tomb = null; }
+    if (name === 'necropolis') this.tomb = new Tomb(this);
     this.hazards?.dispose(this.scene);
     this.hazards = new Hazards(this.zone, this.scene);
     this.breath = 1;
@@ -531,7 +530,7 @@ class Game {
       this.openGacha();
     } else if (t.kind === 'chest') {
       const c = t.chest;
-      c.opened = true; this.save.chests.push(c.index);
+      c.opened = true; this.save.chests.push(c.index); audio.voice('chest', { chance: 0.8 });
       const start = this.time;
       const anim = () => { const k = Math.min(1, (this.time - start) / 0.5); c.lid.rotation.x = -1.8 * k; if (k < 1) requestAnimationFrame(anim); };
       anim();
@@ -542,7 +541,7 @@ class Game {
       this.scene.remove(f.fx);
       this.finds.splice(this.finds.indexOf(f), 1);
       (this.save.finds ||= []).push(f.def.id);
-      audio.sfx('clue');
+      audio.sfx('clue'); audio.voice('look', { gap: 0 });
       const all = (FINDS[this.zone.name] || []).every(d => this.save.finds.includes(d.id));
       const steps = [{ who: 'narr', text: `${f.def.title}を見つけた。` }, { who: 'narr', text: f.def.text }];
       if (this.zone.seal) {
@@ -568,8 +567,9 @@ class Game {
       this.pickups.splice(this.pickups.indexOf(t.pickup), 1);
       this.save.items.scarab = 1;
       this.save.flags.gotScarab = true;
+      if (!this.save.flags.escaped) setTimeout(() => this.tomb?.startCollapse(), 2600);
       audio.sfx('rare');
-      await this.runSteps([{ who: 'narr', text: '太陽のスカラベを取り戻した！' }, { who: 'narr', text: '神殿のメリトに届けよう。' }]);
+      await this.runSteps([{ who: 'narr', text: '太陽のスカラベを取り戻した！' }, { who: 'narr', text: '……でも、ここから出られるかな。' }]);
       this.refreshHUD(); this.persist();
     }
   }
@@ -649,7 +649,7 @@ class Game {
     return {
       game: g,
       setFlag(name, value = true) { g.save.flags[name] = value; },
-      addClue(id) { if (!g.save.clues.includes(id)) { g.save.clues.push(id); g.toast(`ヒント帳に「${CLUES[id].title}」を書いた`); audio.sfx('clue'); } },
+      addClue(id) { if (!g.save.clues.includes(id)) { g.save.clues.push(id); g.toast(`推理メモに「${CLUES[id].title}」を書いた`); audio.sfx('clue'); audio.voice('clue', { gap: 0 }); } },
       giveAnkh(n) { g.gainAnkh(n); },
       giveExp(n) { g.gainExp(n); },
       takeItem(id) { delete g.save.items[id]; },
@@ -796,6 +796,7 @@ class Game {
   }
 
   castGlyph(P, name) {
+    audio.voice(name === 'circle' ? 'sun' : 'thunder', { gap: 0.3 });
     const s = this.stats;
     if (name === 'circle') {   // ラーの円環：まわりの敵を太陽の輪で吹き飛ばす
       this.fx.pillar(P.pos); this.fx.ring(P.pos, '#ffd36a', 7, 0.55); this.fx.ring(P.pos, '#fff2c0', 4.5, 0.4, 0.3);
@@ -883,7 +884,7 @@ class Game {
   }
 
   bossAwake(e) {
-    this.boss = e;
+    this.boss = e; audio.voice('boss', { gap: 0 });
     $('bossName').textContent = e.def.name;
     $('bossbar').classList.remove('hidden');
     audio.play('battle');
@@ -900,7 +901,7 @@ class Game {
       this.boss = null;
       audio.play('tomb');
       this.dropScarab(e.pos.clone());
-      this.toast('黒ジャッカルを倒した！');
+      this.toast('黒ジャッカルを倒した！'); setTimeout(() => audio.voice('win', { gap: 0 }), 900);
     }
     this.persist();
   }
@@ -928,7 +929,7 @@ class Game {
     this.save.exp += n;
     let up = false;
     while (this.save.exp >= expToNext(this.save.level)) { this.save.exp -= expToNext(this.save.level); this.save.level++; up = true; }
-    if (up) { this.player.hp = this.stats.maxHP; this.toast(`レベルアップ！ Lv.${this.save.level}`); audio.sfx('rare'); }
+    if (up) { this.player.hp = this.stats.maxHP; this.toast(`レベルアップ！ Lv.${this.save.level}`); audio.sfx('rare'); audio.voice('levelup', { gap: 0 }); }
     this.refreshHUD();
   }
 
@@ -987,6 +988,7 @@ class Game {
   /** 次に話すべき人に「！」 */
   important(id) {
     const f = this.save.flags;
+    if (f.gotScarab && !f.chapterClear) return id === 'nefer';
     switch (id) {
       case 'tk_guard': return !f.tkGuard;
       case 'tk_prof': return !f.tkProf;
@@ -1027,7 +1029,7 @@ class Game {
     if (!this.player || this.titleMode) return;
     audio.sfx('ui');
     const s = this.stats, save = this.save;
-    const tabs = `<div class="tabs">${[['equip', '装備'], ['map', '地図'], ['clues', 'ヒント帳'], ['settings', '設定']].map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['equip', '装備'], ['map', '地図'], ['clues', '推理メモ'], ['settings', '設定']].map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (tab === 'equip') {
       const slot = (cap, id, key) => {
@@ -1221,7 +1223,7 @@ class Game {
       <div class="rank rank${st.rank}">${st.rank}</div>
       <div class="clue"><b>探索率 ${st.rate}%</b>${rows}<div class="statRow"><span>プレイ時間</span><b>${st.min} 分</b></div><div class="statRow"><span>倒れた回数</span><b>${st.deaths}</b></div>
       ${st.rate < 100 ? '<div class="note">まだ見つけていない秘密がある……。地図から墓地へ戻って探せます。</div>' : '<div class="note">すべての秘密を見つけた！</div>'}</div>
-      <div class="clue"><b>盗まれた太陽のスカラベ</b>秘宝は神殿に戻り、メンメリトに祭りの灯がともった。</div>
+      <div class="clue"><b>盗まれた太陽のスカラベ</b>秘宝は神殿に戻り、メンネフェルに祭りの灯がともった。</div>
       <div class="clue"><b>つづく…</b>盗賊団はなぜ「1つだけ」盗んだのか。対になる「月のスカラベ」の行方とは――。</div>
       <button class="btn close">町を歩く</button>`);
   }
@@ -1292,7 +1294,7 @@ class Game {
       this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
       for (const e of this.enemies) e.root.visible = e.pos.distanceToSquared(this.player.pos) < 60 * 60;   // 遠くの敵は描かない
       this.creatures = (this.creatures || []).filter(c => { const keep = c.update(edt, this.player, this); if (!keep) this.scene.remove(c.root); return keep; });
-      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this); this.puzzles?.update(dt);
+      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this); this.puzzles?.update(dt); this.tomb?.update(dt);
       // 安全な場所（東京の人のまわり）には敵は入れない
       for (const n of this.npcs) if (n.def.safe) for (const e of this.enemies) {
         const dx = e.pos.x - n.root.position.x, dz = e.pos.z - n.root.position.z, d = Math.hypot(dx, dz);
@@ -1417,6 +1419,7 @@ class Game {
   }
 
   updateCamera(dt) {
+    if (this.cine) { this.camera.position.copy(this.cine.pos); if (this.shake > 0) { this.shake -= dt; this.camera.position.x += (Math.random() - 0.5) * this.shake * 0.3; this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.3; } this.camera.lookAt(this.cine.look); return; }   // ムービー中
     const fp = !!this.save.fp;
     if (fp !== this.fpOn) { this.fpOn = fp; this.setBodyVisible(!fp); }
     if (fp) return this.updateFPCamera(dt);
@@ -1501,6 +1504,10 @@ class Game {
     this.lantern.intensity = lerp(this.lantern.intensity, look.lantern);
     this.lantern.position.set(p.x, 2.6, p.z);
     this.renderer.toneMappingExposure = lerp(this.renderer.toneMappingExposure, look.exposure * (z.exposureMul || 1) * (z.region(p).expo || 1));
+    // 色づくりも場所に合わせてなめらかに
+    this.bloom.strength = lerp(this.bloom.strength, look.bloom ?? 0.35);   // 明るい砂漠ではにじみを弱く（白っぽくならないように）
+    const gr = look.grade || {}, U = this.grade?.uniforms;
+    if (U) for (const [k, d] of [['contrast', 1.15], ['saturation', 1.1], ['warm', 0.05], ['cool', 0.05], ['lift', 0], ['vignette', 0.3]]) U[k].value = lerp(U[k].value, gr[k] ?? d);
     if (z.sky) {
       this.scene.environment = z.sky;
       this.scene.environmentIntensity = lerp(this.scene.environmentIntensity ?? 1, look.env);

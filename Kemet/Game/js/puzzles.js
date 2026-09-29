@@ -166,6 +166,7 @@ export class Puzzles {
     this.disc.material.emissiveIntensity = 2.5;
     g.fx?.pillar(new THREE.Vector3(0, 0, -77), '#ffd36a');
     g.makeChest({ x: 0, z: -76.5, ankh: 600 }, 'mirror');
+    audio.voice('solved', { gap: 0 });
     await g.runSteps([{ who: 'narr', text: '日の光が太陽円盤に届いた！ 円盤が輝き、壁の奥で石が動いた……' },
       { run: a => a.giveItem('sun_disk') }, { who: 'narr', text: '円盤の裏から「太陽円盤」のお守りが現れた。宝箱も出てきた！' }]);
     g.persist();
@@ -238,7 +239,7 @@ export class Puzzles {
     audio.sfx('rumble'); g.shake = 0.4;
     const a = g.zone.colliders.boxes, i = a.indexOf(this.doorBox); if (i >= 0) a.splice(i, 1);
     this.doorSink = 0;
-    g.toast('カチッ……祠の扉が沈んでいく！');
+    g.toast('カチッ……祠の扉が沈んでいく！'); audio.voice('solved', { gap: 0 });
     g.gainExp?.(60);
     g.persist();
   }
@@ -375,7 +376,7 @@ export class Puzzles {
     if (boss && !g.save.flags.lairSeals) boss.dormant = true;
     // 入ったら閉じこめられる
     if (!L.trapped && !g.save.flags.bossDown && P.pos.x > 55 && P.pos.z < -84 && P.pos.z > -106) {
-      L.trapped = true; L.doorT = 0;
+      L.trapped = true; L.doorT = 0; setTimeout(() => audio.voice('trapped', { gap: 0 }), 700);
       g.checkpoint = { zone: 'necropolis', x: 57, z: -95, face: Math.PI / 2 };   // 倒れたらここから
       g.zone.colliders.boxes.push(this.lairDoorBox);
       audio.sfx('rumble'); g.shake = 0.6;
