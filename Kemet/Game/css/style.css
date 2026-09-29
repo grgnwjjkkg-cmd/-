@@ -164,3 +164,23 @@ table.rates td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.1)
 .bar.breath { flex: 1; height: 5px; background: rgba(0,0,0,.4); }
 .bar.breath b { background: linear-gradient(90deg, #5fb8e8, #c8f0ff); }
 #breathBox.low .bar.breath b { background: #ff6a5a; animation: pulse 0.6s infinite; }
+
+/* ---------- 画面いっぱい：上には細いゲージだけ ---------- */
+#topbar { pointer-events: none; }
+#status { background: none; border: none; padding: 0; width: 150px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)); }
+#status .row, .bar.exp { display: none; }
+#status .bar:not(.power):not(.breath) { height: 5px; background: rgba(0,0,0,.35); }
+#money { display: none; }
+#menuBtn { position: absolute; right: 0; top: 0; width: 40px; height: 40px; border-radius: 50%; background: rgba(20,12,4,.35); border: 1px solid rgba(242,193,78,.45); font-size: 17px; pointer-events: auto; }
+/* いまやること：変わったときだけ上に出て、消える */
+#objective { position: absolute; left: 50%; top: 0; transform: translate(-50%, -8px); width: min(70vw, 520px); flex: none; text-align: center; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(20,12,4,.72) 15%, rgba(20,12,4,.72) 85%, transparent); border: none; border-radius: 0; min-height: 0; padding: 6px 30px; }
+#objective.show { animation: objShow 5s ease forwards; }
+@keyframes objShow { 0% { opacity: 0; transform: translate(-50%, -8px); } 8%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -4px); } }
+/* スティックは出さない（左半分をなぞると歩く） */
+#stickBase { opacity: 0; }
+/* メニューの上のステータス */
+.menuStat { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 13px; margin-bottom: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255,240,200,.06); border: 1px solid rgba(242,193,78,.3); }
+.menuStat b { color: var(--gold2); font-size: 15px; }
+.menuStat .obj { flex-basis: 100%; font-size: 12.5px; line-height: 1.4; }
+.menuStat .obj small { display: block; color: var(--gold); font-size: 10px; letter-spacing: .1em; }

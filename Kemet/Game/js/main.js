@@ -408,10 +408,8 @@ class Game {
     zone.addEventListener('pointerdown', e => {
       audio.unlock();
       stickId = e.pointerId; zone.setPointerCapture(e.pointerId);
-      // スティックは決まった位置に固定（どこを触っても、その中心からの向きで動く）
-      const r = base.getBoundingClientRect();
-      cx = r.left + r.width / 2; cy = r.top + r.height / 2;
-      zone.dispatchEvent(new PointerEvent('pointermove', { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }));
+      // スティックは出さない：左半分のどこでも、指を置いた所からなぞった向きに歩く
+      cx = e.clientX; cy = e.clientY;
     });
     zone.addEventListener('pointermove', e => {
       if (e.pointerId !== stickId) return;
@@ -726,7 +724,7 @@ class Game {
         this.wings.add(w);
       }
     }
-    let spine = null; P.model.traverse(o => { if (!spine && o.isBone && /spine_03/.test(o.name)) spine = o; });
+    let spine = null; P.actor.model.traverse(o => { if (!spine && o.isBone && /spine_03/.test(o.name)) spine = o; });
     if (on && spine && this.wings.parent !== spine) {
       spine.add(this.wings);
       const ws = new THREE.Vector3(); spine.getWorldScale(ws); this.wings.scale.setScalar(1 / (ws.x || 1));
@@ -931,7 +929,11 @@ class Game {
     $('hpBar').style.width = (hp / s.maxHP * 100) + '%';
     $('expBar').style.width = (this.save.exp / expToNext(this.save.level) * 100) + '%';
     $('ankhText').textContent = this.save.ankh.toLocaleString();
-    $('objText').textContent = this.zoneObjective() || objective(this.save);
+    const obj = this.zoneObjective() || objective(this.save);
+    if (obj !== this.lastObj) {
+      this.lastObj = obj; $('objText').textContent = obj;
+      const box = $('objective'); box.classList.remove('show'); void box.offsetWidth; box.classList.add('show');
+    }
   }
 
   zoneObjective() {
@@ -1028,7 +1030,9 @@ class Game {
           <button class="btn sub" id="warpSky">天空都市へ</button>
           <button class="btn sub" id="addAnkh">+1000 アンク</button></div>`;
     }
-    this.openPanel(`<div class="pHead"><h2>メニュー</h2><button class="close">✕</button></div>${tabs}${body}`, root => {
+    const st = `<div class="menuStat"><span>Lv.<b>${save.level}</b></span><span>HP <b>${Math.ceil(this.player.hp)}/${s.maxHP}</b></span><span>EXP <b>${save.exp}/${expToNext(save.level)}</b></span><span class="ankh">☥</span><b>${save.ankh.toLocaleString()}</b>
+      <div class="obj"><small>いまやること</small>${this.zoneObjective() || objective(save)}</div></div>`;
+    this.openPanel(`<div class="pHead"><h2>メニュー</h2><button class="close">✕</button></div>${st}${tabs}${body}`, root => {
       root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => this.openMenu(b.dataset.tab));
       root.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
         this.closePanel(); this.paused = true;
