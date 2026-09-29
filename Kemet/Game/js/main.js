@@ -27,6 +27,10 @@ const AREAS = [
   { id: 'pyramid', name: '大ピラミッドの中', icon: '▲', desc: '大回廊、女王の間、封印された王の間', hint: '大ピラミッドのふもとの穴', arrive: 'giza' },
   { id: 'sunken', name: '海に沈んだ神殿', icon: '🌊', desc: '倒れた巨像と柱が眠る海の底', hint: '漁師の船着き場の先', arrive: 'town' },
   { id: 'sky', name: '天空都市ヘリオポリス', icon: '☀', desc: '雲の上に浮かぶ太陽神ラーの都', hint: 'ギザの「太陽の門」が開いたら', arrive: 'giza' },
+  { id: 'volcano', name: '炎の山', icon: '🌋', desc: '溶岩の川と、火の女神セクメトの神殿', hint: '天空都市の「時の門」の先', arrive: 'sky' },
+  { id: 'ice', name: '氷の神殿', icon: '❄', desc: 'すべる凍った湖と、氷に閉じこめられた神殿', hint: '天空都市の「時の門」の先', arrive: 'sky' },
+  { id: 'tokyo', name: '夜の東京', icon: '🌃', desc: '時の止まった街の交差点に、遺跡が現れた', hint: '天空都市の「時の門」の先', arrive: 'sky' },
+  { id: 'space', name: '星の都ネブト', icon: '✦', desc: '地球を見下ろす宇宙の都。重力が弱い', hint: '天空都市の「時の門」の先', arrive: 'sky' },
 ];
 import { EffectComposer } from '../lib/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../lib/jsm/postprocessing/RenderPass.js';
@@ -1018,7 +1022,7 @@ class Game {
     } else if (tab === 'map') {
       // 行ったことのある場所へ移動できる（未踏の場所は「？」）
       const visited = save.visited || [];
-      body = `<div class="note" style="margin-bottom:8px">行ったことのある場所へ移動できます。</div><div class="list">` + AREAS.map(a => {
+      body = `<div class="note" style="margin-bottom:8px">行ったことのある場所へ移動できます。</div><div class="list">` + AREAS.filter(a => READY_ZONES.has(a.id)).map(a => {
         const known = visited.includes(a.id), here = this.zone?.name === a.id;
         return `<button class="item ${here ? 'equipped' : ''}" ${known && !here && !this.escape ? `data-go="${a.id}"` : 'disabled'}><div class="icon">${known ? a.icon : '？'}</div>
           <div class="t"><b>${known ? a.name : '？？？'}</b>${known ? a.desc : a.hint}</div><div class="r">${here ? 'いまここ' : known ? '移動' : ''}</div></button>`;
@@ -1030,7 +1034,7 @@ class Game {
       body = `<button class="btn sub" id="bgmBtn">BGM・効果音：${save.bgm ? 'オン' : 'オフ'}</button>
         <button class="btn sub" id="guideBtn">操作の書を見る</button>
         <button class="btn sub" id="btnMode">攻撃・回避ボタン：${save.buttons ? '表示する' : '表示しない（なぞり操作）'}</button>
-        <div class="note" style="margin-top:14px">操作：左下のスティックで移動（倒す量で歩く／走る）。右側をなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。画面の右側をはじく「砂走り」でかわせます。</div>
+        <div class="note" style="margin-top:14px">操作：画面の左半分をなぞって移動（大きくなぞると走る）。右側をゆっくりなぞるとカメラを回せます。<br>敵が赤い輪を出したら攻撃の合図。画面の右側をはじく「砂走り」でかわせます。</div>
         <div class="note" style="margin-top:14px">3Dモデル・アニメーション：Quaternius（CC0）／実写素材：Poly Haven（CC0）</div>
         <div class="clue" style="margin-top:16px;border-color:#ff8a5a"><b>テスト用（完成版では消します）</b>
           <button class="btn sub" id="warpNecro">墓地へワープ</button>
@@ -1039,6 +1043,7 @@ class Game {
           <button class="btn sub" id="warpPyramid">ピラミッドの中へ</button>
           <button class="btn sub" id="warpSunken">海中遺跡へ</button>
           <button class="btn sub" id="warpSky">天空都市へ</button>
+          ${['volcano', 'ice', 'tokyo', 'space'].filter(z => READY_ZONES.has(z)).map(z => `<button class="btn sub" data-warp="${z}">${AREAS.find(a => a.id === z).name}へ</button>`).join('')}
           <button class="btn sub" id="addAnkh">+1000 アンク</button></div>`;
     }
     const st = `<div class="menuStat"><span>Lv.<b>${save.level}</b></span><span>HP <b>${Math.ceil(this.player.hp)}/${s.maxHP}</b></span><span>EXP <b>${save.exp}/${expToNext(save.level)}</b></span><span class="ankh">☥</span><b>${save.ankh.toLocaleString()}</b>
@@ -1064,7 +1069,7 @@ class Game {
           if (!save.weapon) { this.addItem('travel_sword'); save.weapon = 'travel_sword'; }
         }
         this.paused = true;
-        await this.enterZone(to, false, { necropolis: 'town', town: 'necropolis', giza: 'necropolis', pyramid: 'giza', sunken: 'town', sky: 'giza' }[to]);
+        await this.enterZone(to, false, { necropolis: 'town', town: 'necropolis', giza: 'necropolis', pyramid: 'giza', sunken: 'town', sky: 'giza', volcano: 'sky', ice: 'sky', tokyo: 'sky', space: 'sky' }[to]);
         this.paused = false;
         this.refreshHUD();
       };
@@ -1074,6 +1079,7 @@ class Game {
       root.querySelector('#warpPyramid')?.addEventListener('click', () => warp('pyramid'));
       root.querySelector('#warpSunken')?.addEventListener('click', () => warp('sunken'));
       root.querySelector('#warpSky')?.addEventListener('click', () => warp('sky'));
+      root.querySelectorAll('[data-warp]').forEach(b => b.onclick = () => warp(b.dataset.warp));
       root.querySelector('#addAnkh')?.addEventListener('click', () => { this.gainAnkh(1000); this.openMenu('settings'); });
       const bgm = root.querySelector('#bgmBtn');
       if (bgm) bgm.onclick = () => { save.bgm = !save.bgm; audio.setMuted(!save.bgm); this.openMenu('settings'); };

@@ -210,7 +210,7 @@ export async function loadBakedZone(name, game) {
   if (kind0 === 'space' || kind0 === 'night') {
     const N = kind0 === 'space' ? 3000 : 600, pos = [];
     for (let i = 0; i < N; i++) {
-      const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = 5000;
+      const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = 2600;
       const y = kind0 === 'space' ? u : Math.abs(u) * 0.9 + 0.1;
       const q = Math.sqrt(1 - y * y);
       pos.push(Math.cos(a) * q * r, y * r, Math.sin(a) * q * r);
@@ -220,6 +220,7 @@ export async function loadBakedZone(name, game) {
     stars.frustumCulled = false; stars.renderOrder = -1;
     root.add(stars);
   }
+  if (kind0 === 'space') root.add(makeEarth());
 
   // 出入口のしるし：足もとから立ちのぼる淡い光
   const exitMat = new THREE.MeshBasicMaterial({ color: '#ffe2a8', transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
@@ -337,6 +338,44 @@ export async function loadBakedZone(name, game) {
       });
     },
   };
+}
+
+/** 宇宙から見た地球（海・大陸・雲を絵でかく。ファイルを増やさない） */
+function makeEarth() {
+  const W = 1024, H = 512, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'), img = g.createImageData(W, H), d = img.data;
+  const hash = (x, y) => { const h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); };
+  const noise = (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), e = hash(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + e) * u * v;
+  };
+  const fbm = (x, y) => { let s = 0, k = 0.5; for (let i = 0; i < 5; i++) { s += noise(x, y) * k; x *= 2.03; y *= 2.03; k *= 0.5; } return s; };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const lat = Math.abs(y / H - 0.5) * 2, i = (y * W + x) * 4;
+    const land = fbm(x / 110, y / 110) - 0.02 * lat, cloud = fbm(x / 40 + 50, y / 70);
+    let r, gg, b;
+    if (lat > 0.86) { r = gg = b = 235; }
+    else if (land > 0.52) { const k = fbm(x / 30, y / 30); r = 70 + k * 90 + lat * 40; gg = 95 + k * 60; b = 45 + k * 30; if (lat < 0.35 && k > 0.55) { r += 70; gg += 40; b += 10; } }
+    else { const deep = Math.min(1, (0.52 - land) * 4); r = 12 + 10 * (1 - deep); gg = 45 + 40 * (1 - deep); b = 110 + 40 * (1 - deep); }
+    const c = Math.max(0, cloud - 0.5) * 2.4;
+    d[i] = r + (255 - r) * Math.min(1, c); d[i + 1] = gg + (255 - gg) * Math.min(1, c); d[i + 2] = b + (255 - b) * Math.min(1, c); d[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+  const grp = new THREE.Group();
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(900, 64, 32), new THREE.MeshBasicMaterial({ map: tx, fog: false, color: '#b8c4d0' }));
+  earth.rotation.set(0.35, 1.2, 0.2); grp.add(earth);
+  // 大気のふち（青く光る輪）
+  const atm = new THREE.Mesh(new THREE.SphereGeometry(940, 64, 32), new THREE.ShaderMaterial({
+    fog: false, transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'varying vec3 vN; varying vec3 vV; void main(){ float k = pow(1.0 - abs(dot(vN, vV)), 3.0); gl_FragColor = vec4(0.35, 0.65, 1.0, 1.0) * k * 1.6; }',
+  }));
+  grp.add(atm);
+  grp.position.set(600, -700, -1500);
+  grp.userData.spin = earth;
+  return grp;
 }
 
 export { LOOKS };
