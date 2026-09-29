@@ -21,6 +21,11 @@ L.material('stone', 'sandstone_blocks_08', (0.95, 0.86, 0.72), scale=2.5)
 L.material('rock', 'cliff_side', (0.95, 0.82, 0.66), scale=5)
 L.material('dark', 'sandstone_blocks_08', (0.02, 0.015, 0.01), scale=3)
 
+L.material('blk1', 'large_sandstone_blocks_01', (1.0, 0.86, 0.66), scale=1.8)   # 石1個ずつ（色のちがう石を混ぜる）
+L.material('blk2', 'large_sandstone_blocks_01', (0.92, 0.79, 0.6), scale=2.1)
+L.material('blk3', 'sandstone_blocks_08', (0.98, 0.86, 0.68), scale=1.6)
+L.material('blk4', 'large_sandstone_blocks_01', (0.8, 0.68, 0.52), scale=1.8)
+L.group('pyrnear', 4096)
 L.group('pyr', 4096)
 L.group('ground', 2048)
 L.group('far', 1024)
@@ -64,7 +69,72 @@ def stepped(group, mat, cx, cz, base, height, course=1.25, casing_from=None, col
 
 
 GP = dict(cx=0, cz=-160, base=240, h=150)           # 大ピラミッド：南の面は z=-40
-stepped('pyr', 'courses', GP['cx'], GP['cz'], GP['base'], GP['h'])
+DETAIL = 22                                          # 下から何段を、石1個ずつで作るか（近くで見える所）
+BLOCK_MATS = ['blk1', 'blk1', 'blk2', 'blk2', 'blk3', 'blk4']
+
+
+def block_skin(cx, cz, base, height, course=1.25, n_detail=DETAIL, hole=None):
+    """下の段を本物のように石1個ずつで積む。石は長さ・奥行き・高さがばらばらで、角が風化して丸く欠け、ところどころ抜け落ちている。
+    見える面だけ作る（前・上・両はし・欠けた角）。奥には段の芯があり、抜けた石の穴は暗くくぼむ。"""
+    n = int(height / course); inset = base / 2 / n
+    for i in range(n_detail):
+        s0 = base / 2 - inset * i; y0 = i * course
+        for side in range(4):
+            a = side * math.pi / 2; ca, sa = math.cos(a), math.sin(a)
+            def P(u, v, y):   # u：面にそった位置、v：内側への深さ → ゲーム座標
+                x, z = u, s0 - v
+                return B(cx + x * ca - z * sa, y, cz + x * sa + z * ca)
+            u = -s0
+            while u < s0 - 0.4:
+                ln = min(random.uniform(1.2, 2.7), s0 - u)
+                if ln < 0.5: break
+                gap = random.uniform(0.02, 0.07)
+                u0, u1 = u + gap, u + ln - gap
+                u += ln
+                mid = (u0 + u1) / 2
+                if hole and side == 0 and abs(mid - hole[0]) < hole[1] and y0 < hole[2]: continue    # 盗掘者の穴
+                if random.random() < (0.045 if i < 12 else 0.025): continue                          # 抜け落ちた石
+                h = course * random.uniform(0.9, 0.99)
+                y1 = y0 + h
+                out = random.uniform(-0.14, 0.04)          # 前へ出たり引っこんだり
+                dep = random.uniform(1.3, 2.1)
+                ch = random.uniform(0.06, 0.32) if random.random() < 0.8 else random.uniform(0.35, 0.6)   # 上の角の欠け
+                j = lambda: random.uniform(-0.04, 0.04)
+                bm = L.bm('pyrnear', random.choice(BLOCK_MATS))
+                v = lambda uu, vv, yy: bm.verts.new(P(uu + j(), vv, yy))
+                fl0, fl1 = v(u0, out + j(), y0), v(u1, out + j(), y0)                              # 前・下
+                fm0, fm1 = v(u0, out + j() + ch * 0.25, y1 - ch), v(u1, out + j() + ch * 0.25, y1 - ch)   # 前・欠けの下
+                ft0, ft1 = v(u0 + ch * 0.2, out + ch + j(), y1), v(u1 - ch * 0.2, out + ch + j(), y1)   # 上・欠けの奥
+                bt0, bt1 = v(u0, dep, y1), v(u1, dep, y1)                                          # 上・奥
+                bb0, bb1 = v(u0, dep, y0), v(u1, dep, y0)
+                ctr = P(mid, dep * 0.5, (y0 + y1) / 2)
+                for f in ((fl0, fl1, fm1, fm0), (fm0, fm1, ft1, ft0), (ft0, ft1, bt1, bt0),
+                          (fl0, fm0, ft0, bt0, bb0), (fl1, bb1, bt1, ft1, fm1)):
+                    try: face = bm.faces.new(f)
+                    except ValueError: continue
+                    face.normal_update()
+                    if face.normal.dot(face.calc_center_median() - ctr) < 0: face.normal_flip()   # 外向きにそろえる
+
+
+# 芯：下の段は石の後ろ（1.6m 内側）、上は今までどおりの段
+def core(cx, cz, base, height, course=1.25, n_detail=DETAIL):
+    bm = L.bm('pyr', 'courses')
+    n = int(height / course); inset = base / 2 / n
+    for i in range(n):
+        back = 1.6 if i < n_detail else 0.0
+        s0 = base / 2 - inset * i - back; s1 = base / 2 - inset * (i + 1) - (1.6 if i + 1 < n_detail else 0.0)
+        y0, y1 = i * course, (i + 1) * course
+        sq = lambda hh, y: [bm.verts.new(B(cx + dx * hh, y, cz + dz * hh)) for dx, dz in ((-1, 1), (1, 1), (1, -1), (-1, -1))]
+        lo, hi, inner = sq(s0, y0), sq(s0, y1), sq(max(s1, 0.01), y1)
+        for k in range(4):
+            q = (k + 1) % 4
+            bm.faces.new((lo[k], lo[q], hi[q], hi[k]))
+            if s1 != s0: bm.faces.new((hi[k], hi[q], inner[q], inner[k]))
+    L.meta['colliders']['boxes'].append([cx - base / 2, cx + base / 2, cz - base / 2, cz + base / 2])
+
+
+core(GP['cx'], GP['cz'], GP['base'], GP['h'])
+block_skin(GP['cx'], GP['cz'], GP['base'], GP['h'], hole=(0, 3.4, 8.5))
 stepped('far', 'courses', -250, -380, 215, 143, casing_from=88, collide=False)   # カフラー王（上に化粧石）
 stepped('far', 'courses', -430, -560, 105, 65, collide=False)                    # メンカウラー王
 for i, x in enumerate((150, 150, 150)):                            # 王妃の小ピラミッド
