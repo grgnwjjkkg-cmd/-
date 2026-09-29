@@ -148,8 +148,13 @@ L.sun(elevation=24, azimuth=40, energy=4.4, color=(1.0, 0.82, 0.6))
 # ---------- ゲーム用
 M = L.meta
 M['regions'] = [{'name': 'sky', 'box': [-3000, 3000, -3000, 3000], 'kind': 'heaven', 'music': 'desert'}]
-M['spawns'] = {'default': {'x': 0, 'z': 62, 'face': math.pi}, 'giza': {'x': 0, 'z': 62, 'face': math.pi}}
-M['exits'] = [{'x': 0, 'z': 67.5, 'r': 1.8, 'to': 'giza'}]
+M['spawns'] = {'default': {'x': 0, 'z': 62, 'face': math.pi}, 'giza': {'x': 0, 'z': 62, 'face': math.pi},
+               'volcano': {'x': -66, 'z': 6, 'face': math.pi}, 'ice': {'x': -66, 'z': 6, 'face': math.pi},
+               'tokyo': {'x': -66, 'z': 6, 'face': math.pi}, 'space': {'x': -66, 'z': 6, 'face': math.pi}}
+M['exits'] = [{'x': 0, 'z': 67.5, 'r': 1.8, 'to': 'giza'},
+              # 星見の台の石の輪は「時の門」：ほかの世界へ
+              {'x': -72, 'z': -4, 'r': 1.8, 'to': 'volcano'}, {'x': -60, 'z': -4, 'r': 1.8, 'to': 'ice'},
+              {'x': -66, 'z': -10, 'r': 1.8, 'to': 'tokyo'}, {'x': -66, 'z': 2, 'r': 1.8, 'to': 'space'}]
 M['enemies'] = [{'type': 'guardian', 'x': 0, 'z': -66}, {'type': 'mummy', 'x': 64, 'z': 6}, {'type': 'bandit', 'x': -64, 'z': -12}, {'type': 'bandit', 'x': -8, 'z': -18}]
 M['chests'] = [{'x': 72, 'z': -14, 'ankh': 500}, {'x': -74, 'z': 10, 'ankh': 450}, {'x': 10, 'z': -80, 'ankh': 900}]
 M['waters'] = []
