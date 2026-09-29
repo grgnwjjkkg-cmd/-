@@ -301,7 +301,7 @@ export class Puzzles {
     const ins = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.9), new THREE.MeshStandardMaterial({ map: tx, emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0.25 }));
     ins.position.set(66, 2.2, -84.45); ins.rotation.y = Math.PI; this.root.add(ins);
     const insIt = { kind: 'inscription', label: '読む', x: 66, z: -85.4, r: 2.0 };
-    insIt.act = () => g.runSteps([{ who: 'narr', text: '壁に古い言葉が刻まれている。' }, { who: 'narr', text: '「日が沈み、月が昇り、星がまたたくとき、セトの封印は解ける」' }]);
+    insIt.act = () => { g.save.flags.lairRead = true; g.runSteps([{ who: 'narr', text: '壁に古い言葉が刻まれている。' }, { who: 'narr', text: '「日が沈み、月が昇り、星がまたたくとき、セトの封印は解ける」' }, { run: a => a.addClue('sealOrder') }]); };
     this.items.push(insIt);
     // 3つの封印（東の壁）：並びと砕く順番はちがう
     const SYM = [['moon', '☾', -89], ['star', '✦', -95], ['sun', '☀', -101]];
@@ -376,6 +376,7 @@ export class Puzzles {
     // 入ったら閉じこめられる
     if (!L.trapped && !g.save.flags.bossDown && P.pos.x > 55 && P.pos.z < -84 && P.pos.z > -106) {
       L.trapped = true; L.doorT = 0;
+      g.checkpoint = { zone: 'necropolis', x: 57, z: -95, face: Math.PI / 2 };   // 倒れたらここから
       g.zone.colliders.boxes.push(this.lairDoorBox);
       audio.sfx('rumble'); g.shake = 0.6;
       g.runSteps([{ who: 'narr', text: '背後で重い石の扉が閉まった！ 閉じこめられた……' },

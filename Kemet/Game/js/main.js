@@ -895,6 +895,7 @@ class Game {
     this.gainAnkh(e.def.ankh);
     if (e.def.boss) {
       this.save.flags.bossDown = true;
+      this.checkpoint = null;
       $('bossbar').classList.add('hidden');
       this.boss = null;
       audio.play('tomb');
@@ -909,7 +910,10 @@ class Game {
     const lost = Math.floor(this.save.ankh * 0.1);
     this.save.ankh -= lost;
     this.toast(`力尽きた…（${lost}アンクを落とした）`);
+    this.save.deaths = (this.save.deaths || 0) + 1;
+    const cp = this.checkpoint?.zone === this.zone.name ? this.checkpoint : null;   // 山場の手前からやり直せる
     await this.enterZone(this.zone.name, false, null);
+    if (cp) { this.player.pos.set(cp.x, 0, cp.z); this.player.face = cp.face; this.camYaw = cp.face + Math.PI; this.camPos = null; }
     this.player.revive(this.stats.maxHP);
   }
 
@@ -969,6 +973,13 @@ class Game {
       const n = this.pyramidTablets();
       return n < 3 ? `ピラミッドの中で石板を探せ（${n}/3）。封印の扉が開く` : '王の間へ。石棺の上の秘宝を手に入れよう';
     }
+    const lair = this.puzzles?.lair;
+    if (z === 'necropolis' && lair?.trapped && !f.bossDown) {
+      if (!this.save.inventory.seal_blade) return 'ラーの祭壇に祈り（300☥）、封印を破る剣を手に入れよう。アンクは盗賊から';
+      if (!f.lairSeals) return f.lairRead ? `碑文の順に封印を斬れ：☀ → ☾ → ✦（${lair.order.length}/3）` : '南の壁の碑文を読んで、封印を斬る順番を知ろう';
+      return '目覚めた黒ジャッカルを倒せ！';
+    }
+    if (z === 'necropolis' && f.bossDown && !f.gotScarab) return '太陽のスカラベを拾おう';
     if (z === 'giza' && !f.pyrEscaped) return '大ピラミッドのふもとの「盗掘者の穴」から中へ入ろう';
     return null;
   }
@@ -1186,8 +1197,30 @@ class Game {
       <table class="rates">${rows}</table><button class="btn sub" id="back">もどる</button>`, root => root.querySelector('#back').onclick = () => this.openGacha());
   }
 
+  /** 第1章の成績：時間・探索率・倒れた回数からランク */
+  chapterStats() {
+    const s = this.save, f = s.flags;
+    const secrets = [
+      ['石板のかけら', (FINDS.necropolis || []).filter(d => (s.finds || []).includes(d.id)).length, (FINDS.necropolis || []).length],
+      ['黄金のスカラベ', (s.scarabs || []).length, GOLD_SCARABS.length],
+      ['光の鏡の謎', f.necMirror ? 1 : 0, 1],
+      ['祠の仕掛け', f.necBlock ? 1 : 0, 1],
+      ['墓地の宝箱', (s.chests || []).filter(c => typeof c === 'number' || c === 'mirror' || c === 'shrine').length, 6],
+    ];
+    const got = secrets.reduce((a, x) => a + Math.min(x[1], x[2]), 0), all = secrets.reduce((a, x) => a + x[2], 0);
+    const rate = Math.round(got / all * 100), min = Math.round((s.playTime || 0) / 60), deaths = s.deaths || 0;
+    const score = rate + (min < 30 ? 20 : min < 50 ? 10 : 0) - deaths * 5;
+    const rank = score >= 105 ? 'S' : score >= 85 ? 'A' : score >= 60 ? 'B' : 'C';
+    return { secrets, rate, min, deaths, rank };
+  }
+
   showClear() {
+    const st = this.chapterStats();
+    const rows = st.secrets.map(([n, a, b]) => `<div class="statRow"><span>${n}</span><b>${Math.min(a, b)} / ${b}</b></div>`).join('');
     this.openPanel(`<div class="pHead"><h2>第1章 クリア</h2><button class="close">✕</button></div>
+      <div class="rank rank${st.rank}">${st.rank}</div>
+      <div class="clue"><b>探索率 ${st.rate}%</b>${rows}<div class="statRow"><span>プレイ時間</span><b>${st.min} 分</b></div><div class="statRow"><span>倒れた回数</span><b>${st.deaths}</b></div>
+      ${st.rate < 100 ? '<div class="note">まだ見つけていない秘密がある……。地図から墓地へ戻って探せます。</div>' : '<div class="note">すべての秘密を見つけた！</div>'}</div>
       <div class="clue"><b>盗まれた太陽のスカラベ</b>秘宝は神殿に戻り、メンネフェルに祭りの灯がともった。</div>
       <div class="clue"><b>つづく…</b>盗賊団はなぜ「1つだけ」盗んだのか。対になる「月のスカラベ」の行方とは――。</div>
       <button class="btn close">町を歩く</button>`);
@@ -1232,6 +1265,7 @@ class Game {
 
   tick(dt, render) {
     this.time += dt;
+    if (this.save && !this.paused && !this.titleMode) this.save.playTime = (this.save.playTime || 0) + dt;
     if (!this.zone || !this.player) return;
     if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.08; }
 

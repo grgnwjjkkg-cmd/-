@@ -184,3 +184,8 @@ table.rates td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.1)
 .menuStat b { color: var(--gold2); font-size: 15px; }
 .menuStat .obj { flex-basis: 100%; font-size: 12.5px; line-height: 1.4; }
 .menuStat .obj small { display: block; color: var(--gold); font-size: 10px; letter-spacing: .1em; }
+
+/* 章クリアの成績 */
+.rank { font: 700 64px/1 serif; text-align: center; margin: 4px 0 10px; color: #ffd36a; text-shadow: 0 0 18px rgba(255, 190, 80, .7); }
+.rank.rankS { color: #fff2b0; } .rank.rankC { color: #c9b89a; text-shadow: none; }
+.statRow { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255, 220, 160, .12); font-size: 14px; }
