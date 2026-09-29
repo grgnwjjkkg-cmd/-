@@ -4,7 +4,7 @@ import { GLTFLoader } from '../lib/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../lib/jsm/utils/SkeletonUtils.js';
 import { mergeGeometries } from '../lib/jsm/utils/BufferGeometryUtils.js';
 import { VRMLoaderPlugin, VRMUtils } from '../lib/three-vrm.module.js';
-import { dressNefi } from './costume.js';
+import { dressNefi, dressGuard } from './costume.js';
 
 // VRM（アニメ風のキャラ）の骨の名前を、動きのデータ（UAL）の骨の名前にそろえる
 const VRM_TO_UAL = { hips: 'pelvis', spine: 'spine_01', chest: 'spine_02', upperChest: 'spine_03', neck: 'neck_01', head: 'Head' };
@@ -66,6 +66,7 @@ export class Assets {
     VRMUtils.rotateVRM0(vrm);
     vrm.humanoid.autoUpdateHumanBones = false;       // 動きは骨に直接あてる
     if (id === 'nefi') dressNefi(vrm);
+    if (id === 'guard') dressGuard(vrm);
     for (const [k, n] of Object.entries(VRM_TO_UAL)) { const b = vrm.humanoid.getRawBoneNode(k); if (b) b.name = n; }
     const model = vrm.scene;
     const tpl = SkeletonUtils.clone(model);   // 動きの乗せかえは、画面に置く前の姿勢で計算する

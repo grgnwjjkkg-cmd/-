@@ -78,7 +78,8 @@ function retint(mat, filter) {
 }
 
 /** ひだのあるスカート：腰から太ももの半ばまで。上は腰の骨、下は近い方の太ももの骨で動く */
-function pleatedSkirt(body, skel, bone, bp, waistY) {
+function pleatedSkirt(body, skel, bone, bp, waistY, opt = {}) {
+  const { flare = 0.75, len = 0.38, main = LAPIS, hem = GOLD, band = '#f5f1e6', stripe = LAPIS2 } = opt;
   const hipsB = skel.bones.indexOf(bone('hips')), lT = skel.bones.indexOf(bone('leftUpperLeg')), rT = skel.bones.indexOf(bone('rightUpperLeg'));
   const lx = bp('leftUpperLeg').x, knee = bp('leftLowerLeg').y;
   // 腰まわりの大きさ（体の点から）
@@ -86,18 +87,18 @@ function pleatedSkirt(body, skel, bone, bp, waistY) {
   for (let i = 0; i < P.count; i++) { const y = P.getY(i); if (Math.abs(y - waistY) < 0.02) { rx = Math.max(rx, Math.abs(P.getX(i))); cz += P.getZ(i); n++; } }
   cz /= Math.max(1, n);
   for (let i = 0; i < P.count; i++) { const y = P.getY(i); if (Math.abs(y - waistY) < 0.02) rz = Math.max(rz, Math.abs(P.getZ(i) - cz)); }
-  const bottom = knee + (waistY - knee) * 0.38, RINGS = 9, SEG = 48, pos = [], si = [], sw = [], col = [], idx = [];
+  const bottom = knee + (waistY - knee) * len, RINGS = 9, SEG = 48, pos = [], si = [], sw = [], col = [], idx = [];
   const cc = new THREE.Color();
   for (let r = 0; r <= RINGS; r++) {
     const t = r / RINGS, y = waistY - (waistY - bottom) * t;
     for (let k = 0; k <= SEG; k++) {
       const a = k / SEG * Math.PI * 2, pleat = 1 + 0.06 * t * Math.cos(a * 12);
-      const fl = 1.12 + t * 0.75;
+      const fl = 1.12 + t * flare;
       const x = Math.cos(a) * (rx + 0.012) * fl * pleat, z = cz + Math.sin(a) * (rz + 0.012) * fl * pleat;
       pos.push(x, y, z);
       const side = Math.sign(x) === Math.sign(lx) ? lT : rT, wl = Math.min(0.75, t * 0.9) * Math.min(1, Math.abs(x) / (rx * 0.5));
       si.push(hipsB, side, 0, 0); sw.push(1 - wl, wl, 0, 0);
-      cc.copy(LAPIS); if (t > 0.86) cc.copy(GOLD); else if (t > 0.76) cc.set('#f5f1e6'); else if (Math.cos(a * 12) > 0.85) cc.copy(LAPIS2);
+      cc.copy(main); if (t > 0.86) cc.copy(hem); else if (t > 0.76) cc.set(band); else if (Math.cos(a * 12) > 0.85) cc.copy(stripe);
       col.push(cc.r, cc.g, cc.b);
     }
   }
@@ -253,4 +254,78 @@ export function dressNefi(vrm) {
     const r = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.035, 20, 1, true), gold()); r.rotation.z = Math.PI / 2;
     attach(skel, la, r, new THREE.Vector3(hand.x * 0.93, hand.y, hand.z));
   }
+}
+
+
+/** 骨の位置から作る筒形の服（体の肌がない所もおおえる）。rings＝[{ y, rx, rz, cz }]、上から下へ */
+function tube(body, skel, rings, boneAt, color, seg = 40) {
+  const pos = [], si = [], sw = [], col = [], idx = [], c = new THREE.Color();
+  rings.forEach((R, r) => {
+    const [b0, b1, w] = boneAt(R.y);
+    for (let k = 0; k <= seg; k++) {
+      const a = k / seg * Math.PI * 2;
+      pos.push(Math.cos(a) * R.rx, R.y, R.cz + Math.sin(a) * R.rz);
+      si.push(b0, b1, 0, 0); sw.push(1 - w, w, 0, 0);
+      color(r / (rings.length - 1), a, c); col.push(c.r, c.g, c.b);
+    }
+  });
+  for (let r = 0; r < rings.length - 1; r++) for (let k = 0; k < seg; k++) { const a = r * (seg + 1) + k, b = a + 1, cc = a + seg + 1, d = cc + 1; idx.push(a, cc, b, b, cc, d); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.SkinnedMesh(g, new THREE.MeshToonMaterial({ vertexColors: true, side: THREE.DoubleSide, gradientMap: toonRamp() }));
+  m.bind(skel, body.bindMatrix); m.frustumCulled = false; m.castShadow = true; body.parent.add(m);
+  return m;
+}
+
+/** 神殿の衛兵カシュ：白い上衣、縞の頭巾（ネメス）、腰布、金の胸飾りと腕輪 */
+export function dressGuard(vrm) {
+  const H = vrm.humanoid, bone = n => H.getRawBoneNode(n);
+  let body = null;
+  vrm.scene.traverse(o => {
+    if (!o.isMesh) return;
+    for (const m of [].concat(o.material)) if (/HAIR|Tops|Bottoms|Accessory/.test(m.name)) m.visible = false;
+    if (!body && o.isSkinnedMesh && [].concat(o.material).some(m => /Body_00_SKIN/.test(m.name))) body = o;
+  });
+  if (!body) return;
+  const skel = body.skeleton, bp = n => bindPos(skel, bone(n)), bi = n => skel.bones.indexOf(bone(n));
+  const hips = bp('hips'), spine = bp('spine'), chest = bp('chest'), upper = bp('upperChest') || chest, neck = bp('neck'), head = bp('head'), lsh = bp('leftUpperArm');
+  const WHITE = new THREE.Color('#f3eee0');
+  // 上衣：腰から首まで。骨の高さで、下の骨と上の骨の間をなめらかに
+  const spineBones = [['hips', hips.y], ['spine', spine.y], ['chest', chest.y], [bone('upperChest') ? 'upperChest' : 'chest', upper.y], ['neck', neck.y]];
+  const boneAt = y => { for (let i = 0; i < spineBones.length - 1; i++) { const [n0, y0] = spineBones[i], [n1, y1] = spineBones[i + 1]; if (y <= y1) return [bi(n0), bi(n1), THREE.MathUtils.clamp((y - y0) / (y1 - y0), 0, 1)]; } return [bi('neck'), bi('neck'), 0]; };
+  const cz = (spine.z + chest.z) / 2, sw = Math.abs(lsh.x);
+  const ring = (y, rx, rz) => ({ y, rx, rz, cz });
+  tube(body, skel, [ring(neck.y - 0.005, 0.07, 0.065), ring(upper.y + 0.03, sw * 0.9, 0.12), ring(upper.y - 0.03, sw * 0.95, 0.13), ring(chest.y, sw * 0.82, 0.125), ring(spine.y, sw * 0.7, 0.11), ring(hips.y + 0.04, sw * 0.74, 0.12)], boneAt,
+    (t, a, c) => { c.copy(WHITE); if (t < 0.12) c.copy(GOLD); });
+  // 胸飾り（金・ラピス・トルコ石のしま）：肩にかかる円盤
+  tube(body, skel, [ring(neck.y - 0.012, 0.075, 0.07), ring(upper.y + 0.035, sw * 0.92, 0.135), ring(upper.y - 0.005, sw * 1.0, 0.145)].map((r, i) => ({ ...r, rx: r.rx + 0.006, rz: r.rz + 0.006 })), boneAt,
+    (t, a, c) => { const band = Math.floor(t * 5.99); c.copy([GOLD, LAPIS, GOLD, TURQ, GOLD, GOLD][band]); });
+  // 腰布（シェンティ）：白、すそに金。ネフィのスカートより短く、まっすぐ
+  pleatedSkirt(body, skel, bone, bp, hips.y + 0.1, { flare: 0.35, len: 0.3, main: WHITE, hem: GOLD, band: '#e8dcc0', stripe: new THREE.Color('#e4dccb') });
+  // 頭巾（ネメス）：金とラピスの縞。頭をおおい、両わきは胸まで垂れる
+  const nm = new THREE.Group(), hC = new THREE.Vector3(head.x, head.y + 0.1, head.z + 0.005);
+  const stripe = y => (Math.floor((y + 0.4) / 0.022) % 2) ? GOLD : LAPIS;
+  const capG = new THREE.SphereGeometry(0.108, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.62), cp = capG.attributes.position, cc = [];
+  for (let i = 0; i < cp.count; i++) { const c = stripe(cp.getY(i)); cc.push(c.r, c.g, c.b); }
+  capG.setAttribute('color', new THREE.Float32BufferAttribute(cc, 3));
+  const nMat = new THREE.MeshToonMaterial({ vertexColors: true, side: THREE.DoubleSide, gradientMap: toonRamp() });
+  const cap = new THREE.Mesh(capG, nMat); cap.scale.set(1.08, 1.05, 1.18); nm.add(cap);
+  for (const sx of [-1, 1]) {   // 両わきに垂れる布（前から見える）
+    const L = new THREE.PlaneGeometry(0.075, 0.26, 1, 12), lp = L.attributes.position, lc = [];
+    for (let i = 0; i < lp.count; i++) { const y = lp.getY(i); lp.setZ(i, -0.02 * (0.13 - y)); const c = stripe(y); lc.push(c.r, c.g, c.b); }
+    L.setAttribute('color', new THREE.Float32BufferAttribute(lc, 3));
+    const lap = new THREE.Mesh(L, nMat); lap.position.set(sx * 0.1, -0.13, -0.02); lap.rotation.y = sx * 0.35; nm.add(lap);
+  }
+  const back = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.03, 0.2, 16, 1, true), nMat); back.position.set(0, -0.15, 0.09); back.rotation.x = 0.25; nm.add(back);
+  const brow = new THREE.Mesh(new THREE.TorusGeometry(0.112, 0.008, 6, 40), gold()); brow.rotation.x = Math.PI / 2 - 0.1; brow.scale.set(1.05, 1.18, 1); brow.position.y = -0.02; nm.add(brow);
+  attach(skel, bone('head'), nm, hC);
+  // 腕輪とサンダル色の靴
+  for (const s of ['left', 'right']) {
+    const la = bone(s + 'LowerArm'), hand = bp(s + 'Hand'); if (!la || !hand) continue;
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.05, 20, 1, true), gold()); r.rotation.z = Math.PI / 2;
+    attach(skel, la, r, new THREE.Vector3(hand.x * 0.9, hand.y, hand.z));
+  }
+  vrm.scene.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (/Shoes/.test(m.name)) retint(m, 'sepia(1) saturate(1.6) hue-rotate(-10deg) brightness(0.7)'); });
 }

@@ -61,7 +61,9 @@ export function objective(s) {
   const f = s.flags;
   if (!f.chapterClear && !f.escaped) {
     if (!f.leverPulled) return '閉じこめられた。部屋を調べて、出口をさがそう';
-    if (!f.gotScarab) return '墓の奥へ。盗賊団のアジトで太陽のスカラベを取り戻そう';
+    if (!f.kashJoined) return '墓の奥へ。柱の広間の先、東の洞窟を進もう';
+    if (!f.gateLifted) return '洞窟の奥の落とし扉を、カシュに持ち上げてもらおう';
+    if (!f.gotScarab) return '盗賊団のアジトで太陽のスカラベを取り戻そう';
     return '墓が崩れる！ 入口まで走れ！';
   }
   if (f.gotScarab && !f.chapterClear) return '町へ戻り、神官長メリトにスカラベを届けよう（墓地の南の道）';

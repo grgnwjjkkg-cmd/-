@@ -12,6 +12,7 @@ import { audio } from './audio.js';
 import { Hazards } from './hazards.js';
 import { Puzzles, GOLD_SCARABS } from './puzzles.js';
 import { prologue, Tomb } from './chapter1.js';
+import { Ally, AllyEvents, ALLIES } from './ally.js';
 import { Gestures } from './gestures.js';
 import { FX } from './fx.js';
 import { Creature, CREATURE_SPAWNS } from './creatures.js';
@@ -261,6 +262,9 @@ class Game {
     this.puzzles = new Puzzles(this, name);
     if (this.tomb) { this.scene.remove(this.tomb.root); this.tomb = null; }
     if (name === 'necropolis') this.tomb = new Tomb(this);
+    if (this.allyEv) { this.scene.remove(this.allyEv.root); if (this.allyEv.captive) this.scene.remove(this.allyEv.captive.root); this.allyEv = null; }
+    if (name === 'necropolis') { this.allyEv = new AllyEvents(this); await this.allyEv.spawnCaptive(); }
+    await this.spawnAllies();
     this.hazards?.dispose(this.scene);
     this.hazards = new Hazards(this.zone, this.scene);
     this.breath = 1;
@@ -274,6 +278,21 @@ class Game {
     this.inside = 0;
     if (!initial) { audio.play(this.zone.music); await wait(100); $('fade').classList.remove('on'); }
     this.persist();
+  }
+
+  /** 仲間を出す（町ではつれて歩かない。最大2人） */
+  async spawnAllies() {
+    for (const a of this.allies || []) this.scene.remove(a.root);
+    this.allies = [];
+    if (!this.zone || this.zone.name === 'town') return;
+    for (const id of (this.save.party || []).slice(0, 2)) {
+      const def = ALLIES[id]; if (!def) continue;
+      const actor = new Actor(await this.assets.makeChar(def.model), this.assets);
+      if (def.weapon) actor.hold(await this.assets.makeWeapon(def.weapon, def.tint), WEAPON_LENGTH[def.weapon]);
+      const al = new Ally(this, id, actor);
+      al.pos.copy(this.player.pos).add(new THREE.Vector3(1.2, 0, 1.2));
+      this.allies.push(al); this.scene.add(al.root);
+    }
   }
 
   async spawnEnemy(type, pos) {
@@ -1294,7 +1313,7 @@ class Game {
       this.enemies = this.enemies.filter(e => { const keep = e.update(edt, this.player, this); if (!keep) this.scene.remove(e.root); return keep; });
       for (const e of this.enemies) e.root.visible = e.pos.distanceToSquared(this.player.pos) < 60 * 60;   // 遠くの敵は描かない
       this.creatures = (this.creatures || []).filter(c => { const keep = c.update(edt, this.player, this); if (!keep) this.scene.remove(c.root); return keep; });
-      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this); this.puzzles?.update(dt); this.tomb?.update(dt);
+      this.updateBreath(dt); this.updateWings(dt); this.hazards?.update(dt, this.time, this.player, this); this.puzzles?.update(dt); this.tomb?.update(dt); this.allyEv?.update(dt); for (const a of this.allies || []) a.update(dt);
       // 安全な場所（東京の人のまわり）には敵は入れない
       for (const n of this.npcs) if (n.def.safe) for (const e of this.enemies) {
         const dx = e.pos.x - n.root.position.x, dz = e.pos.z - n.root.position.z, d = Math.hypot(dx, dz);
