@@ -379,6 +379,7 @@ export class Puzzles {
       L.trapped = true; L.doorT = 0; setTimeout(() => audio.voice('trapped', { gap: 0 }), 700);
       g.checkpoint = { zone: 'necropolis', x: 57, z: -95, face: Math.PI / 2 };   // 倒れたらここから
       g.zone.colliders.boxes.push(this.lairDoorBox);
+      for (const a of g.allies || []) if (a.pos.x < 53) a.pos.set(P.pos.x - 1.2, 0, P.pos.z + 1.2);   // 仲間もいっしょに中へ
       audio.sfx('rumble'); g.shake = 0.6;
       g.runSteps([{ who: 'narr', text: '背後で重い石の扉が閉まった！ 閉じこめられた……' },
         { who: 'narr', text: '奥の壁に赤く光る3つの封印。そして祭壇がある。ここから出る方法を探そう。' }]);
