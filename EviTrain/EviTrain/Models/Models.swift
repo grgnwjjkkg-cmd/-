@@ -189,3 +189,8 @@ final class SetRecord {
         }
     }
 }
+
+/// `.sheet(item:)` で種目を渡せるようにする（SwiftData のモデルは、そのままでは Identifiable ではない）。
+extension Exercise: Identifiable {
+    var id: PersistentIdentifier { persistentModelID }
+}
