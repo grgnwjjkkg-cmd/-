@@ -14,13 +14,19 @@ struct StudiesView: View {
     @State private var starFilter: StarFilter = .all
     @State private var bookmarksOnly = false
     @State private var menusOnly = false
+    /// 選んだコースの論文だけ（コースを選んでいるときは、最初からオン）
+    @State private var courseOnly = true
+    @AppStorage(Course.storageKey) private var courseRaw = ""
+
+    private var course: Course? { Course.stored(courseRaw) }
+    private var courseActive: Bool { courseOnly && course != nil }
 
     var body: some View {
         NavigationStack {
             Group {
                 if store.visibleStudies.isEmpty {
                     emptyState
-                } else if !searchText.isEmpty || bookmarksOnly || menusOnly {
+                } else if !searchText.isEmpty || bookmarksOnly || menusOnly || courseActive {
                     studyList
                 } else {
                     themeList
@@ -53,6 +59,11 @@ struct StudiesView: View {
     private var filters: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                if let course {
+                    Button { courseOnly.toggle() } label: {
+                        FilterChip(title: "\(course.title)の論文", isSelected: courseOnly)
+                    }
+                }
                 Menu {
                     Picker("★", selection: $starFilter) {
                         ForEach(StarFilter.allCases) { Text($0.title).tag($0) }
@@ -128,7 +139,14 @@ struct StudiesView: View {
     private func filteredStudies() -> [Study] {
         let minStars = starFilter.rawValue
         var result: [Study] = []
-        for study in store.visibleStudies {
+        // コースの論文は、コースの優先順位のまま。それ以外は★の多い順
+        let base: [Study]
+        if let course, courseActive {
+            base = store.studies(for: course, limit: 10_000)
+        } else {
+            base = store.visibleStudies
+        }
+        for study in base {
             if study.stars < minStars { continue }
             if let field, study.field != field { continue }
             if bookmarksOnly && !store.isBookmarked(study) { continue }
@@ -136,7 +154,7 @@ struct StudiesView: View {
             if !searchText.isEmpty && !study.contains(searchText) { continue }
             result.append(study)
         }
-        return result.sorted { $0.stars > $1.stars }
+        return courseActive ? result : result.sorted { $0.stars > $1.stars }
     }
 
     private var emptyState: some View {
