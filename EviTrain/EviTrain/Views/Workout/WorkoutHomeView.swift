@@ -66,6 +66,7 @@ private struct StartScreen: View {
                     if let study = studyStore.studyOfTheDay(for: course) {
                         DailyStudyCard(study: study, title: "今日の根拠")
                     }
+                    CourseLinks(course: course)
                 } else {
                     NavigationLink {
                         CoursePickerView()

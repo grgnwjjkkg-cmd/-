@@ -87,6 +87,104 @@ enum Course: String, CaseIterable, Identifiable {
     static func stored(_ raw: String) -> Course? { Course(rawValue: raw) }
 }
 
+/// コースの「基本メニュー」。論文の研究ではなく、よくある組み立ての目安。種目は ExerciseCatalog の名前だけを使う。
+struct CoursePreset: Identifiable {
+    struct Item {
+        let exercise: String
+        let sets: Int
+        var reps: Int = 0
+        var meters: Double = 0
+        var seconds: Double = 0
+        var rest: Double?
+    }
+
+    let name: String
+    let summary: String
+    let items: [Item]
+
+    var id: String { name }
+    var exerciseNames: String { items.map(\.exercise).joined(separator: "・") }
+}
+
+extension Course {
+    var presets: [CoursePreset] {
+        switch self {
+        case .muscle: [
+            CoursePreset(name: "胸・肩・腕の日", summary: "押す動きの日。1部位あたり週10セット前後が目安です。", items: [
+                .init(exercise: "ベンチプレス", sets: 3, reps: 8, rest: 120),
+                .init(exercise: "インクラインダンベルプレス", sets: 3, reps: 10, rest: 90),
+                .init(exercise: "ショルダープレス", sets: 3, reps: 10, rest: 90),
+                .init(exercise: "サイドレイズ", sets: 3, reps: 12, rest: 60),
+                .init(exercise: "トライセプスエクステンション", sets: 3, reps: 12, rest: 60),
+            ]),
+            CoursePreset(name: "背中・腕の日", summary: "引く動きの日。", items: [
+                .init(exercise: "デッドリフト", sets: 3, reps: 5, rest: 150),
+                .init(exercise: "ラットプルダウン", sets: 3, reps: 10, rest: 90),
+                .init(exercise: "ベントオーバーロウ", sets: 3, reps: 10, rest: 90),
+                .init(exercise: "シーテッドロウ", sets: 3, reps: 12, rest: 60),
+                .init(exercise: "バーベルカール", sets: 3, reps: 12, rest: 60),
+            ]),
+            CoursePreset(name: "脚・体幹の日", summary: "脚と体幹の日。", items: [
+                .init(exercise: "スクワット", sets: 3, reps: 8, rest: 150),
+                .init(exercise: "ルーマニアンデッドリフト", sets: 3, reps: 10, rest: 120),
+                .init(exercise: "レッグプレス", sets: 3, reps: 12, rest: 90),
+                .init(exercise: "カーフレイズ", sets: 3, reps: 15, rest: 60),
+                .init(exercise: "プランク", sets: 3, seconds: 45, rest: 60),
+            ]),
+            CoursePreset(name: "全身（週2回）", summary: "時間がない人向け。1回で全身を回します。", items: [
+                .init(exercise: "スクワット", sets: 3, reps: 8, rest: 120),
+                .init(exercise: "ベンチプレス", sets: 3, reps: 8, rest: 120),
+                .init(exercise: "ベントオーバーロウ", sets: 3, reps: 10, rest: 90),
+                .init(exercise: "ショルダープレス", sets: 2, reps: 10, rest: 90),
+                .init(exercise: "プランク", sets: 2, seconds: 45, rest: 60),
+            ]),
+        ]
+        case .speed: [
+            CoursePreset(name: "加速ダッシュの日", summary: "スタートから10〜30mの加速をのばす日。しっかり休んで全力で。", items: [
+                .init(exercise: "10mダッシュ", sets: 6, meters: 10, rest: 120),
+                .init(exercise: "30mダッシュ", sets: 4, meters: 30, rest: 180),
+                .init(exercise: "そり引きダッシュ", sets: 4, meters: 20, rest: 150),
+                .init(exercise: "スクワット", sets: 3, reps: 5, rest: 150),
+            ]),
+            CoursePreset(name: "最大速度の日", summary: "60mで最高速度に乗せる日。", items: [
+                .init(exercise: "30mダッシュ", sets: 3, meters: 30, rest: 150),
+                .init(exercise: "60mダッシュ", sets: 4, meters: 60, rest: 240),
+                .init(exercise: "ノルディックハムストリング", sets: 3, reps: 5, rest: 120),
+                .init(exercise: "ヒップスラスト", sets: 3, reps: 8, rest: 120),
+            ]),
+            CoursePreset(name: "ジャンプ・パワーの日", summary: "跳ぶ力と爆発力を鍛える日。", items: [
+                .init(exercise: "ボックスジャンプ", sets: 4, reps: 5, rest: 90),
+                .init(exercise: "バウンディング", sets: 4, reps: 6, rest: 90),
+                .init(exercise: "立ち幅跳び", sets: 3, reps: 5, rest: 90),
+                .init(exercise: "パワークリーン", sets: 4, reps: 3, rest: 150),
+            ]),
+            CoursePreset(name: "坂道ダッシュの日", summary: "坂で前傾を作って加速を身につける日。", items: [
+                .init(exercise: "坂道ダッシュ", sets: 8, meters: 20, rest: 90),
+                .init(exercise: "ヒップスラスト", sets: 3, reps: 10, rest: 90),
+            ]),
+        ]
+        case .soccer: [
+            CoursePreset(name: "加速・切り返しの日", summary: "短いダッシュをくり返して、試合の動きに近づける日。", items: [
+                .init(exercise: "10mダッシュ", sets: 8, meters: 10, rest: 60),
+                .init(exercise: "30mダッシュ", sets: 4, meters: 30, rest: 120),
+                .init(exercise: "ブルガリアンスクワット", sets: 3, reps: 8, rest: 90),
+                .init(exercise: "ボックスジャンプ", sets: 3, reps: 5, rest: 90),
+            ]),
+            CoursePreset(name: "ケガ予防＋脚力の日", summary: "ハムストリングと体幹でケガを減らす日。", items: [
+                .init(exercise: "ノルディックハムストリング", sets: 3, reps: 6, rest: 120),
+                .init(exercise: "ヒップスラスト", sets: 3, reps: 10, rest: 90),
+                .init(exercise: "ルーマニアンデッドリフト", sets: 3, reps: 8, rest: 120),
+                .init(exercise: "プランク", sets: 3, seconds: 45, rest: 60),
+            ]),
+            CoursePreset(name: "くり返しダッシュの日", summary: "短い休みでくり返し走る力（スプリントをくり返す力）を作る日。", items: [
+                .init(exercise: "30mダッシュ", sets: 10, meters: 30, rest: 30),
+                .init(exercise: "バウンディング", sets: 3, reps: 6, rest: 90),
+            ]),
+        ]
+        }
+    }
+}
+
 extension StudyStore {
     /// コースに関係する論文（タグの一致 → 分野の一致 → ★の多い順）。
     func studies(for course: Course, limit: Int = 5) -> [Study] {
