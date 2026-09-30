@@ -47,21 +47,52 @@ enum Course: String, CaseIterable, Identifiable {
     /// ストップウォッチを使うコースか
     var usesStopwatch: Bool { self != .muscle }
 
-    /// このコースに関係する論文のタグ（強く一致）
-    var paperTags: Set<String> {
+    // ── 論文の並べ方（優先順位はこの順番）──
+    // 1. 後ろへ回す論文（demoteTags: 対象がちがう） 2. 一番大事なタグ（primaryTags）の数
+    // 3. 次に大事なタグ（secondaryTags）の数 4. 分野（fields）が合う 5. ★の数
+
+    /// 一番大事なタグ。1つでもあれば「そのコースの論文」として先頭グループに入る
+    var primaryTags: Set<String> {
         switch self {
         case .speed: ["スプリント", "ダッシュ", "短距離", "ジャンプ", "陸上", "くり返しダッシュ", "ソリ引き", "跳ねる運動"]
-        case .soccer: ["サッカー", "フットサル", "切り返し", "方向転換", "スプリント", "ジャンプ"]
-        case .muscle: ["筋トレ", "体幹"]
+        case .soccer: ["サッカー", "フットサル"]
+        case .muscle: ["筋トレ"]
         }
     }
 
-    /// このコースに関係する論文の分野（弱く一致）
+    /// 次に大事なタグ。primaryTags が無くても、これだけで一覧には入る（並びは後ろ）
+    var secondaryTags: Set<String> {
+        switch self {
+        case .speed: []
+        case .soccer: ["切り返し", "方向転換", "スプリント", "ダッシュ", "ジャンプ"]
+        case .muscle: ["体幹", "筋力"]
+        }
+    }
+
+    /// 分野が合うと少し前に出る
     var paperFields: Set<String> {
         switch self {
         case .speed: ["走る", "跳ぶ"]
         case .soccer: ["競技別", "切り返し", "走る"]
         case .muscle: ["筋力"]
+        }
+    }
+
+    /// 一番後ろへ回すタグ（対象や目的がちがう論文）
+    var demoteTags: Set<String> {
+        switch self {
+        case .muscle: ["子ども", "幼児", "体育", "バランス", "測定"]
+        default: []
+        }
+    }
+
+    /// 後ろへ回すタグ（ふつうの筋トレの人向けではなく、特定の競技向けの論文）
+    var softDemoteTags: Set<String> {
+        switch self {
+        case .muscle: ["サッカー", "フットサル", "バスケットボール", "ハンドボール", "バレーボール", "ラグビー", "テニス", "野球",
+                       "ゴルフ", "水泳", "柔道", "ホッケー", "体操", "バドミントン", "卓球", "陸上", "スプリント", "ダッシュ",
+                       "短距離", "長距離", "中長距離"]
+        default: []
         }
     }
 
@@ -186,32 +217,54 @@ extension Course {
 }
 
 extension StudyStore {
-    /// コースに関係する論文（タグの一致 → 分野の一致 → ★の多い順）。
+    /// コースに関係する論文を、優先順位の順に並べる。
+    /// 順番：後ろへ回すもの → 一番大事なタグの数 → 次に大事なタグの数 → 分野 → ★
     func studies(for course: Course, limit: Int = 5) -> [Study] {
-        struct Scored {
-            let study: Study
-            let score: Int
-        }
-        let scored: [Scored] = visibleStudies.compactMap { study in
-            let tagHits = Set(study.tags).intersection(course.paperTags).count
-            let fieldHit = course.paperFields.contains(study.field) ? 1 : 0
-            let score = tagHits * 2 + fieldHit
-            return tagHits > 0 ? Scored(study: study, score: score) : nil
-        }
-        let sorted = scored.sorted { a, b in
-            if a.score != b.score { return a.score > b.score }
-            return a.study.stars > b.study.stars
-        }
-        return sorted.prefix(limit).map(\.study)
+        ranked(for: course).prefix(limit).map(\.study)
     }
 
-    /// コースの「今日の根拠」（★4以上の中から日替わりで1本）。
+    /// コースの「今日の根拠」。★3以上で、後ろへ回されていない論文の上位60本から日替わりで1本。
     func studyOfTheDay(for course: Course, calendar: Calendar = .current, date: Date = .now) -> Study? {
-        let all = studies(for: course, limit: 60)
-        let strong = all.filter { $0.stars >= 4 }
-        let pool = strong.isEmpty ? all : strong
+        let top = ranked(for: course).prefix(60)
+        let strong = top.filter { $0.study.stars >= 3 && $0.demoted == 0 }.map(\.study)
+        let pool = strong.isEmpty ? top.map(\.study) : strong
         guard !pool.isEmpty else { return nil }
         let day = calendar.ordinality(of: .day, in: .era, for: date) ?? 0
         return pool[day % pool.count]
+    }
+
+    private struct Ranked {
+        let study: Study
+        /// 0=そのまま、1=特定の競技向け、2=対象がちがう
+        let demoted: Int
+        let primary: Int
+        let secondary: Int
+        let fieldHit: Int
+    }
+
+    private func ranked(for course: Course) -> [Ranked] {
+        let list: [Ranked] = visibleStudies.compactMap { study in
+            let tags = Set(study.tags)
+            let primary = tags.intersection(course.primaryTags).count
+            let secondary = tags.intersection(course.secondaryTags).count
+            guard primary + secondary > 0 else { return nil }
+            let demoted: Int
+            if !tags.isDisjoint(with: course.demoteTags) || (!course.demoteTags.isEmpty && study.theme.contains("子ども")) {
+                demoted = 2
+            } else if !tags.isDisjoint(with: course.softDemoteTags) {
+                demoted = 1
+            } else {
+                demoted = 0
+            }
+            return Ranked(study: study, demoted: demoted, primary: primary, secondary: secondary,
+                          fieldHit: course.paperFields.contains(study.field) ? 1 : 0)
+        }
+        return list.sorted { a, b in
+            if a.demoted != b.demoted { return a.demoted < b.demoted }
+            if a.primary != b.primary { return a.primary > b.primary }
+            if a.secondary != b.secondary { return a.secondary > b.secondary }
+            if a.fieldHit != b.fieldHit { return a.fieldHit > b.fieldHit }
+            return a.study.stars > b.study.stars
+        }
     }
 }
