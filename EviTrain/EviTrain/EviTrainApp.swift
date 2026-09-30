@@ -35,6 +35,7 @@ struct EviTrainApp: App {
 struct RootView: View {
     @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
     @AppStorage(OnboardingView.seenKey) private var onboardingSeen = false
+    @AppStorage(Course.storageKey) private var courseRaw = ""
 
     var body: some View {
         TabView {
@@ -48,8 +49,14 @@ struct RootView: View {
                 .tabItem { Label("設定", systemImage: "gearshape") }
         }
         .preferredColorScheme(appearance.colorScheme)
-        .fullScreenCover(isPresented: Binding(get: { !onboardingSeen }, set: { if !$0 { onboardingSeen = true } })) {
-            OnboardingView()
+        // 初回：紹介 → コース選び。どちらも終われば閉じる
+        .fullScreenCover(isPresented: Binding(get: { !onboardingSeen || courseRaw.isEmpty }, set: { _ in })) {
+            if !onboardingSeen {
+                OnboardingView()
+            } else {
+                CoursePickerView(showsSkip: true)
+                    .interactiveDismissDisabled()
+            }
         }
     }
 }

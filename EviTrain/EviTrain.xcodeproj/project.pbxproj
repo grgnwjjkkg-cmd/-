@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D5142D8FA52C5C27A2ABE6D7 /* SprintTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFF330EC71E142D8CEA4AC3 /* SprintTimerView.swift */; };
+		4778B82822A0EDEA9E47BCF7 /* CourseViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8DDE3108A23BF39A61AB4E /* CourseViews.swift */; };
+		8B0757FA783D385F2ECDFDCC /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55BC203926CF396A3116B112 /* Course.swift */; };
 		0A1D125A0CF36DB5D397C66C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E343771B470E096E4A7AEB /* Theme.swift */; };
 		0AF01140BC7E1A708109E402 /* ReminderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF38CB93619A87BD7903095 /* ReminderSettingsView.swift */; };
 		16F894B4BAA38EC5914F8327 /* WeeklyVolumeChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 346F428453E8157D481F9D54 /* WeeklyVolumeChart.swift */; };
@@ -65,6 +68,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5BFF330EC71E142D8CEA4AC3 /* SprintTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SprintTimerView.swift; sourceTree = "<group>"; };
+		3A8DDE3108A23BF39A61AB4E /* CourseViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseViews.swift; sourceTree = "<group>"; };
+		55BC203926CF396A3116B112 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
 		009806BA9F8C25A7BF846092 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		010120CEC29246B9F647C3BC /* ExercisePictograms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePictograms.swift; sourceTree = "<group>"; };
 		0F6B839B6FDF773B8A22F4B3 /* InsightViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightViews.swift; sourceTree = "<group>"; };
@@ -134,6 +140,8 @@
 		1FC42CCDA24076C10CBE0CAA /* Workout */ = {
 			isa = PBXGroup;
 			children = (
+				5BFF330EC71E142D8CEA4AC3 /* SprintTimerView.swift */,
+				3A8DDE3108A23BF39A61AB4E /* CourseViews.swift */,
 				70247343453D97D3D11A84B9 /* BadgesView.swift */,
 				009806BA9F8C25A7BF846092 /* ExercisePickerView.swift */,
 				010120CEC29246B9F647C3BC /* ExercisePictograms.swift */,
@@ -174,6 +182,7 @@
 		311F9A35EE2BFD878D8216F6 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				55BC203926CF396A3116B112 /* Course.swift */,
 				A05E6F048B53FC6DDEA3510B /* ExerciseCatalog.swift */,
 				B9766D091F94F5793D667338 /* Menu.swift */,
 				9963D1F22B180BD70B4B5182 /* Models.swift */,
@@ -376,6 +385,9 @@
 			files = (
 				9189214B0005937D511A53E5 /* Backup.swift in Sources */,
 				7990DE665B0C98A654D6CAC6 /* Badges.swift in Sources */,
+				D5142D8FA52C5C27A2ABE6D7 /* SprintTimerView.swift in Sources */,
+				4778B82822A0EDEA9E47BCF7 /* CourseViews.swift in Sources */,
+				8B0757FA783D385F2ECDFDCC /* Course.swift in Sources */,
 				D594A9745028C7BD62A80FFF /* BadgesView.swift in Sources */,
 				41E0D0FD0636D35A6AF9873A /* BodyWeightView.swift in Sources */,
 				4E9F27A16E3398D3BA35AA7B /* CompareProgressView.swift in Sources */,

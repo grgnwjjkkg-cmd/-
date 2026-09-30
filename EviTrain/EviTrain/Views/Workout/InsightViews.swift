@@ -26,13 +26,14 @@ enum Appearance: String, CaseIterable, Identifiable {
 struct DailyStudyCard: View {
     @Environment(\.appTheme) private var theme
     let study: Study
+    var title = "今日の研究"
 
     var body: some View {
         NavigationLink {
             StudyDetailView(study: study)
         } label: {
             VStack(alignment: .leading, spacing: 8) {
-                Label("今日の研究", systemImage: "lightbulb.max.fill")
+                Label(title, systemImage: "lightbulb.max.fill")
                     .font(.caption.bold())
                     .foregroundStyle(.tint)
                 Text(study.headline)

@@ -16,6 +16,7 @@ struct SettingsView: View {
     private var reminderSignature: String {
         "\(reminderEnabled)-\(reminderWeekdays)-\(reminderHour)-\(reminderMinute)"
     }
+    @AppStorage(Course.storageKey) private var courseRaw = ""
     @AppStorage(RestTimer.defaultSecondsKey) private var defaultRestSeconds = 90.0
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
     @AppStorage(AppSettings.appearanceKey) private var appearance = Appearance.system
@@ -26,6 +27,16 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink {
+                        CoursePickerView()
+                    } label: {
+                        LabeledContent("コース", value: Course.stored(courseRaw)?.title ?? "未選択")
+                    }
+                } footer: {
+                    Text("コースを変えると、記録画面のおすすめと「今日の根拠」が変わります。記録したデータは残ります。")
+                }
+
                 Section {
                     Stepper(value: $defaultRestSeconds, in: 15...600, step: 15) {
                         LabeledContent("休憩タイマー", value: defaultRestSeconds.clock)

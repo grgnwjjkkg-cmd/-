@@ -41,6 +41,7 @@ private struct StartScreen: View {
     @Environment(StudyStore.self) private var studyStore
     @Environment(\.appTheme) private var theme
     @AppStorage(AppSettings.weeklySetTargetKey) private var weeklySetTarget = 0
+    @AppStorage(Course.storageKey) private var courseRaw = ""
 
     @Query(filter: #Predicate<Workout> { $0.finishedAt != nil }, sort: \Workout.startedAt, order: .reverse)
     private var finishedWorkouts: [Workout]
@@ -59,6 +60,24 @@ private struct StartScreen: View {
                 Text(Date.now, format: .dateTime.month().day().weekday(.wide))
                     .font(.subheadline.bold())
                     .foregroundStyle(.secondary)
+
+                if let course = Course.stored(courseRaw) {
+                    CourseHeaderCard(course: course)
+                    if let study = studyStore.studyOfTheDay(for: course) {
+                        DailyStudyCard(study: study, title: "今日の根拠")
+                    }
+                } else {
+                    NavigationLink {
+                        CoursePickerView()
+                    } label: {
+                        Label("目的のコースを選ぶ", systemImage: "flag.checkered")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 14)
+                            .background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 HStack(spacing: 10) {
                     StatTile(title: "連続日数", value: "\(Stats.streakDays(finishedWorkouts))日", systemImage: "flame.fill", tint: .orange)
@@ -89,7 +108,7 @@ private struct StartScreen: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.tint)
 
-                if let study = studyStore.studyOfTheDay() {
+                if Course.stored(courseRaw) == nil, let study = studyStore.studyOfTheDay() {
                     DailyStudyCard(study: study)
                 }
 
